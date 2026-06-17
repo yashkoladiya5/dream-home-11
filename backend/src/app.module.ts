@@ -7,6 +7,7 @@ import { User } from './users/entities/user.entity';
 import { Kyc } from './kyc/entities/kyc.entity';
 import { UsersModule } from './users/users.module';
 import { KycModule } from './kyc/kyc.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { KycModule } from './kyc/kyc.module';
     }),
     UsersModule,
     KycModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
