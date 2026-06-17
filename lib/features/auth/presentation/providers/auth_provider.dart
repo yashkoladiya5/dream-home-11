@@ -23,17 +23,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> sendOtp(String phoneNumber) async {
     state = state.copyWith(status: AuthStatus.loading);
     try {
-      // Mock SMS trigger delay
-      await Future.delayed(const Duration(milliseconds: 1000));
       final formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+91$phoneNumber';
+      
+      await _dio.post(
+        '/api/v1/auth/request-otp',
+        data: {
+          'phoneNumber': formattedPhone,
+        },
+      );
+
       state = state.copyWith(
         phoneNumber: formattedPhone,
         status: AuthStatus.codeSent,
       );
+    } on DioException catch (e) {
+      final responseData = e.response?.data;
+      String errMsg = 'Failed to request OTP code. Please try again.';
+      if (responseData is Map && responseData.containsKey('message')) {
+        final msg = responseData['message'];
+        if (msg is List) {
+          errMsg = msg.join(', ');
+        } else if (msg is String) {
+          errMsg = msg;
+        }
+      }
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: errMsg,
+      );
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
-        errorMessage: 'Failed to send OTP code.',
+        errorMessage: 'An unexpected connection error occurred.',
       );
     }
   }
@@ -48,6 +69,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         data: {
           'idToken': mockFirebaseToken,
           'deviceId': deviceId,
+          'otpCode': otp,
         },
       );
 

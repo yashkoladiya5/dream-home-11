@@ -305,7 +305,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                               ? TextButton(
                                   onPressed: authState.status == AuthStatus.loading
                                       ? null
-                                      : _startTimer,
+                                      : () {
+                                          ref.read(authProvider.notifier).sendOtp(widget.phoneNumber);
+                                          _startTimer();
+                                        },
                                   style: TextButton.styleFrom(
                                     foregroundColor: AppTheme.primaryRed,
                                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
