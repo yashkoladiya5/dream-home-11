@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -37,6 +37,18 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async redeemReward(@GetUser() user: User, @Body('pointsCost') pointsCost: number): Promise<User> {
     return this.usersService.redeemReward(user.id, pointsCost);
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @GetUser() user: User,
+    @Body('fullName') fullName?: string,
+    @Body('email') email?: string,
+    @Body('avatarUrl') avatarUrl?: string,
+  ): Promise<User> {
+    return this.usersService.updateProfile(user.id, { fullName, email, avatarUrl });
   }
 }
 

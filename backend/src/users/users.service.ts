@@ -86,5 +86,30 @@ export class UsersService {
     user.pointsBalance = Number(user.pointsBalance) - pointsCost;
     return this.userRepository.save(user);
   }
+
+  async updateProfile(
+    userId: string,
+    updateData: { fullName?: string; email?: string; avatarUrl?: string },
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (updateData.fullName !== undefined) {
+      user.fullName = updateData.fullName;
+    }
+    if (updateData.email !== undefined) {
+      if (updateData.email && !updateData.email.includes('@')) {
+        throw new BadRequestException('Invalid email format');
+      }
+      user.email = updateData.email;
+    }
+    if (updateData.avatarUrl !== undefined) {
+      user.avatarUrl = updateData.avatarUrl;
+    }
+
+    return this.userRepository.save(user);
+  }
 }
 

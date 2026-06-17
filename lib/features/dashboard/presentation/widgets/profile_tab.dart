@@ -3,9 +3,51 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/shimmer_widget.dart';
+import '../screens/edit_profile_screen.dart';
+import '../screens/settings_screen.dart';
 
 class ProfileTab extends ConsumerWidget {
   const ProfileTab({super.key});
+
+  Widget _getAvatarWidget(String? code) {
+    IconData iconData = Icons.person_rounded;
+    Color iconColor = AppTheme.white;
+
+    switch (code) {
+      case 'gamer':
+        iconData = Icons.sports_esports_rounded;
+        iconColor = AppTheme.primaryRed;
+        break;
+      case 'champion':
+        iconData = Icons.emoji_events_rounded;
+        iconColor = AppTheme.goldYellow;
+        break;
+      case 'elite':
+        iconData = Icons.workspace_premium_rounded;
+        iconColor = AppTheme.emeraldGreen;
+        break;
+      case 'lightning':
+        iconData = Icons.flash_on_rounded;
+        iconColor = Colors.cyan;
+        break;
+      case 'star':
+        iconData = Icons.star_rounded;
+        iconColor = Colors.amber;
+        break;
+      default:
+        iconData = Icons.person_rounded;
+        iconColor = AppTheme.white;
+        break;
+    }
+
+    return Center(
+      child: Icon(
+        iconData,
+        size: 46,
+        color: iconColor,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -56,13 +98,7 @@ class ProfileTab extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.person_rounded,
-                              size: 48,
-                              color: AppTheme.white,
-                            ),
-                          ),
+                          child: _getAvatarWidget(profile.avatarUrl),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -79,11 +115,31 @@ class ProfileTab extends ConsumerWidget {
                                 color: AppTheme.greyMedium,
                               ),
                         ),
+                        const SizedBox(height: 12),
+                        // Edit Profile pill button
+                        ElevatedButton.icon(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                          ),
+                          icon: const Icon(Icons.edit_rounded, size: 14),
+                          label: const Text('EDIT PROFILE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0x0CFFFFFF),
+                            foregroundColor: AppTheme.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: const BorderSide(color: Color(0x1AFFFFFF)),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
 
                   // Stats row
                   Row(
@@ -115,6 +171,10 @@ class ProfileTab extends ConsumerWidget {
                     value: kycStatus.toUpperCase(),
                     valueColor: kycColor,
                     icon: Icons.verified_user_rounded,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   _buildInfoTile(
@@ -123,6 +183,10 @@ class ProfileTab extends ConsumerWidget {
                     value: profile.currentTier.toUpperCase(),
                     valueColor: AppTheme.goldYellow,
                     icon: Icons.workspace_premium_rounded,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   _buildInfoTile(
@@ -130,6 +194,22 @@ class ProfileTab extends ConsumerWidget {
                     label: 'Registered Email',
                     value: profile.email ?? 'Not linked',
                     icon: Icons.mail_rounded,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
+                    label: 'Account & Settings',
+                    value: 'MANAGE',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.settings_rounded,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    ),
                   ),
                   const SizedBox(height: 32),
                 ],
@@ -252,33 +332,44 @@ class ProfileTab extends ConsumerWidget {
     required String value,
     required IconData icon,
     Color? valueColor,
+    VoidCallback? onTap,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0x0CFFFFFF),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0x0FFFFFFF)),
       ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppTheme.greyMedium, size: 20),
-          const SizedBox(width: 16),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Icon(icon, color: AppTheme.greyMedium, size: 20),
+              const SizedBox(width: 16),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const Spacer(),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: valueColor ?? AppTheme.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.chevron_right_rounded, color: AppTheme.greyMedium, size: 18),
+              ],
+            ],
           ),
-          const Spacer(),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: valueColor ?? AppTheme.white,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-        ],
+        ),
       ),
     );
   }

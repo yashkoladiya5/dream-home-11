@@ -61,5 +61,20 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
       return false;
     }
   }
+
+  Future<bool> updateProfile({String? fullName, String? email, String? avatarUrl}) async {
+    try {
+      final response = await _dio.patch('/api/v1/users/profile', data: {
+        'fullName':? fullName,
+        'email':? email,
+        'avatarUrl':? avatarUrl,
+      });
+      final data = UserProfile.fromJson(response.data as Map<String, dynamic>);
+      state = AsyncValue.data(data);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
