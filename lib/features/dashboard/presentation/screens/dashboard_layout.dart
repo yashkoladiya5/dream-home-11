@@ -25,7 +25,7 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
-    
+
     // Proactively fetch user profile on layout initialization
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(userProfileProvider.notifier).fetchProfile();
@@ -65,13 +65,13 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
     final profileState = ref.watch(userProfileProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    
-    // Width of each tab item
-    final tabWidth = screenWidth / 5;
-    
-    // Offset for the active indicator (centered inside the active tab)
-    // Indicator width is 32px, so subtract 16px to center it
-    final indicatorLeftOffset = (tabWidth * _currentIndex) + (tabWidth / 2) - 16;
+
+    // Width of each tab item (within the margins of the floating dock)
+    final dockWidth = screenWidth - 36;
+    final tabWidth = dockWidth / 5;
+    final capsuleWidth = 60.0;
+    final capsuleLeftOffset =
+        (tabWidth * _currentIndex) + (tabWidth - capsuleWidth) / 2;
 
     return Scaffold(
       backgroundColor: AppTheme.darkSlate,
@@ -87,16 +87,24 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
                   return Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.primaryRed, width: 1.5),
+                      border: Border.all(
+                        color: AppTheme.primaryRed,
+                        width: 1.5,
+                      ),
                     ),
                     child: const CircleAvatar(
                       radius: 12,
                       backgroundColor: AppTheme.secondarySlate,
-                      child: Icon(Icons.person_rounded, size: 16, color: AppTheme.white),
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 16,
+                        color: AppTheme.white,
+                      ),
                     ),
                   );
                 },
-                orElse: () => const Icon(Icons.menu_rounded, color: AppTheme.white),
+                orElse: () =>
+                    const Icon(Icons.menu_rounded, color: AppTheme.white),
               ),
               onPressed: () => Scaffold.of(context).openDrawer(),
             );
@@ -121,16 +129,25 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
               padding: const EdgeInsets.only(right: 16.0),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.goldYellow.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.goldYellow.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: AppTheme.goldYellow.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.stars_rounded, color: AppTheme.goldYellow, size: 14),
+                      const Icon(
+                        Icons.stars_rounded,
+                        color: AppTheme.goldYellow,
+                        size: 14,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${profile.pointsBalance} PTS',
@@ -166,57 +183,133 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
         ],
       ),
       bottomNavigationBar: Container(
-        height: 64 + bottomPadding,
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-          border: Border(
-            top: BorderSide(color: Color(0x0CFFFFFF), width: 1.0),
-          ),
+        margin: EdgeInsets.only(
+          left: 18,
+          right: 18,
+          bottom: bottomPadding > 0 ? bottomPadding : 16,
         ),
-        child: ClipRect(
+        height: 70,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+            BoxShadow(
+              color: AppTheme.primaryRed.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
             child: Container(
-              color: AppTheme.secondarySlate.withValues(alpha: 0.75),
-              padding: EdgeInsets.only(bottom: bottomPadding),
+              decoration: BoxDecoration(
+                color: AppTheme.secondarySlate.withValues(alpha: 0.82),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  width: 1.2,
+                ),
+              ),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Sliding Active Indicator Pill (placed at the top border of the bar)
+                  // Sliding Active Indicator Capsule behind the Active Icon
                   AnimatedPositioned(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutQuad,
-                    left: indicatorLeftOffset,
-                    top: 0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutBack,
+                    left: capsuleLeftOffset,
+                    top: 5,
                     child: Container(
-                      width: 32,
-                      height: 3,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.primaryRed,
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(2),
-                          bottomRight: Radius.circular(2),
+                      width: capsuleWidth,
+                      height: 55,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.primaryRed.withValues(alpha: 0.22),
+                            AppTheme.primaryRed.withValues(alpha: 0.04),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: AppTheme.primaryRed.withValues(alpha: 0.35),
+                          width: 1.2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryRed,
-                            blurRadius: 6,
-                            spreadRadius: 1,
-                            offset: Offset(0, 1),
+                            color: AppTheme.primaryRed.withValues(alpha: 0.15),
+                            blurRadius: 8,
+                            spreadRadius: 0.5,
                           ),
                         ],
                       ),
                     ),
                   ),
-                  
+
+                  // Pulsing Indicator Dot
+                  // AnimatedPositioned(
+                  //   duration: const Duration(milliseconds: 300),
+                  //   curve: Curves.easeOutCubic,
+                  //   left: (tabWidth * _currentIndex) + (tabWidth - 5) / 2,
+                  //   bottom: 8,
+                  //   child: Container(
+                  //     width: 5,
+                  //     height: 5,
+                  //     decoration: BoxDecoration(
+                  //       shape: BoxShape.circle,
+                  //       color: AppTheme.primaryRed,
+                  //       boxShadow: [
+                  //         BoxShadow(
+                  //           color: AppTheme.primaryRed.withValues(alpha: 0.8),
+                  //           blurRadius: 4,
+                  //           spreadRadius: 1,
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ),
+
                   // Navigation Items
                   Row(
                     children: [
-                      _buildNavBarItem(0, Icons.home_outlined, Icons.home_rounded, 'Home'),
-                      _buildNavBarItem(1, Icons.emoji_events_outlined, Icons.emoji_events_rounded, 'Contest'),
-                      _buildNavBarItem(2, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Wallet'),
-                      _buildNavBarItem(3, Icons.stars_outlined, Icons.stars_rounded, 'Rewards'),
-                      _buildNavBarItem(4, Icons.person_outlined, Icons.person_rounded, 'Profile'),
+                      _buildNavBarItem(
+                        0,
+                        Icons.home_outlined,
+                        Icons.home_rounded,
+                        'Home',
+                      ),
+                      _buildNavBarItem(
+                        1,
+                        Icons.emoji_events_outlined,
+                        Icons.emoji_events_rounded,
+                        'Contest',
+                      ),
+                      _buildNavBarItem(
+                        2,
+                        Icons.account_balance_wallet_outlined,
+                        Icons.account_balance_wallet_rounded,
+                        'Wallet',
+                      ),
+                      _buildNavBarItem(
+                        3,
+                        Icons.stars_outlined,
+                        Icons.stars_rounded,
+                        'Rewards',
+                      ),
+                      _buildNavBarItem(
+                        4,
+                        Icons.person_outlined,
+                        Icons.person_rounded,
+                        'Profile',
+                      ),
                     ],
                   ),
                 ],
@@ -228,7 +321,12 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
     );
   }
 
-  Widget _buildNavBarItem(int index, IconData outlineIcon, IconData filledIcon, String label) {
+  Widget _buildNavBarItem(
+    int index,
+    IconData outlineIcon,
+    IconData filledIcon,
+    String label,
+  ) {
     final isSelected = _currentIndex == index;
     return Expanded(
       child: GestureDetector(
@@ -238,26 +336,40 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedScale(
-              scale: isSelected ? 1.15 : 1.0,
+              scale: isSelected ? 1.1 : 1.0,
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutBack,
               child: Icon(
                 isSelected ? filledIcon : outlineIcon,
-                color: isSelected ? AppTheme.white : AppTheme.greyMedium,
+                color: isSelected
+                    ? AppTheme.white
+                    : AppTheme.greyMedium.withValues(alpha: 0.7),
                 size: 22,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 5),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? AppTheme.white : AppTheme.greyMedium,
+                color: isSelected
+                    ? AppTheme.white
+                    : AppTheme.greyMedium.withValues(alpha: 0.7),
                 letterSpacing: 0.2,
+                shadows: isSelected
+                    ? [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ]
+                    : null,
               ),
               child: Text(label),
             ),
+            const SizedBox(height: 6),
           ],
         ),
       ),
