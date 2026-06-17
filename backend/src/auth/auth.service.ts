@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { FirebaseService } from './firebase.service';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
+import { exec } from 'child_process';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +27,23 @@ export class AuthService {
     console.log(
       `[Nest] ✉️ [Mock SMS] Verification code for ${phoneNumber} is: ${otpCode}`,
     );
+
+    // If running on macOS, try sending it to the user's real device via AppleScript Messages app
+    if (process.platform === 'darwin' && process.env.NODE_ENV !== 'test') {
+      const appleScript = `tell application "Messages" to send "Dream Home 11 verification code: ${otpCode}" to buddy "${phoneNumber}"`;
+      exec(`osascript -e '${appleScript.replace(/'/g, "'\\''")}'`, (err) => {
+        if (err) {
+          console.warn(
+            '[Nest] ⚠️ [Mock SMS] Failed to forward code via macOS Messages app:',
+            err.message,
+          );
+        } else {
+          console.log(
+            `[Nest] ✉️ [Mock SMS] Forwarded verification code to ${phoneNumber} via macOS Messages app.`,
+          );
+        }
+      });
+    }
 
     return {
       success: true,

@@ -34,9 +34,10 @@ describe('AuthController', () => {
   };
 
   const mockAuthService = {
-    requestOtp: jest
-      .fn()
-      .mockReturnValue({ success: true, message: 'OTP requested successfully' }),
+    requestOtp: jest.fn().mockReturnValue({
+      success: true,
+      message: 'OTP requested successfully',
+    }),
     verifyOtp: jest.fn().mockImplementation((idToken: string) => {
       if (idToken.startsWith('mock-token-')) {
         return Promise.resolve({
