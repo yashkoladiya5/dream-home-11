@@ -39,11 +39,7 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
 
   void _onTabTapped(int index) {
     if (index == _currentIndex) return;
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeInOutCubic,
-    );
+    _pageController.jumpToPage(index);
   }
 
   String _getAppBarTitle() {
