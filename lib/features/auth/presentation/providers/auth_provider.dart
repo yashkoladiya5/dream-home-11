@@ -25,8 +25,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       // Mock SMS trigger delay
       await Future.delayed(const Duration(milliseconds: 1000));
+      final formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+91$phoneNumber';
       state = state.copyWith(
-        phoneNumber: phoneNumber,
+        phoneNumber: formattedPhone,
         status: AuthStatus.codeSent,
       );
     } catch (e) {
