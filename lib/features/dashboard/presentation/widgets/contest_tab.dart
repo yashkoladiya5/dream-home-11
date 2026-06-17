@@ -77,74 +77,88 @@ class ContestTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            Text(
-              'Active Contests',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Join active contest groups to earn dream homes.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.greyMedium,
-                  ),
-            ),
-            const SizedBox(height: 24),
-
-            // Mega Contest Card
-            _buildContestCard(
-              context,
-              title: 'Mega Dream Home Contest',
-              prize: '3 BHK Luxury Apartment in Mumbai',
-              entryFee: 49.0,
-              pointsEarned: 100,
-              totalSpots: 10000,
-              spotsLeft: 3420,
-              badgeText: 'MEGA PRIZE',
-              badgeColor: AppTheme.goldYellow,
-              onJoin: () => _joinContest(context, ref, 'Mega Dream Home Contest', 49.0, 100),
-            ),
-            const SizedBox(height: 16),
-
-            // Premium Contest Card
-            _buildContestCard(
-              context,
-              title: 'Weekend Villa Clash',
-              prize: 'Premium Villa Weekend Gateway',
-              entryFee: 99.0,
-              pointsEarned: 250,
-              totalSpots: 5000,
-              spotsLeft: 1200,
-              badgeText: 'HOT',
-              badgeColor: AppTheme.primaryRed,
-              onJoin: () => _joinContest(context, ref, 'Weekend Villa Clash', 99.0, 250),
-            ),
-            const SizedBox(height: 16),
-
-            // Starter Contest Card
-            _buildContestCard(
-              context,
-              title: 'Starter Dream Cottage',
-              prize: 'Mountain Cottage Stay & Title',
-              entryFee: 19.0,
-              pointsEarned: 30,
-              totalSpots: 1000,
-              spotsLeft: 950,
-              badgeText: 'FAST FILLING',
-              badgeColor: AppTheme.emeraldGreen,
-              onJoin: () => _joinContest(context, ref, 'Starter Dream Cottage', 19.0, 30),
-            ),
-            const SizedBox(height: 20),
-          ],
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutQuart,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              Text(
+                'Active Contests',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Join active contest groups to earn dream homes.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.greyMedium,
+                    ),
+              ),
+              const SizedBox(height: 24),
+  
+              // Mega Contest Card
+              _buildContestCard(
+                context,
+                title: 'Mega Dream Home Contest',
+                prize: '3 BHK Luxury Apartment in Mumbai',
+                entryFee: 49.0,
+                pointsEarned: 100,
+                totalSpots: 10000,
+                spotsLeft: 3420,
+                badgeText: 'MEGA PRIZE',
+                badgeColor: AppTheme.goldYellow,
+                onJoin: () => _joinContest(context, ref, 'Mega Dream Home Contest', 49.0, 100),
+              ),
+              const SizedBox(height: 16),
+  
+              // Premium Contest Card
+              _buildContestCard(
+                context,
+                title: 'Weekend Villa Clash',
+                prize: 'Premium Villa Weekend Gateway',
+                entryFee: 99.0,
+                pointsEarned: 250,
+                totalSpots: 5000,
+                spotsLeft: 1200,
+                badgeText: 'HOT',
+                badgeColor: AppTheme.primaryRed,
+                onJoin: () => _joinContest(context, ref, 'Weekend Villa Clash', 99.0, 250),
+              ),
+              const SizedBox(height: 16),
+  
+              // Starter Contest Card
+              _buildContestCard(
+                context,
+                title: 'Starter Dream Cottage',
+                prize: 'Mountain Cottage Stay & Title',
+                entryFee: 19.0,
+                pointsEarned: 30,
+                totalSpots: 1000,
+                spotsLeft: 950,
+                badgeText: 'FAST FILLING',
+                badgeColor: AppTheme.emeraldGreen,
+                onJoin: () => _joinContest(context, ref, 'Starter Dream Cottage', 19.0, 30),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

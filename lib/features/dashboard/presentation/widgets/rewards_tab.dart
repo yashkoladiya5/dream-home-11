@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/user_profile_provider.dart';
+import '../widgets/shimmer_widget.dart';
 
 class RewardsTab extends ConsumerWidget {
   const RewardsTab({super.key});
@@ -73,154 +74,187 @@ class RewardsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(userProfileProvider);
 
-    return profileState.when(
-      data: (profile) {
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Text(
-                  'Rewards Store',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Redeem points to claim real prizes and bonus tickets.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.greyMedium,
-                      ),
-                ),
-                const SizedBox(height: 24),
-
-                // Current Points Summary
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.goldYellow.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.goldYellow.withValues(alpha: 0.3)),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 350),
+      switchInCurve: Curves.easeIn,
+      switchOutCurve: Curves.easeOut,
+      child: profileState.when(
+        data: (profile) {
+          return SingleChildScrollView(
+            key: const ValueKey('loaded'),
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header
+                  Text(
+                    'Rewards Store',
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.stars_rounded, color: AppTheme.goldYellow, size: 28),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'YOUR POINTS BALANCE',
-                            style: TextStyle(
-                              color: AppTheme.goldYellow.withValues(alpha: 0.8),
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.0,
+                  const SizedBox(height: 8),
+                  Text(
+                    'Redeem points to claim real prizes and bonus tickets.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.greyMedium,
+                        ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Current Points Summary
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.goldYellow.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.goldYellow.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.stars_rounded, color: AppTheme.goldYellow, size: 28),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'YOUR POINTS BALANCE',
+                              style: TextStyle(
+                                color: AppTheme.goldYellow.withValues(alpha: 0.8),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${profile.pointsBalance} PTS',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.white,
-                                ),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              '${profile.pointsBalance} PTS',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.white,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+
+                  // Rewards Grid
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.78,
+                    children: [
+                      _buildRewardItem(
+                        context,
+                        title: 'Free Contest Ticket',
+                        points: '1,000 PTS',
+                        cost: 1000,
+                        desc: '1x entry for any ₹49 contest',
+                        icon: Icons.confirmation_number_rounded,
+                        color: AppTheme.primaryRed,
+                        onTap: () => _redeem(context, ref, 'Free Contest Ticket', 1000),
+                      ),
+                      _buildRewardItem(
+                        context,
+                        title: 'Double Points Boost',
+                        points: '2,500 PTS',
+                        cost: 2500,
+                        desc: 'Get 2x points for 24 hours',
+                        icon: Icons.bolt_rounded,
+                        color: AppTheme.goldYellow,
+                        onTap: () => _redeem(context, ref, 'Double Points Boost', 2500),
+                      ),
+                      _buildRewardItem(
+                        context,
+                        title: 'Premium Smart TV',
+                        points: '85,000 PTS',
+                        cost: 85000,
+                        desc: '55" 4K Smart OLED Television',
+                        icon: Icons.tv_rounded,
+                        color: Colors.blue,
+                        onTap: () => _redeem(context, ref, 'Premium Smart TV', 85000),
+                      ),
+                      _buildRewardItem(
+                        context,
+                        title: 'Apple iPad Air',
+                        points: '150,000 PTS',
+                        cost: 150000,
+                        desc: 'M1 Chip, 10.9" Liquid Retina',
+                        icon: Icons.tablet_mac_rounded,
+                        color: Colors.purple,
+                        onTap: () => _redeem(context, ref, 'Apple iPad Air', 150000),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 28),
-
-                // Rewards Grid
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.78,
-                  children: [
-                    _buildRewardItem(
-                      context,
-                      title: 'Free Contest Ticket',
-                      points: '1,000 PTS',
-                      cost: 1000,
-                      desc: '1x entry for any ₹49 contest',
-                      icon: Icons.confirmation_number_rounded,
-                      color: AppTheme.primaryRed,
-                      onTap: () => _redeem(context, ref, 'Free Contest Ticket', 1000),
-                    ),
-                    _buildRewardItem(
-                      context,
-                      title: 'Double Points Boost',
-                      points: '2,500 PTS',
-                      cost: 2500,
-                      desc: 'Get 2x points for 24 hours',
-                      icon: Icons.bolt_rounded,
-                      color: AppTheme.goldYellow,
-                      onTap: () => _redeem(context, ref, 'Double Points Boost', 2500),
-                    ),
-                    _buildRewardItem(
-                      context,
-                      title: 'Premium Smart TV',
-                      points: '85,000 PTS',
-                      cost: 85000,
-                      desc: '55" 4K Smart OLED Television',
-                      icon: Icons.tv_rounded,
-                      color: Colors.blue,
-                      onTap: () => _redeem(context, ref, 'Premium Smart TV', 85000),
-                    ),
-                    _buildRewardItem(
-                      context,
-                      title: 'Apple iPad Air',
-                      points: '150,000 PTS',
-                      cost: 150000,
-                      desc: 'M1 Chip, 10.9" Liquid Retina',
-                      icon: Icons.tablet_mac_rounded,
-                      color: Colors.purple,
-                      onTap: () => _redeem(context, ref, 'Apple iPad Air', 150000),
-                    ),
-                  ],
+                ],
+              ),
+            ),
+          );
+        },
+        loading: () {
+          return SingleChildScrollView(
+            key: const ValueKey('loading'),
+            physics: const NeverScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const ShimmerLine(width: 130, height: 22),
+                  const SizedBox(height: 8),
+                  const ShimmerLine(width: 250, height: 14),
+                  const SizedBox(height: 24),
+                  const ShimmerCard(height: 72, borderRadius: 16),
+                  const SizedBox(height: 28),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.78,
+                    children: const [
+                      ShimmerCard(height: 160, borderRadius: 24),
+                      ShimmerCard(height: 160, borderRadius: 24),
+                      ShimmerCard(height: 160, borderRadius: 24),
+                      ShimmerCard(height: 160, borderRadius: 24),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        error: (err, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline_rounded, color: AppTheme.primaryRed, size: 48),
+                const SizedBox(height: 16),
+                const Text('Failed to load rewards details', textAlign: TextAlign.center),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () => ref.read(userProfileProvider.notifier).fetchProfile(),
+                  child: const Text('RETRY'),
                 ),
               ],
             ),
-          ),
-        );
-      },
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(48.0),
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryRed),
-          ),
-        ),
-      ),
-      error: (err, stack) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline_rounded, color: AppTheme.primaryRed, size: 48),
-              const SizedBox(height: 16),
-              const Text('Failed to load rewards details', textAlign: TextAlign.center),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () => ref.read(userProfileProvider.notifier).fetchProfile(),
-                child: const Text('RETRY'),
-              ),
-            ],
           ),
         ),
       ),
     );
   }
+
 
   Widget _buildRewardItem(
     BuildContext context, {

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -62,6 +63,15 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(userProfileProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
+    // Width of each tab item
+    final tabWidth = screenWidth / 5;
+    
+    // Offset for the active indicator (centered inside the active tab)
+    // Indicator width is 32px, so subtract 16px to center it
+    final indicatorLeftOffset = (tabWidth * _currentIndex) + (tabWidth / 2) - 16;
 
     return Scaffold(
       backgroundColor: AppTheme.darkSlate,
@@ -156,47 +166,97 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
         ],
       ),
       bottomNavigationBar: Container(
+        height: 64 + bottomPadding,
         decoration: const BoxDecoration(
+          color: Colors.transparent,
           border: Border(
-            top: BorderSide(color: Color(0x12FFFFFF), width: 1.0),
+            top: BorderSide(color: Color(0x0CFFFFFF), width: 1.0),
           ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: AppTheme.secondarySlate,
-          selectedItemColor: AppTheme.primaryRed,
-          unselectedItemColor: AppTheme.greyMedium,
-          selectedFontSize: 12,
-          unselectedFontSize: 11,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_rounded, color: AppTheme.primaryRed),
-              label: 'Home',
+        child: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              color: AppTheme.secondarySlate.withValues(alpha: 0.75),
+              padding: EdgeInsets.only(bottom: bottomPadding),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Sliding Active Indicator Pill (placed at the top border of the bar)
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutQuad,
+                    left: indicatorLeftOffset,
+                    top: 0,
+                    child: Container(
+                      width: 32,
+                      height: 3,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primaryRed,
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(2),
+                          bottomRight: Radius.circular(2),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryRed,
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Navigation Items
+                  Row(
+                    children: [
+                      _buildNavBarItem(0, Icons.home_outlined, Icons.home_rounded, 'Home'),
+                      _buildNavBarItem(1, Icons.emoji_events_outlined, Icons.emoji_events_rounded, 'Contest'),
+                      _buildNavBarItem(2, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Wallet'),
+                      _buildNavBarItem(3, Icons.stars_outlined, Icons.stars_rounded, 'Rewards'),
+                      _buildNavBarItem(4, Icons.person_outlined, Icons.person_rounded, 'Profile'),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.emoji_events_outlined),
-              activeIcon: Icon(Icons.emoji_events_rounded, color: AppTheme.primaryRed),
-              label: 'Contest',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavBarItem(int index, IconData outlineIcon, IconData filledIcon, String label) {
+    final isSelected = _currentIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onTabTapped(index),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedScale(
+              scale: isSelected ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutBack,
+              child: Icon(
+                isSelected ? filledIcon : outlineIcon,
+                color: isSelected ? AppTheme.white : AppTheme.greyMedium,
+                size: 22,
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_outlined),
-              activeIcon: Icon(Icons.account_balance_wallet_rounded, color: AppTheme.primaryRed),
-              label: 'Wallet',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.stars_outlined),
-              activeIcon: Icon(Icons.stars_rounded, color: AppTheme.primaryRed),
-              label: 'Rewards',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person_rounded, color: AppTheme.primaryRed),
-              label: 'Profile',
+            const SizedBox(height: 4),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? AppTheme.white : AppTheme.greyMedium,
+                letterSpacing: 0.2,
+              ),
+              child: Text(label),
             ),
           ],
         ),
