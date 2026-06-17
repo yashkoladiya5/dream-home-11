@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/auth_state.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   bool _isAgeAccepted = false;
@@ -39,13 +42,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _onSubmit() {
     if (_formKey.currentState!.validate() && _isAgeAccepted) {
-      context.push('/otp', extra: _phoneController.text);
+      ref.read(authProvider.notifier).sendOtp(_phoneController.text);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isButtonEnabled = _isPhoneValid && _isAgeAccepted;
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.status == AuthStatus.codeSent) {
+        context.push('/otp', extra: _phoneController.text);
+      } else if (next.status == AuthStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage ?? 'An error occurred'),
+            backgroundColor: AppTheme.primaryRed,
+          ),
+        );
+      }
+    });
+
+    final authState = ref.watch(authProvider);
+    final isButtonEnabled = _isPhoneValid && _isAgeAccepted && authState.status != AuthStatus.loading;
 
     return Scaffold(
       backgroundColor: AppTheme.darkSlate,
@@ -194,6 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
                             maxLength: 10,
+                            enabled: authState.status != AuthStatus.loading,
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                   letterSpacing: 2.5,
                                   fontWeight: FontWeight.bold,
@@ -245,7 +263,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please enter mobile number';
+                                  return 'Please enter mobile number';
                               }
                               if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
                                 return 'Enter a valid 10-digit number';
@@ -257,11 +275,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           // Custom Age Check Card
                           InkWell(
-                            onTap: () {
-                              setState(() {
-                                _isAgeAccepted = !_isAgeAccepted;
-                              });
-                            },
+                            onTap: authState.status == AuthStatus.loading
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _isAgeAccepted = !_isAgeAccepted;
+                                    });
+                                  },
                             borderRadius: BorderRadius.circular(20),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
@@ -382,17 +402,26 @@ class _LoginScreenState extends State<LoginScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
-                              child: Text(
-                                'GET OTP',
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.2,
-                                      fontSize: 16,
-                                      color: isButtonEnabled
-                                          ? AppTheme.white
-                                          : AppTheme.greyMedium,
+                              child: authState.status == AuthStatus.loading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                                      ),
+                                    )
+                                  : Text(
+                                      'GET OTP',
+                                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1.2,
+                                            fontSize: 16,
+                                            color: isButtonEnabled
+                                                ? AppTheme.white
+                                                : AppTheme.greyMedium,
+                                          ),
                                     ),
-                              ),
                             ),
                           ),
                           const SizedBox(height: 12),

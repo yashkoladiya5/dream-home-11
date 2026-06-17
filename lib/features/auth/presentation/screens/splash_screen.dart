@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../providers/auth_provider.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
@@ -31,9 +33,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(milliseconds: 2500));
     if (mounted) {
-      // For Day 1, we route to Language Selection first as per Sprint 1, or Login.
-      // Let's route to /language.
-      context.go('/language');
+      final isLoggedIn = await ref.read(authProvider.notifier).checkPersistence();
+      if (mounted) {
+        if (isLoggedIn) {
+          context.go('/home');
+        } else {
+          context.go('/language');
+        }
+      }
     }
   }
 
@@ -53,7 +60,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo placeholder
               Container(
                 width: 120,
                 height: 120,
@@ -76,7 +82,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 ),
               ),
               const SizedBox(height: 24),
-              // Brand Text
               Text(
                 'DREAM HOME 11',
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
@@ -94,7 +99,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     ),
               ),
               const SizedBox(height: 48),
-              // Loader
               const SizedBox(
                 width: 24,
                 height: 24,

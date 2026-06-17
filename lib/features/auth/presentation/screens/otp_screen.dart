@@ -1,17 +1,20 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/auth_state.dart';
 
-class OtpScreen extends StatefulWidget {
+class OtpScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
   const OtpScreen({super.key, required this.phoneNumber});
 
   @override
-  State<OtpScreen> createState() => _OtpScreenState();
+  ConsumerState<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen> {
+class _OtpScreenState extends ConsumerState<OtpScreen> {
   final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   
@@ -60,13 +63,27 @@ class _OtpScreenState extends State<OtpScreen> {
   void _verifyOtp() {
     final otp = _controllers.map((c) => c.text).join();
     if (otp.length == 6) {
-      context.go('/home');
+      ref.read(authProvider.notifier).verifyOtp(otp, 'mock-device-uuid-999');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isOtpComplete = _controllers.every((c) => c.text.isNotEmpty);
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.status == AuthStatus.verified) {
+        context.go('/home');
+      } else if (next.status == AuthStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage ?? 'Verification failed'),
+            backgroundColor: AppTheme.primaryRed,
+          ),
+        );
+      }
+    });
+
+    final authState = ref.watch(authProvider);
+    final isOtpComplete = _controllers.every((c) => c.text.isNotEmpty) && authState.status != AuthStatus.loading;
 
     return Scaffold(
       backgroundColor: AppTheme.darkSlate,
@@ -82,7 +99,9 @@ class _OtpScreenState extends State<OtpScreen> {
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, size: 16),
-              onPressed: () => context.pop(),
+              onPressed: authState.status == AuthStatus.loading
+                  ? null
+                  : () => context.pop(),
             ),
           ),
         ),
@@ -242,6 +261,7 @@ class _OtpScreenState extends State<OtpScreen> {
                                 keyboardType: TextInputType.number,
                                 textAlign: TextAlign.center,
                                 maxLength: 1,
+                                enabled: authState.status != AuthStatus.loading,
                                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                       fontWeight: FontWeight.w900,
                                       fontSize: 22,
@@ -283,7 +303,12 @@ class _OtpScreenState extends State<OtpScreen> {
                         Center(
                           child: _canResend
                               ? TextButton(
-                                  onPressed: _startTimer,
+                                  onPressed: authState.status == AuthStatus.loading
+                                      ? null
+                                      : () {
+                                          ref.read(authProvider.notifier).sendOtp(widget.phoneNumber);
+                                          _startTimer();
+                                        },
                                   style: TextButton.styleFrom(
                                     foregroundColor: AppTheme.primaryRed,
                                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -371,17 +396,26 @@ class _OtpScreenState extends State<OtpScreen> {
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16)),
                             ),
-                            child: Text(
-                              'VERIFY & PROCEED',
-                              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2,
-                                    fontSize: 16,
-                                    color: isOtpComplete
-                                        ? AppTheme.white
-                                        : AppTheme.greyMedium,
+                            child: authState.status == AuthStatus.loading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                                    ),
+                                  )
+                                : Text(
+                                    'VERIFY & PROCEED',
+                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                          fontSize: 16,
+                                          color: isOtpComplete
+                                              ? AppTheme.white
+                                              : AppTheme.greyMedium,
+                                        ),
                                   ),
-                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
