@@ -119,7 +119,7 @@ describe('AuthService', () => {
       expect(service['otpStore'].get(phoneNumber)).toBeUndefined();
     });
 
-    it('should throw UnauthorizedException if OTP code is incorrect', async () => {
+    it('should increment attempt counter on incorrect OTP code', async () => {
       const idToken = 'mock-token-+919999999999';
       const deviceId = 'device-id-12345';
       const phoneNumber = '+919999999999';
@@ -129,6 +129,35 @@ describe('AuthService', () => {
       await expect(
         service.verifyOtp(idToken, deviceId, '000000'),
       ).rejects.toThrow(UnauthorizedException);
+
+      const cached = service['otpStore'].get(phoneNumber);
+      expect(cached).toBeDefined();
+      expect(cached?.attempts).toBe(1);
+    });
+
+    it('should delete OTP and throw too many attempts error on the 3rd failed attempt', async () => {
+      const idToken = 'mock-token-+919999999999';
+      const deviceId = 'device-id-12345';
+      const phoneNumber = '+919999999999';
+
+      service.requestOtp(phoneNumber);
+
+      // Attempt 1
+      await expect(
+        service.verifyOtp(idToken, deviceId, '000001'),
+      ).rejects.toThrow(new UnauthorizedException('Invalid OTP verification code'));
+
+      // Attempt 2
+      await expect(
+        service.verifyOtp(idToken, deviceId, '000002'),
+      ).rejects.toThrow(new UnauthorizedException('Invalid OTP verification code'));
+
+      // Attempt 3 - Should throw too many attempts exception and delete cache
+      await expect(
+        service.verifyOtp(idToken, deviceId, '000003'),
+      ).rejects.toThrow(new UnauthorizedException('Too many failed attempts. Please request a new OTP.'));
+
+      expect(service['otpStore'].get(phoneNumber)).toBeUndefined();
     });
 
     it('should throw UnauthorizedException if OTP code is expired', async () => {

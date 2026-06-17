@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyBhe0GFNbYUzK1Lm8NA4Mjt2ORxB9KdUVU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>380197749039</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.dreamhome11.dreamHome11</string>
+	<key>PROJECT_ID</key>
+	<string>dream-home-c569a</string>
+	<key>STORAGE_BUCKET</key>
+	<string>dream-home-c569a.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:380197749039:ios:29ad1160183fdeec72e1da</string>
+</dict>
+</plist>

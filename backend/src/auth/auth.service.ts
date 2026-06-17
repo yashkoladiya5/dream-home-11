@@ -7,8 +7,8 @@ import { exec } from 'child_process';
 
 @Injectable()
 export class AuthService {
-  // In-memory cache for OTP codes. Key: phone number, Value: OTP and expiration date.
-  private otpStore = new Map<string, { code: string; expiresAt: Date }>();
+  // In-memory cache for OTP codes. Key: phone number, Value: OTP, expiration date, and attempts.
+  private otpStore = new Map<string, { code: string; expiresAt: Date; attempts: number }>();
 
   constructor(
     private readonly firebaseService: FirebaseService,
@@ -21,7 +21,7 @@ export class AuthService {
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes TTL
 
-    this.otpStore.set(phoneNumber, { code: otpCode, expiresAt });
+    this.otpStore.set(phoneNumber, { code: otpCode, expiresAt, attempts: 0 });
 
     // Print OTP code to console
     console.log(
@@ -71,6 +71,11 @@ export class AuthService {
       }
 
       if (cachedOtp.code !== otpCode) {
+        cachedOtp.attempts += 1;
+        if (cachedOtp.attempts >= 3) {
+          this.otpStore.delete(phoneNumber);
+          throw new UnauthorizedException('Too many failed attempts. Please request a new OTP.');
+        }
         throw new UnauthorizedException('Invalid OTP verification code');
       }
 
