@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "380197749039",
+    "project_id": "dream-home-c569a",
+    "storage_bucket": "dream-home-c569a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:380197749039:android:664b1db5317a6ce572e1da",
+        "android_client_info": {
+          "package_name": "com.dreamhome.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvEvhKLdoyIyR4l8ErFexo4Ct1o6vSLxE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
