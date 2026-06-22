@@ -21,7 +21,7 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {});
@@ -41,12 +41,13 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
 
     return Column(
       children: [
-        _buildHeader(),
         _buildTabBar(),
         Expanded(
           child: TabBarView(
             controller: _tabController,
             children: [
+              _buildTabContent(contestsAsync),
+              _buildTabContent(contestsAsync),
               _buildTabContent(contestsAsync),
               _buildTabContent(contestsAsync),
               _buildTabContent(contestsAsync),
@@ -57,32 +58,48 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          Text(
-            'Contests',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+  Widget _buildTabBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.secondarySlate,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        dividerColor: Colors.transparent,
+        indicatorPadding: const EdgeInsets.symmetric(
+          horizontal: -20,
+          vertical: 6,
+        ),
+        indicator: BoxDecoration(
+          color: AppTheme.primaryRed.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.3)),
+        ),
+
+        // indicatorPadding: EdgeInsetsGeometry.all(5),
+        labelColor: AppTheme.white,
+        unselectedLabelColor: AppTheme.greyMedium,
+        labelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.3,
+        ),
+        tabs: const [
+          Tab(text: 'All'),
+          Tab(text: 'Active'),
+          Tab(text: 'Mega'),
+          Tab(text: 'Home'),
+          Tab(text: 'Past'),
         ],
       ),
-    );
-  }
-
-  Widget _buildTabBar() {
-    return TabBar(
-      controller: _tabController,
-      labelColor: AppTheme.white,
-      unselectedLabelColor: AppTheme.greyMedium,
-      indicatorColor: AppTheme.primaryRed,
-      indicatorWeight: 3,
-      tabs: const [
-        Tab(text: 'All'),
-        Tab(text: 'Active'),
-        Tab(text: 'Completed'),
-      ],
     );
   }
 
@@ -91,9 +108,35 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
       case 1:
         return contests.where((c) => c.status == 'running').toList();
       case 2:
+        return contests.where((c) => c.type == 'mega').toList();
+      case 3:
+        return contests.where((c) => c.type == 'home').toList();
+      case 4:
         return contests.where((c) => c.status == 'completed').toList();
       default:
         return contests;
+    }
+  }
+
+  Color? _accentColorForTab() {
+    switch (_tabController.index) {
+      case 2:
+        return AppTheme.goldYellow;
+      case 3:
+        return AppTheme.emeraldGreen;
+      default:
+        return null;
+    }
+  }
+
+  Widget? _titleIconForTab() {
+    switch (_tabController.index) {
+      case 2:
+        return const Icon(Icons.star, color: AppTheme.goldYellow, size: 20);
+      case 3:
+        return const Icon(Icons.home, color: AppTheme.emeraldGreen, size: 20);
+      default:
+        return null;
     }
   }
 
@@ -109,8 +152,11 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
         if (filtered.isEmpty) {
           return _buildEmpty();
         }
+        final accentColor = _accentColorForTab();
+        final titleIcon = _titleIconForTab();
         return RefreshIndicator(
-          onRefresh: () => ref.read(contestListProvider.notifier).fetchContests(),
+          onRefresh: () =>
+              ref.read(contestListProvider.notifier).fetchContests(),
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
@@ -121,6 +167,8 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
                 padding: const EdgeInsets.only(bottom: 16),
                 child: ContestCard(
                   contest: contest,
+                  accentColor: accentColor,
+                  titleIcon: titleIcon,
                   onJoin: () => context.push('/contest/${contest.id}'),
                 ),
               );
@@ -201,11 +249,23 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
   }
 
   Widget _buildEmpty() {
+    final messages = {
+      0: 'No contests available right now',
+      1: 'No active contests',
+      2: 'No mega contests',
+      3: 'No home contests',
+      4: 'No past contests',
+    };
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.emoji_events_outlined, size: 64, color: AppTheme.greyMedium),
+          Icon(
+            Icons.emoji_events_outlined,
+            size: 64,
+            color: AppTheme.greyMedium,
+          ),
           const SizedBox(height: 16),
           Text(
             'No contests found',
@@ -213,11 +273,7 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            _tabController.index == 0
-                ? 'No contests available right now'
-                : _tabController.index == 1
-                    ? 'No active contests'
-                    : 'No completed contests',
+            messages[_tabController.index] ?? 'No contests available right now',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
