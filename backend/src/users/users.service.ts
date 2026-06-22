@@ -2,12 +2,15 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserLevel } from './entities/user.entity';
+import { ContestMember } from '../contests/entities/contest-member.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(ContestMember)
+    private readonly contestMemberRepository: Repository<ContestMember>,
   ) {}
 
   async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
@@ -110,6 +113,30 @@ export class UsersService {
     }
 
     return this.userRepository.save(user);
+  }
+
+  async getMyContests(userId: string): Promise<{ contests: any[] }> {
+    const members = await this.contestMemberRepository.find({
+      where: { userId },
+      relations: { contest: true },
+      order: { joinedAt: 'DESC' },
+    });
+
+    const contests = await Promise.all(members.map(async (member) => {
+      const myPoints = member.pointsEarned;
+
+      const rankResult = await this.contestMemberRepository
+        .createQueryBuilder('cm')
+        .select('COUNT(*)', 'rank')
+        .where('cm.contestId = :contestId', { contestId: member.contestId })
+        .andWhere('cm.pointsEarned > :myPoints', { myPoints })
+        .getRawOne();
+      const myRank = (rankResult?.rank || 0) + 1;
+
+      return { ...member.contest, myPoints, myRank };
+    }));
+
+    return { contests };
   }
 }
 

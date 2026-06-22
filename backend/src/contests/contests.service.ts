@@ -107,6 +107,24 @@ export class ContestsService {
     return { contest, inviteCode };
   }
 
+  async getLeaderboard(contestId: string): Promise<{ leaderboard: any[] }> {
+    const members = await this.contestMemberRepository.find({
+      where: { contestId },
+      relations: { user: true },
+      order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
+    });
+
+    const leaderboard = members.map((member, index) => ({
+      userId: member.userId,
+      userName: member.user?.fullName || 'Anonymous',
+      phoneNumber: member.user?.phoneNumber || '',
+      points: member.pointsEarned,
+      rank: index + 1,
+    }));
+
+    return { leaderboard };
+  }
+
   async joinContest(userId: string, contestId: string): Promise<{ user: User; contest: Contest; member: ContestMember }> {
     return this.dataSource.transaction(async (entityManager) => {
       const contest = await entityManager.findOne(Contest, {

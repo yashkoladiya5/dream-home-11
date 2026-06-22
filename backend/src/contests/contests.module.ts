@@ -4,12 +4,13 @@ import { Contest } from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
 import { ContestsService } from './contests.service';
 import { ContestsController } from './contests.controller';
+import { ContestsGateway } from './contests.gateway';
 import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Contest, ContestMember]), UsersModule],
-  providers: [ContestsService],
+  providers: [ContestsService, ContestsGateway],
   controllers: [ContestsController],
-  exports: [TypeOrmModule, ContestsService],
+  exports: [TypeOrmModule, ContestsService, ContestsGateway],
 })
 export class ContestsModule {}

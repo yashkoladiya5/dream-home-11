@@ -14,6 +14,8 @@ class ContestModel {
   final DateTime startTime;
   final DateTime endTime;
   final String status;
+  final int? myPoints;
+  final int? myRank;
 
   ContestModel({
     required this.id,
@@ -31,6 +33,8 @@ class ContestModel {
     required this.startTime,
     required this.endTime,
     required this.status,
+    this.myPoints,
+    this.myRank,
   });
 
   factory ContestModel.fromJson(Map<String, dynamic> json) {
@@ -50,6 +54,8 @@ class ContestModel {
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: DateTime.parse(json['endTime'] as String),
       status: json['status'] as String? ?? 'upcoming',
+      myPoints: json['myPoints'] as int?,
+      myRank: json['myRank'] as int?,
     );
   }
 

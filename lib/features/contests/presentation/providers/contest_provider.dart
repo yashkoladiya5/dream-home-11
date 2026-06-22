@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/models/contest_model.dart';
+import '../../data/models/activity_event.dart';
+import '../../data/models/leaderboard_entry.dart';
 
 final contestListProvider = StateNotifierProvider<ContestListNotifier, AsyncValue<List<ContestModel>>>((ref) {
   final dio = ref.watch(apiClientProvider);
@@ -15,6 +17,7 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
   DateTime? _lastFetch;
   static const Duration _cacheDuration = Duration(seconds: 60);
   final Set<String> _joinedContestIds = {};
+  List<ContestModel> _myContests = [];
 
   ContestListNotifier(this._dio) : super(const AsyncValue.loading()) {
     fetchContests();
