@@ -10,12 +10,22 @@ final contestListProvider = StateNotifierProvider<ContestListNotifier, AsyncValu
 
 class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> {
   final Dio _dio;
+  List<ContestModel>? _cachedContests;
+  DateTime? _lastFetch;
+  static const Duration _cacheDuration = Duration(seconds: 60);
 
   ContestListNotifier(this._dio) : super(const AsyncValue.loading()) {
     fetchContests();
   }
 
   Future<void> fetchContests({String? type, String? status}) async {
+    if (_cachedContests != null && _lastFetch != null &&
+        DateTime.now().difference(_lastFetch!) < _cacheDuration &&
+        type == null && status == null) {
+      state = AsyncValue.data(_cachedContests!);
+      return;
+    }
+
     state = const AsyncValue.loading();
     try {
       final queryParams = <String, dynamic>{};
@@ -28,9 +38,35 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
       final list = (data['contests'] as List<dynamic>)
           .map((e) => ContestModel.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      _cachedContests = list;
+      _lastFetch = DateTime.now();
       state = AsyncValue.data(list);
     } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      if (_cachedContests != null) {
+        state = AsyncValue.data(_cachedContests!);
+      } else {
+        state = AsyncValue.error(e, stack);
+      }
     }
+  }
+
+  Future<void> refreshContests() async {
+    _lastFetch = null;
+    await fetchContests();
+  }
+
+  ContestModel? getContestById(String id) {
+    if (_cachedContests == null) return null;
+    try {
+      return _cachedContests!.firstWhere((c) => c.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<ContestModel> filterByStatus(String status) {
+    if (_cachedContests == null) return [];
+    return _cachedContests!.where((c) => c.status == status).toList();
   }
 }
