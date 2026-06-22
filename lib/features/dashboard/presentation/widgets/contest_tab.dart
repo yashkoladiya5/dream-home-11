@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../contests/data/models/contest_model.dart';
+import '../../../contests/presentation/providers/contest_provider.dart';
 import '../providers/user_profile_provider.dart';
+import 'shimmer_widget.dart';
 
 class ContestTab extends ConsumerWidget {
   const ContestTab({super.key});
@@ -9,9 +12,7 @@ class ContestTab extends ConsumerWidget {
   Future<void> _joinContest(
     BuildContext context,
     WidgetRef ref,
-    String title,
-    double entryFee,
-    int pointsEarned,
+    ContestModel contest,
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -23,7 +24,7 @@ class ContestTab extends ConsumerWidget {
           style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'Do you want to join "$title"?\nEntry Fee: ₹${entryFee.toStringAsFixed(0)}\nYou will earn: $pointsEarned PTS',
+          'Do you want to join "${contest.title}"?\nEntry Fee: ₹${contest.entryFeeInr.toStringAsFixed(0)}\nYou will earn: ${contest.pointsToJoin} PTS',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         actions: [
@@ -44,7 +45,10 @@ class ContestTab extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      final success = await ref.read(userProfileProvider.notifier).joinContest(entryFee, pointsEarned);
+      final success = await ref.read(userProfileProvider.notifier).joinContest(
+        contest.entryFeeInr,
+        contest.pointsToJoin,
+      );
       if (context.mounted) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -53,7 +57,7 @@ class ContestTab extends ConsumerWidget {
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               content: Text(
-                'Successfully joined "$title"! Registered for the contest.',
+                'Successfully joined "${contest.title}"! Registered for the contest.',
                 style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
               ),
             ),
@@ -75,8 +79,17 @@ class ContestTab extends ConsumerWidget {
     }
   }
 
+  Color _parseBadgeColor(String? hex) {
+    if (hex == null) return AppTheme.primaryRed;
+    final color = int.tryParse(hex.replaceFirst('#', '0xFF'));
+    if (color == null) return AppTheme.primaryRed;
+    return Color(color);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final contestsAsync = ref.watch(contestListProvider);
+
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 400),
@@ -94,90 +107,124 @@ class ContestTab extends ConsumerWidget {
         physics: const BouncingScrollPhysics(),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Text(
-                'Active Contests',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Join active contest groups to earn dream homes.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.greyMedium,
-                    ),
-              ),
-              const SizedBox(height: 24),
-  
-              // Mega Contest Card
-              _buildContestCard(
-                context,
-                title: 'Mega Dream Home Contest',
-                prize: '3 BHK Luxury Apartment in Mumbai',
-                entryFee: 49.0,
-                pointsEarned: 100,
-                totalSpots: 10000,
-                spotsLeft: 3420,
-                badgeText: 'MEGA PRIZE',
-                badgeColor: AppTheme.goldYellow,
-                onJoin: () => _joinContest(context, ref, 'Mega Dream Home Contest', 49.0, 100),
-              ),
-              const SizedBox(height: 16),
-  
-              // Premium Contest Card
-              _buildContestCard(
-                context,
-                title: 'Weekend Villa Clash',
-                prize: 'Premium Villa Weekend Gateway',
-                entryFee: 99.0,
-                pointsEarned: 250,
-                totalSpots: 5000,
-                spotsLeft: 1200,
-                badgeText: 'HOT',
-                badgeColor: AppTheme.primaryRed,
-                onJoin: () => _joinContest(context, ref, 'Weekend Villa Clash', 99.0, 250),
-              ),
-              const SizedBox(height: 16),
-  
-              // Starter Contest Card
-              _buildContestCard(
-                context,
-                title: 'Starter Dream Cottage',
-                prize: 'Mountain Cottage Stay & Title',
-                entryFee: 19.0,
-                pointsEarned: 30,
-                totalSpots: 1000,
-                spotsLeft: 950,
-                badgeText: 'FAST FILLING',
-                badgeColor: AppTheme.emeraldGreen,
-                onJoin: () => _joinContest(context, ref, 'Starter Dream Cottage', 19.0, 30),
-              ),
-              const SizedBox(height: 20),
-            ],
+          child: contestsAsync.when(
+            loading: () => _buildLoadingSkeleton(),
+            error: (err, stack) => _buildErrorState(context, ref, err),
+            data: (contests) {
+              if (contests.isEmpty) {
+                return _buildEmptyState(context);
+              }
+              return _buildContestList(context, ref, contests);
+            },
           ),
         ),
       ),
     );
   }
 
+  Widget _buildLoadingSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const ShimmerLine(width: 180, height: 28),
+        const SizedBox(height: 8),
+        const ShimmerLine(width: 240, height: 16),
+        const SizedBox(height: 24),
+        ...List.generate(3, (_) => const Padding(
+          padding: EdgeInsets.only(bottom: 16),
+          child: ShimmerCard(height: 180),
+        )),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, WidgetRef ref, Object err) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 60),
+        const Icon(Icons.cloud_off_rounded, size: 64, color: AppTheme.greyMedium),
+        const SizedBox(height: 16),
+        Text(
+          'Could not load contests',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Check your connection and try again',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.greyMedium),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton.icon(
+          onPressed: () => ref.read(contestListProvider.notifier).fetchContests(),
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('RETRY'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.primaryRed,
+            foregroundColor: AppTheme.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 60),
+        const Icon(Icons.emoji_events_outlined, size: 64, color: AppTheme.greyMedium),
+        const SizedBox(height: 16),
+        Text(
+          'No contests available',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Check back later for new contests',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.greyMedium),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContestList(BuildContext context, WidgetRef ref, List<ContestModel> contests) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Active Contests',
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Join active contest groups to earn dream homes.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.greyMedium,
+              ),
+        ),
+        const SizedBox(height: 24),
+        ...contests.map((contest) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _buildContestCard(
+            context,
+            contest: contest,
+            onJoin: () => _joinContest(context, ref, contest),
+          ),
+        )),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
   Widget _buildContestCard(
     BuildContext context, {
-    required String title,
-    required String prize,
-    required double entryFee,
-    required int pointsEarned,
-    required int totalSpots,
-    required int spotsLeft,
-    required String badgeText,
-    required Color badgeColor,
+    required ContestModel contest,
     required VoidCallback onJoin,
   }) {
-    final spotsFilled = totalSpots - spotsLeft;
-    final fillPercentage = spotsFilled / totalSpots;
+    final badgeColor = _parseBadgeColor(contest.badgeColor);
 
     return Container(
       decoration: BoxDecoration(
@@ -188,31 +235,33 @@ class ContestTab extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Card Header with Badge
           Padding(
             padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: badgeColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: badgeColor.withValues(alpha: 0.4), width: 1),
-                  ),
-                  child: Text(
-                    badgeText,
-                    style: TextStyle(
-                      color: badgeColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
+                if (contest.badgeText != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: badgeColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: badgeColor.withValues(alpha: 0.4), width: 1),
                     ),
-                  ),
-                ),
+                    child: Text(
+                      contest.badgeText!,
+                      style: TextStyle(
+                        color: badgeColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  )
+                else
+                  const SizedBox.shrink(),
                 Text(
-                  'Entry: ₹${entryFee.toStringAsFixed(0)}',
+                  'Entry: ₹${contest.entryFeeInr.toStringAsFixed(0)}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: AppTheme.emeraldGreen,
                         fontWeight: FontWeight.bold,
@@ -223,30 +272,30 @@ class ContestTab extends ConsumerWidget {
             ),
           ),
 
-          // Prize Info
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  contest.title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  prize,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.greyLight,
-                      ),
-                ),
+                if (contest.prize != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    contest.prize!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.greyLight,
+                        ),
+                  ),
+                ],
               ],
             ),
           ),
 
-          // Progress Bar / Spots Indicators
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
@@ -254,7 +303,7 @@ class ContestTab extends ConsumerWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: fillPercentage,
+                    value: contest.fillPercentage,
                     backgroundColor: AppTheme.greyDark,
                     valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryRed),
                     minHeight: 6,
@@ -265,7 +314,7 @@ class ContestTab extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '$spotsLeft spots left',
+                      '${contest.spotsLeft} spots left',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.primaryRed,
                             fontSize: 12,
@@ -273,7 +322,7 @@ class ContestTab extends ConsumerWidget {
                           ),
                     ),
                     Text(
-                      '$totalSpots total spots',
+                      '${contest.maxSlots} total spots',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.greyMedium,
                             fontSize: 12,
@@ -287,7 +336,6 @@ class ContestTab extends ConsumerWidget {
 
           const SizedBox(height: 16),
 
-          // Join Button Action
           Container(
             height: 1,
             color: const Color(0x16FFFFFF),
@@ -318,4 +366,3 @@ class ContestTab extends ConsumerWidget {
     );
   }
 }
-

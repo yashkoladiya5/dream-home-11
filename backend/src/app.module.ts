@@ -5,9 +5,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { User } from './users/entities/user.entity';
 import { Kyc } from './kyc/entities/kyc.entity';
+import { Contest } from './contests/entities/contest.entity';
+import { ContestMember } from './contests/entities/contest-member.entity';
 import { UsersModule } from './users/users.module';
 import { KycModule } from './kyc/kyc.module';
 import { AuthModule } from './auth/auth.module';
+import { ContestsModule } from './contests/contests.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -25,13 +29,15 @@ import { AuthModule } from './auth/auth.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc],
+        entities: [User, Kyc, Contest, ContestMember],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
     UsersModule,
     KycModule,
     AuthModule,
+    ContestsModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
