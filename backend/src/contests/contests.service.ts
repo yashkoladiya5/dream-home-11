@@ -60,8 +60,12 @@ export class ContestsService {
     return { members, total };
   }
 
-  async findByInviteCode(code: string): Promise<Contest | null> {
-    return this.contestRepository.findOne({ where: { inviteCode: code } });
+  async findByInviteCode(code: string): Promise<Contest> {
+    const contest = await this.contestRepository.findOne({ where: { inviteCode: code.toUpperCase() } });
+    if (!contest) {
+      throw new NotFoundException('Contest not found for this invite code');
+    }
+    return contest;
   }
 
   async createPrivateContest(
@@ -81,11 +85,11 @@ export class ContestsService {
       prize: dto.prize,
       badgeText: 'PRIVATE',
       badgeColor: '#F97316',
-      rules: dto.rules,
+      rules: dto.rules || '1. Entry fee is non-refundable.\n2. This is a private contest — invite only.\n3. Winners will be announced after the contest ends.\n4. Must complete KYC within 7 days of winning.\n5. Dream11 reserves the right to modify these rules.\n6. By joining, you agree to all terms and conditions.',
       inviteCode,
       startTime: dto.startTime || now,
       endTime: dto.endTime || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-      status: ContestStatus.UPCOMING,
+      status: ContestStatus.RUNNING,
     });
 
     await this.contestRepository.save(contest);

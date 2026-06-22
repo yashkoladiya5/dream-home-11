@@ -39,13 +39,21 @@ class _CreateContestScreenState extends ConsumerState<CreateContestScreen> {
 
     setState(() => _isSubmitting = true);
 
+    final rulesValue = _rulesController.text.trim().isEmpty ? null : _rulesController.text.trim();
+    debugPrint('[CreateContest] Submitting contest — title: "${_titleController.text.trim()}", '
+        'entryFeeInr: ${_entryFeeController.text.trim()}, '
+        'pointsToJoin: ${_pointsController.text.trim()}, '
+        'maxSlots: ${_maxSlotsController.text.trim()}, '
+        'prize: "${_prizeController.text.trim()}", '
+        'rules: "${rulesValue}"');
+
     final result = await ref.read(contestListProvider.notifier).createPrivateContest(
       title: _titleController.text.trim(),
       entryFeeInr: double.parse(_entryFeeController.text.trim()),
       pointsToJoin: int.parse(_pointsController.text.trim()),
       maxSlots: int.parse(_maxSlotsController.text.trim()),
       prize: _prizeController.text.trim().isEmpty ? null : _prizeController.text.trim(),
-      rules: _rulesController.text.trim().isEmpty ? null : _rulesController.text.trim(),
+      rules: rulesValue,
     );
 
     setState(() => _isSubmitting = false);
