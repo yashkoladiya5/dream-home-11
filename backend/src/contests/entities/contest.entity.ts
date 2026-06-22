@@ -57,6 +57,9 @@ export class Contest {
   @Column({ name: 'badge_color', type: 'varchar', length: 20, nullable: true })
   badgeColor: string;
 
+  @Column({ type: 'text', nullable: true })
+  rules: string;
+
   @Column({ name: 'start_time', type: 'timestamp with time zone', nullable: false })
   startTime: Date;
 

@@ -4,7 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/contest_model.dart';
 import '../providers/contest_provider.dart';
+import '../helpers/join_contest_dialog.dart';
+import '../screens/contest_rules_screen.dart';
+import '../screens/join_success_screen.dart';
 import '../widgets/home_prize_card.dart';
+import '../../../dashboard/data/models/user_profile.dart';
 import '../../../dashboard/presentation/providers/user_profile_provider.dart';
 import '../../../dashboard/presentation/widgets/shimmer_widget.dart';
 
@@ -25,66 +29,44 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
   ];
 
   Future<void> _joinContest(ContestModel contest) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.secondarySlate,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Join Contest',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ContestRulesScreen(
+          contest: contest,
+          onAgreed: () => Navigator.of(context).pop('confirmed'),
         ),
-        content: Text(
-          'Do you want to join "${contest.title}"?\nEntry Fee: \u20B9${contest.entryFeeInr.toStringAsFixed(0)}\nYou will earn: ${contest.pointsToJoin} PTS',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('CANCEL', style: TextStyle(color: AppTheme.greyMedium)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.emeraldGreen,
-              foregroundColor: AppTheme.white,
-            ),
-            child: const Text('JOIN NOW', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
       ),
     );
 
-    if (confirmed == true && mounted) {
-      final success = await ref.read(userProfileProvider.notifier).joinContest(
-        contest.entryFeeInr,
-        contest.pointsToJoin,
-      );
-      if (mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppTheme.emeraldGreen,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              content: Text(
-                'Successfully joined "${contest.title}"! Registered for the contest.',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
+    if (result == 'confirmed' && context.mounted) {
+      final confirmed = await showJoinConfirmationDialog(context, contest);
+      if (confirmed == true && context.mounted) {
+        final joinResult = await ref.read(userProfileProvider.notifier).joinContestById(contest.id);
+        if (context.mounted) {
+          if (joinResult != null) {
+            final userData = UserProfile.fromJson(joinResult['user'] as Map<String, dynamic>);
+            ref.read(contestListProvider.notifier).updateContestAfterJoin(contest.id);
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => JoinSuccessScreen(
+                  contest: contest,
+                  updatedProfile: userData,
+                ),
               ),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppTheme.primaryRed,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              content: const Text(
-                'Failed to join contest. Please check your wallet cash balance.',
-                style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: AppTheme.primaryRed,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                content: const Text(
+                  'Failed to join contest. Please check your wallet balance.',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       }
     }

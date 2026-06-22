@@ -1,6 +1,6 @@
 import { Injectable, OnApplicationBootstrap, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Contest, ContestType, ContestStatus } from '../contests/entities/contest.entity';
 
 @Injectable()
@@ -15,7 +15,8 @@ export class SeedService implements OnApplicationBootstrap {
   async onApplicationBootstrap(): Promise<void> {
     const count = await this.contestRepository.count();
     if (count > 0) {
-      this.logger.log(`Seeding skipped — ${count} contests already exist`);
+      this.logger.log(`Backfilling any missing data for ${count} existing contests...`);
+      await this._upsertSeedData();
       return;
     }
 
@@ -37,6 +38,7 @@ export class SeedService implements OnApplicationBootstrap {
         startTime: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
         endTime: new Date(now.getTime() + 35 * 24 * 60 * 60 * 1000),
         status: ContestStatus.RUNNING,
+        rules: '1. Entry fee is non-refundable.\n2. Winner will be selected via a lucky draw at the end of the contest period.\n3. Participants must have a valid KYC to claim the prize.\n4. The mega prize apartment is located in Mumbai and the winner must be 18+.\n5. Dream11 reserves the right to modify or cancel the contest.',
       },
       {
         title: 'Weekend Villa Clash',
@@ -51,6 +53,7 @@ export class SeedService implements OnApplicationBootstrap {
         startTime: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
         endTime: new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000),
         status: ContestStatus.RUNNING,
+        rules: '1. Entry fee is non-refundable.\n2. The winner gets a 3-day, 2-night stay at a premium villa.\n3. Travel and accommodation are covered by Dream11.\n4. Valid KYC must be completed before claiming.\n5. Contest is open to Indian residents only.',
       },
       {
         title: 'Starter Dream Cottage',
@@ -65,6 +68,7 @@ export class SeedService implements OnApplicationBootstrap {
         startTime: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
         endTime: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
         status: ContestStatus.RUNNING,
+        rules: '1. Entry fee is non-refundable.\n2. The winner receives a weekend stay at a mountain cottage.\n3. Transportation is not included.\n4. Must be 18+ to participate.\n5. Only one entry per user.',
       },
       {
         title: 'Luxury Penthouse Showdown',
@@ -79,6 +83,7 @@ export class SeedService implements OnApplicationBootstrap {
         startTime: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
         endTime: new Date(now.getTime() + 44 * 24 * 60 * 60 * 1000),
         status: ContestStatus.UPCOMING,
+        rules: '1. Contest starts on the scheduled date.\n2. The sea-facing penthouse is located in North Goa.\n3. Winner must complete KYC within 7 days of announcement.\n4. All applicable taxes will be borne by the winner.\n5. Dream11 employees are not eligible to participate.',
       },
       {
         title: 'Beach Villa Bonanza',
@@ -93,6 +98,7 @@ export class SeedService implements OnApplicationBootstrap {
         startTime: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
         endTime: new Date(now.getTime() + 40 * 24 * 60 * 60 * 1000),
         status: ContestStatus.RUNNING,
+        rules: '1. Entry fee is non-refundable.\n2. Winner gets a beachfront villa in Kerala valued at ₹2.5 Cr.\n3. The prize will be transferred after legal formalities.\n4. Must have a valid PAN card and KYC.\n5. Multiple entries allowed, but only one prize per winner.',
       },
       {
         title: 'Champions Private League',
@@ -107,10 +113,34 @@ export class SeedService implements OnApplicationBootstrap {
         startTime: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
         endTime: new Date(now.getTime() + 29 * 24 * 60 * 60 * 1000),
         status: ContestStatus.RUNNING,
+        rules: '1. Private league — invite only.\n2. Entry fee is non-refundable.\n3. The championship trophy will be awarded at a ceremony.\n4. Participants must maintain fair play standards.\n5. Dream11 reserves the right to disqualify any participant for misconduct.',
       },
     ];
 
     await this.contestRepository.save(contests);
     this.logger.log(`Seeded ${contests.length} mock contests successfully`);
+  }
+
+  private async _upsertSeedData(): Promise<void> {
+    const rulesByTitle: Record<string, string> = {
+      'Mega Dream Home Contest': '1. Entry fee is non-refundable.\n2. Winner will be selected via a lucky draw at the end of the contest period.\n3. Participants must have a valid KYC to claim the prize.\n4. The mega prize apartment is located in Mumbai and the winner must be 18+.\n5. Dream11 reserves the right to modify or cancel the contest.',
+      'Weekend Villa Clash': '1. Entry fee is non-refundable.\n2. The winner gets a 3-day, 2-night stay at a premium villa.\n3. Travel and accommodation are covered by Dream11.\n4. Valid KYC must be completed before claiming.\n5. Contest is open to Indian residents only.',
+      'Starter Dream Cottage': '1. Entry fee is non-refundable.\n2. The winner receives a weekend stay at a mountain cottage.\n3. Transportation is not included.\n4. Must be 18+ to participate.\n5. Only one entry per user.',
+      'Luxury Penthouse Showdown': '1. Contest starts on the scheduled date.\n2. The sea-facing penthouse is located in North Goa.\n3. Winner must complete KYC within 7 days of announcement.\n4. All applicable taxes will be borne by the winner.\n5. Dream11 employees are not eligible to participate.',
+      'Beach Villa Bonanza': '1. Entry fee is non-refundable.\n2. Winner gets a beachfront villa in Kerala valued at ₹2.5 Cr.\n3. The prize will be transferred after legal formalities.\n4. Must have a valid PAN card and KYC.\n5. Multiple entries allowed, but only one prize per winner.',
+      'Champions Private League': '1. Private league — invite only.\n2. Entry fee is non-refundable.\n3. The championship trophy will be awarded at a ceremony.\n4. Participants must maintain fair play standards.\n5. Dream11 reserves the right to disqualify any participant for misconduct.',
+    };
+
+    const existing = await this.contestRepository.findBy({ rules: IsNull() });
+    for (const contest of existing) {
+      const rules = rulesByTitle[contest.title];
+      if (rules) {
+        await this.contestRepository.update(contest.id, { rules });
+        this.logger.log(`  Updated rules for "${contest.title}"`);
+      }
+    }
+    if (existing.length === 0) {
+      this.logger.log('  All contests already have rules — nothing to backfill');
+    }
   }
 }

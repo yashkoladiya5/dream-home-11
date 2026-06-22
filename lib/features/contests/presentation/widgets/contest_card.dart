@@ -7,6 +7,7 @@ class ContestCard extends StatelessWidget {
   final VoidCallback onJoin;
   final Color? accentColor;
   final Widget? titleIcon;
+  final bool isJoined;
 
   const ContestCard({
     super.key,
@@ -14,6 +15,7 @@ class ContestCard extends StatelessWidget {
     required this.onJoin,
     this.accentColor,
     this.titleIcon,
+    this.isJoined = false,
   });
 
   Color _parseBadgeColor(String? hex) {
@@ -152,7 +154,7 @@ class ContestCard extends StatelessWidget {
             color: const Color(0x16FFFFFF),
           ),
           InkWell(
-            onTap: onJoin,
+            onTap: isJoined ? null : onJoin,
             borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(24),
               bottomRight: Radius.circular(24),
@@ -160,15 +162,32 @@ class ContestCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Center(
-                child: Text(
-                  'JOIN CONTEST',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppTheme.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
-                        fontSize: 14,
+                child: isJoined
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_circle_rounded, color: AppTheme.emeraldGreen, size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            'ALREADY JOINED',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: AppTheme.emeraldGreen,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.0,
+                                  fontSize: 14,
+                                ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        'JOIN CONTEST',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: AppTheme.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                              fontSize: 14,
+                            ),
                       ),
-                ),
               ),
             ),
           ),

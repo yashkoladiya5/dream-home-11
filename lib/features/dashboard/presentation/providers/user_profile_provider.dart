@@ -51,6 +51,18 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
     }
   }
 
+  Future<Map<String, dynamic>?> joinContestById(String contestId) async {
+    try {
+      final response = await _dio.post('/api/v1/contests/$contestId/join');
+      final data = response.data as Map<String, dynamic>;
+      final userData = UserProfile.fromJson(data['user'] as Map<String, dynamic>);
+      state = AsyncValue.data(userData);
+      return data;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<bool> redeemReward(int pointsCost) async {
     try {
       final response = await _dio.post('/api/v1/users/redeem-reward', data: {'pointsCost': pointsCost});

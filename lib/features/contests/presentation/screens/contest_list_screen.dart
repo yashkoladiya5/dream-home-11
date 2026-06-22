@@ -163,15 +163,17 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
             itemCount: filtered.length,
             itemBuilder: (context, index) {
               final contest = filtered[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: ContestCard(
-                  contest: contest,
-                  accentColor: accentColor,
-                  titleIcon: titleIcon,
-                  onJoin: () => context.push('/contest/${contest.id}'),
-                ),
-              );
+                final joined = ref.read(contestListProvider.notifier).isJoined(contest.id);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: ContestCard(
+                    contest: contest,
+                    accentColor: accentColor,
+                    titleIcon: titleIcon,
+                    isJoined: joined,
+                    onJoin: () => context.push('/contest/${contest.id}'),
+                  ),
+                );
             },
           ),
         );

@@ -13,10 +13,13 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
   List<ContestModel>? _cachedContests;
   DateTime? _lastFetch;
   static const Duration _cacheDuration = Duration(seconds: 60);
+  final Set<String> _joinedContestIds = {};
 
   ContestListNotifier(this._dio) : super(const AsyncValue.loading()) {
     fetchContests();
   }
+
+  bool isJoined(String contestId) => _joinedContestIds.contains(contestId);
 
   Future<void> fetchContests({String? type, String? status}) async {
     if (_cachedContests != null && _lastFetch != null &&
@@ -68,5 +71,32 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
   List<ContestModel> filterByStatus(String status) {
     if (_cachedContests == null) return [];
     return _cachedContests!.where((c) => c.status == status).toList();
+  }
+
+  void updateContestAfterJoin(String contestId) {
+    if (_cachedContests == null) return;
+    _joinedContestIds.add(contestId);
+    _cachedContests = _cachedContests!.map((c) {
+      if (c.id == contestId) {
+        return ContestModel(
+          id: c.id,
+          title: c.title,
+          type: c.type,
+          entryFeeInr: c.entryFeeInr,
+          pointsToJoin: c.pointsToJoin,
+          maxSlots: c.maxSlots,
+          filledSlots: c.filledSlots + 1,
+          prize: c.prize,
+          badgeText: c.badgeText,
+          badgeColor: c.badgeColor,
+          rules: c.rules,
+          startTime: c.startTime,
+          endTime: c.endTime,
+          status: c.status,
+        );
+      }
+      return c;
+    }).toList();
+    state = AsyncValue.data(_cachedContests!);
   }
 }
