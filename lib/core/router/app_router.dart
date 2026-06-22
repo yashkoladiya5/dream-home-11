@@ -10,6 +10,7 @@ import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/contests/presentation/screens/our_contests_screen.dart';
 import '../../features/contests/presentation/screens/mega_contest_screen.dart';
 import '../../features/contests/presentation/screens/home_contest_screen.dart';
+import '../../features/contests/presentation/screens/create_contest_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_layout.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
@@ -87,6 +88,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home-contests',
         builder: (context, state) => const HomeContestScreen(),
+      ),
+      GoRoute(
+        path: '/create-contest',
+        builder: (context, state) => const CreateContestScreen(),
       ),
     ],
   );

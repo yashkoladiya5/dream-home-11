@@ -2,6 +2,7 @@ import { Controller, Get, Post, Param, Query, Body, UseGuards, HttpCode, HttpSta
 import { ContestsService } from './contests.service';
 import { QueryContestsDto } from './dto/query-contests.dto';
 import { JoinContestDto } from './dto/join-contest.dto';
+import { CreatePrivateContestDto } from './dto/create-private-contest.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -26,6 +27,22 @@ export class ContestsController {
   @UseGuards(JwtAuthGuard)
   async getMembers(@Param('id') id: string) {
     return this.contestsService.getMembers(id);
+  }
+
+  @Get('code/:code')
+  @UseGuards(JwtAuthGuard)
+  async findByInviteCode(@Param('code') code: string) {
+    return this.contestsService.findByInviteCode(code);
+  }
+
+  @Post('private')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtAuthGuard)
+  async createPrivate(
+    @Body() dto: CreatePrivateContestDto,
+    @GetUser() user: User,
+  ) {
+    return this.contestsService.createPrivateContest(user.id, dto);
   }
 
   @Post(':id/join')

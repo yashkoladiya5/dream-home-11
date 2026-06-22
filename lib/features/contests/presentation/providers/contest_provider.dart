@@ -73,6 +73,37 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
     return _cachedContests!.where((c) => c.status == status).toList();
   }
 
+  Future<Map<String, dynamic>?> createPrivateContest({
+    required String title,
+    required double entryFeeInr,
+    required int pointsToJoin,
+    required int maxSlots,
+    String? prize,
+    String? rules,
+  }) async {
+    try {
+      final response = await _dio.post('/api/v1/contests/private', data: {
+        'title': title,
+        'entryFeeInr': entryFeeInr,
+        'pointsToJoin': pointsToJoin,
+        'maxSlots': maxSlots,
+        if (prize != null) 'prize': prize,
+        if (rules != null) 'rules': rules,
+      });
+      final data = response.data as Map<String, dynamic>;
+      final contestData = data['contest'] as Map<String, dynamic>;
+      final contest = ContestModel.fromJson(contestData);
+      _joinedContestIds.add(contest.id);
+      if (_cachedContests != null) {
+        _cachedContests = [contest, ..._cachedContests!];
+        state = AsyncValue.data(_cachedContests!);
+      }
+      return {'contest': contest, 'inviteCode': data['inviteCode'] as String};
+    } catch (_) {
+      return null;
+    }
+  }
+
   void updateContestAfterJoin(String contestId) {
     if (_cachedContests == null) return;
     _joinedContestIds.add(contestId);
@@ -90,6 +121,7 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
           badgeText: c.badgeText,
           badgeColor: c.badgeColor,
           rules: c.rules,
+          inviteCode: c.inviteCode,
           startTime: c.startTime,
           endTime: c.endTime,
           status: c.status,

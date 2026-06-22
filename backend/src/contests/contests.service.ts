@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Contest, ContestStatus } from './entities/contest.entity';
+import { randomBytes } from 'crypto';
+import { Contest, ContestStatus, ContestType } from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
 import { User, UserLevel } from '../users/entities/user.entity';
 import { QueryContestsDto } from './dto/query-contests.dto';
+import { CreatePrivateContestDto } from './dto/create-private-contest.dto';
 
 @Injectable()
 export class ContestsService {
@@ -56,6 +58,49 @@ export class ContestsService {
       relations: { user: true },
     });
     return { members, total };
+  }
+
+  async findByInviteCode(code: string): Promise<Contest | null> {
+    return this.contestRepository.findOne({ where: { inviteCode: code } });
+  }
+
+  async createPrivateContest(
+    userId: string,
+    dto: CreatePrivateContestDto,
+  ): Promise<{ contest: Contest; inviteCode: string }> {
+    const inviteCode = randomBytes(4).toString('hex').toUpperCase().slice(0, 8);
+
+    const now = new Date();
+    const contest = this.contestRepository.create({
+      title: dto.title,
+      type: ContestType.PRIVATE,
+      entryFeeInr: dto.entryFeeInr,
+      pointsToJoin: dto.pointsToJoin,
+      maxSlots: dto.maxSlots,
+      filledSlots: 0,
+      prize: dto.prize,
+      badgeText: 'PRIVATE',
+      badgeColor: '#F97316',
+      rules: dto.rules,
+      inviteCode,
+      startTime: dto.startTime || now,
+      endTime: dto.endTime || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+      status: ContestStatus.UPCOMING,
+    });
+
+    await this.contestRepository.save(contest);
+
+    const member = this.contestMemberRepository.create({
+      contestId: contest.id,
+      userId,
+      pointsEarned: 0,
+    });
+    await this.contestMemberRepository.save(member);
+
+    contest.filledSlots = 1;
+    await this.contestRepository.save(contest);
+
+    return { contest, inviteCode };
   }
 
   async joinContest(userId: string, contestId: string): Promise<{ user: User; contest: Contest; member: ContestMember }> {
