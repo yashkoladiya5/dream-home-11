@@ -5,11 +5,15 @@ import '../../../../core/theme/app_theme.dart';
 class ContestCard extends StatelessWidget {
   final ContestModel contest;
   final VoidCallback onJoin;
+  final Color? accentColor;
+  final Widget? titleIcon;
 
   const ContestCard({
     super.key,
     required this.contest,
     required this.onJoin,
+    this.accentColor,
+    this.titleIcon,
   });
 
   Color _parseBadgeColor(String? hex) {
@@ -74,11 +78,21 @@ class ContestCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  contest.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    if (titleIcon != null) ...[
+                      titleIcon!,
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: Text(
+                        contest.title,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
+                    ),
+                  ],
                 ),
                 if (contest.prize != null) ...[
                   const SizedBox(height: 4),
@@ -97,15 +111,15 @@ class ContestCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: contest.fillPercentage,
-                    backgroundColor: AppTheme.greyDark,
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryRed),
-                    minHeight: 6,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: contest.fillPercentage,
+                      backgroundColor: AppTheme.greyDark,
+                      valueColor: AlwaysStoppedAnimation<Color>(accentColor ?? AppTheme.primaryRed),
+                      minHeight: 6,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -113,7 +127,7 @@ class ContestCard extends StatelessWidget {
                     Text(
                       '${contest.spotsLeft} spots left',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.primaryRed,
+                            color: accentColor ?? AppTheme.primaryRed,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),

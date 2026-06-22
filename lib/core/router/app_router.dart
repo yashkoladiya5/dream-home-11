@@ -8,6 +8,8 @@ import '../../features/auth/presentation/screens/language_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/contests/presentation/screens/our_contests_screen.dart';
+import '../../features/contests/presentation/screens/mega_contest_screen.dart';
+import '../../features/contests/presentation/screens/home_contest_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_layout.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
@@ -77,6 +79,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           final contestId = state.pathParameters['id']!;
           return OurContestsScreen(contestId: contestId);
         },
+      ),
+      GoRoute(
+        path: '/mega-contests',
+        builder: (context, state) => const MegaContestScreen(),
+      ),
+      GoRoute(
+        path: '/home-contests',
+        builder: (context, state) => const HomeContestScreen(),
       ),
     ],
   );
