@@ -41,6 +41,7 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
 
     return Column(
       children: [
+        _buildCreatePrivateButton(),
         _buildTabBar(),
         Expanded(
           child: TabBarView(
@@ -55,6 +56,70 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCreatePrivateButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: InkWell(
+        onTap: () => context.push('/create-contest'),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppTheme.primaryRed, Color(0xFF9E1B1B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryRed.withValues(alpha: 0.25),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppTheme.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.add_rounded, color: AppTheme.white, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Create Private Contest',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                          ),
+                    ),
+                    Text(
+                      'Invite friends with a custom code',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.white.withValues(alpha: 0.7),
+                            fontSize: 12,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppTheme.white, size: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

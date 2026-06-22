@@ -10,6 +10,7 @@ class ContestModel {
   final String? badgeText;
   final String? badgeColor;
   final String? rules;
+  final String? inviteCode;
   final DateTime startTime;
   final DateTime endTime;
   final String status;
@@ -26,6 +27,7 @@ class ContestModel {
     this.badgeText,
     this.badgeColor,
     this.rules,
+    this.inviteCode,
     required this.startTime,
     required this.endTime,
     required this.status,
@@ -44,6 +46,7 @@ class ContestModel {
       badgeText: json['badgeText'] as String?,
       badgeColor: json['badgeColor'] as String?,
       rules: json['rules'] as String?,
+      inviteCode: json['inviteCode'] as String?,
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: DateTime.parse(json['endTime'] as String),
       status: json['status'] as String? ?? 'upcoming',

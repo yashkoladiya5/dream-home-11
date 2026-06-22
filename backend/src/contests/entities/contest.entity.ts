@@ -60,6 +60,9 @@ export class Contest {
   @Column({ type: 'text', nullable: true })
   rules: string;
 
+  @Column({ name: 'invite_code', type: 'varchar', length: 8, nullable: true, unique: true })
+  inviteCode: string;
+
   @Column({ name: 'start_time', type: 'timestamp with time zone', nullable: false })
   startTime: Date;
 
