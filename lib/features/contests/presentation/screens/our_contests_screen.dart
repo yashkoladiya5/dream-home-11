@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/contest_model.dart';
 import '../providers/contest_provider.dart';
+import '../helpers/join_contest_dialog.dart';
+import '../screens/contest_rules_screen.dart';
+import '../screens/join_success_screen.dart';
+import '../../../dashboard/data/models/user_profile.dart';
 import '../../../dashboard/presentation/providers/user_profile_provider.dart';
 import '../../../dashboard/presentation/widgets/shimmer_widget.dart';
 
@@ -17,66 +21,44 @@ class OurContestsScreen extends ConsumerStatefulWidget {
 
 class _OurContestsScreenState extends ConsumerState<OurContestsScreen> {
   Future<void> _joinContest(ContestModel contest) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.secondarySlate,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Join Contest',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ContestRulesScreen(
+          contest: contest,
+          onAgreed: () => Navigator.of(context).pop('confirmed'),
         ),
-        content: Text(
-          'Do you want to join "${contest.title}"?\nEntry Fee: \u20B9${contest.entryFeeInr.toStringAsFixed(0)}\nYou will earn: ${contest.pointsToJoin} PTS',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('CANCEL', style: TextStyle(color: AppTheme.greyMedium)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.emeraldGreen,
-              foregroundColor: AppTheme.white,
-            ),
-            child: const Text('JOIN NOW', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
       ),
     );
 
-    if (confirmed == true && mounted) {
-      final success = await ref.read(userProfileProvider.notifier).joinContest(
-        contest.entryFeeInr,
-        contest.pointsToJoin,
-      );
-      if (mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppTheme.emeraldGreen,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              content: Text(
-                'Successfully joined "${contest.title}"! Registered for the contest.',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
+    if (result == 'confirmed' && context.mounted) {
+      final confirmed = await showJoinConfirmationDialog(context, contest);
+      if (confirmed == true && context.mounted) {
+        final joinResult = await ref.read(userProfileProvider.notifier).joinContestById(contest.id);
+        if (context.mounted) {
+          if (joinResult != null) {
+            final userData = UserProfile.fromJson(joinResult['user'] as Map<String, dynamic>);
+            ref.read(contestListProvider.notifier).updateContestAfterJoin(contest.id);
+            await Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => JoinSuccessScreen(
+                  contest: contest,
+                  updatedProfile: userData,
+                ),
               ),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppTheme.primaryRed,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              content: const Text(
-                'Failed to join contest. Please check your wallet cash balance.',
-                style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: AppTheme.primaryRed,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                content: const Text(
+                  'Failed to join contest. Please check your wallet balance.',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       }
     }
@@ -153,6 +135,8 @@ class _OurContestsScreenState extends ConsumerState<OurContestsScreen> {
                       _buildDurationSection(contest),
                       const SizedBox(height: 20),
                       _buildStatusBadge(contest),
+                      const SizedBox(height: 20),
+                      _buildRulesLink(contest),
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -584,7 +568,71 @@ class _OurContestsScreenState extends ConsumerState<OurContestsScreen> {
     );
   }
 
+  Widget _buildRulesLink(ContestModel contest) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ContestRulesScreen(
+              contest: contest,
+              onAgreed: () => Navigator.of(context).pop(),
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          gradient: AppTheme.darkCardGradient,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0x1FFFFFFF)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryRed.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.description_outlined, color: AppTheme.primaryRed, size: 18),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rules & Terms',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    Text(
+                      'Tap to view contest rules and conditions',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.greyMedium,
+                            fontSize: 12,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppTheme.greyMedium),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildJoinButton(ContestModel contest) {
+    final isRunning = contest.status == 'running';
+    final alreadyJoined = ref.read(contestListProvider.notifier).isJoined(contest.id);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       decoration: BoxDecoration(
@@ -600,25 +648,54 @@ class _OurContestsScreenState extends ConsumerState<OurContestsScreen> {
       child: SizedBox(
         width: double.infinity,
         height: 56,
-        child: ElevatedButton(
-          onPressed: () => _joinContest(contest),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.emeraldGreen,
-            foregroundColor: AppTheme.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 4,
-            shadowColor: AppTheme.emeraldGreen.withValues(alpha: 0.4),
-          ),
-          child: Text(
-            'JOIN CONTEST - \u20B9${contest.entryFeeInr.toStringAsFixed(0)}',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.0,
+        child: alreadyJoined
+            ? Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.emeraldGreen.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppTheme.emeraldGreen.withValues(alpha: 0.4),
+                  ),
                 ),
-          ),
-        ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_circle_rounded, color: AppTheme.emeraldGreen, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'ALREADY JOINED',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppTheme.emeraldGreen,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                          ),
+                    ),
+                  ],
+                ),
+              )
+            : ElevatedButton(
+                onPressed: isRunning ? () => _joinContest(contest) : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isRunning ? AppTheme.emeraldGreen : AppTheme.greyDark,
+                  foregroundColor: AppTheme.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: isRunning ? 4 : 0,
+                  shadowColor: isRunning ? AppTheme.emeraldGreen.withValues(alpha: 0.4) : null,
+                ),
+                child: Text(
+                  isRunning
+                      ? 'JOIN CONTEST - \u20B9${contest.entryFeeInr.toStringAsFixed(0)}'
+                      : contest.status == 'completed'
+                          ? 'CONTEST ENDED'
+                          : 'COMING SOON',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
+                ),
+              ),
       ),
     );
   }
