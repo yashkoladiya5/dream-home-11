@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
@@ -54,6 +55,32 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
     }
   }
 
+  Future<ContestModel?> lookupContestByCode(String code) async {
+    final upperCode = code.toUpperCase();
+    debugPrint('[ContestProvider] lookupContestByCode called with: "$code" → uppercased: "$upperCode"');
+    try {
+      final response = await _dio.get('/api/v1/contests/code/$upperCode');
+      debugPrint('[ContestProvider] Response statusCode: ${response.statusCode}');
+      debugPrint('[ContestProvider] Response data type: ${response.data.runtimeType}');
+      debugPrint('[ContestProvider] Response data: ${response.data}');
+      if (response.data == null) {
+        debugPrint('[ContestProvider] response.data is null → returning null');
+        return null;
+      }
+      final contest = ContestModel.fromJson(response.data as Map<String, dynamic>);
+      debugPrint('[ContestProvider] Parsed ContestModel — id: ${contest.id}, status: "${contest.status}", inviteCode: "${contest.inviteCode}"');
+      return contest;
+    } on DioException catch (e) {
+      debugPrint('[ContestProvider] DioException: type=${e.type}, statusCode=${e.response?.statusCode}, message=${e.message}');
+      if (e.response?.statusCode == 404) {
+        debugPrint('[ContestProvider] 404 not found → returning null');
+        return null;
+      }
+      debugPrint('[ContestProvider] Non-404 DioException → rethrowing');
+      rethrow;
+    }
+  }
+
   Future<void> refreshContests() async {
     _lastFetch = null;
     await fetchContests();
@@ -81,17 +108,21 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
     String? prize,
     String? rules,
   }) async {
+    final payload = <String, dynamic>{
+      'title': title,
+      'entryFeeInr': entryFeeInr,
+      'pointsToJoin': pointsToJoin,
+      'maxSlots': maxSlots,
+    };
+    if (prize != null) payload['prize'] = prize;
+    if (rules != null) payload['rules'] = rules;
+    debugPrint('[ContestProvider] createPrivateContest payload: $payload');
     try {
-      final response = await _dio.post('/api/v1/contests/private', data: {
-        'title': title,
-        'entryFeeInr': entryFeeInr,
-        'pointsToJoin': pointsToJoin,
-        'maxSlots': maxSlots,
-        if (prize != null) 'prize': prize,
-        if (rules != null) 'rules': rules,
-      });
+      final response = await _dio.post('/api/v1/contests/private', data: payload);
       final data = response.data as Map<String, dynamic>;
+      debugPrint('[ContestProvider] createPrivateContest response: $data');
       final contestData = data['contest'] as Map<String, dynamic>;
+      debugPrint('[ContestProvider] contest data includes rules? ${contestData.containsKey('rules')}, rules value: "${contestData['rules']}"');
       final contest = ContestModel.fromJson(contestData);
       _joinedContestIds.add(contest.id);
       if (_cachedContests != null) {
@@ -99,7 +130,8 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
         state = AsyncValue.data(_cachedContests!);
       }
       return {'contest': contest, 'inviteCode': data['inviteCode'] as String};
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[ContestProvider] createPrivateContest error: $e');
       return null;
     }
   }

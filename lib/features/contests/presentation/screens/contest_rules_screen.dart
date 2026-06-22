@@ -15,7 +15,16 @@ class ContestRulesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rules = contest.rules;
+    debugPrint('[ContestRulesScreen] Building for contest: "${contest.title}" (id: ${contest.id})');
+    debugPrint('[ContestRulesScreen] contest.rules is null? ${rules == null}');
+    debugPrint('[ContestRulesScreen] contest.rules raw value: "${rules}"');
     final ruleLines = rules != null ? rules.split('\n').where((l) => l.trim().isNotEmpty).toList() : <String>[];
+    debugPrint('[ContestRulesScreen] Parsed ${ruleLines.length} rule lines');
+    if (ruleLines.isNotEmpty) {
+      for (var i = 0; i < ruleLines.length; i++) {
+        debugPrint('[ContestRulesScreen] Rule $i: "${ruleLines[i]}"');
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
