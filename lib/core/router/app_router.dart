@@ -7,6 +7,7 @@ import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/language_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
+import '../../features/contests/presentation/screens/our_contests_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_layout.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
@@ -69,6 +70,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         builder: (context, state) => const DashboardLayout(),
+      ),
+      GoRoute(
+        path: '/contest/:id',
+        builder: (context, state) {
+          final contestId = state.pathParameters['id']!;
+          return OurContestsScreen(contestId: contestId);
+        },
       ),
     ],
   );
