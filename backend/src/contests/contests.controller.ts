@@ -33,6 +33,12 @@ export class ContestsController {
     return this.contestsService.getMembers(id);
   }
 
+  @Get(':id/completed')
+  @UseGuards(JwtAuthGuard)
+  async getCompletedContestData(@Param('id') id: string) {
+    return this.contestsService.getCompletedContestData(id);
+  }
+
   @Get(':id/leaderboard')
   @UseGuards(JwtAuthGuard)
   async getLeaderboard(@Param('id') id: string) {

@@ -125,6 +125,53 @@ export class ContestsService {
     return { leaderboard };
   }
 
+  async getCompletedContestData(contestId: string): Promise<{
+    contest: Contest;
+    members: {
+      userId: string;
+      userName: string;
+      phoneNumber: string;
+      points: number;
+      rank: number;
+    }[];
+    stats: {
+      totalParticipants: number;
+      totalPointsAwarded: number;
+      averagePoints: number;
+    };
+  }> {
+    const contest = await this.contestRepository.findOne({ where: { id: contestId } });
+    if (!contest) {
+      throw new NotFoundException('Contest not found');
+    }
+
+    const members = await this.contestMemberRepository.find({
+      where: { contestId },
+      relations: { user: true },
+      order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
+    });
+
+    const memberList = members.map((m, index) => ({
+      userId: m.userId,
+      userName: m.user?.fullName || 'Anonymous',
+      phoneNumber: m.user?.phoneNumber || '',
+      points: m.pointsEarned,
+      rank: index + 1,
+    }));
+
+    const totalPointsAwarded = members.reduce((sum, m) => sum + m.pointsEarned, 0);
+
+    return {
+      contest,
+      members: memberList,
+      stats: {
+        totalParticipants: members.length,
+        totalPointsAwarded,
+        averagePoints: members.length > 0 ? Math.round(totalPointsAwarded / members.length) : 0,
+      },
+    };
+  }
+
   async joinContest(userId: string, contestId: string): Promise<{ user: User; contest: Contest; member: ContestMember }> {
     return this.dataSource.transaction(async (entityManager) => {
       const contest = await entityManager.findOne(Contest, {

@@ -39,130 +39,72 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
   Widget build(BuildContext context) {
     final contestsAsync = ref.watch(contestListProvider);
 
-    return Column(
-      children: [
-        _buildCreatePrivateButton(),
-        _buildTabBar(),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildTabContent(contestsAsync),
-              _buildTabContent(contestsAsync),
-              _buildTabContent(contestsAsync),
-              _buildTabContent(contestsAsync),
-              _buildTabContent(contestsAsync),
-            ],
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: Container(
+        height: 56,
+        width: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            colors: [AppTheme.primaryRed, Color(0xFF9E1B1B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryRed.withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildCreatePrivateButton() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Column(
+        child: FloatingActionButton(
+          onPressed: _showPremiumSheet,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add_rounded, color: AppTheme.white, size: 28),
+        ),
+      ),
+      body: Column(
         children: [
-          _buildActionRow(
-            context,
-            icon: Icons.add_rounded,
-            title: 'Create Private Contest',
-            subtitle: 'Set up your own contest with a custom code',
-            color: AppTheme.primaryRed,
-            onTap: () => context.push('/create-contest'),
-          ),
-          const SizedBox(height: 10),
-          _buildActionRow(
-            context,
-            icon: Icons.vpn_key_rounded,
-            title: 'Join with Code',
-            subtitle: 'Enter an invite code to join a private contest',
-            color: AppTheme.emeraldGreen,
-            onTap: () => context.push('/enter-code'),
-          ),
-          const SizedBox(height: 10),
-          _buildActionRow(
-            context,
-            icon: Icons.sports_esports_rounded,
-            title: 'My Active Contests',
-            subtitle: 'View contests you have joined',
-            color: AppTheme.primaryRed.withValues(alpha: 0.85),
-            onTap: () {
-              // For now, navigate to the contest list itself
-              // The user can see their Active tab there
-              context.pop();
-            },
+          _buildTabBar(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildTabContent(contestsAsync),
+                _buildTabContent(contestsAsync),
+                _buildTabContent(contestsAsync),
+                _buildTabContent(contestsAsync),
+                _buildTabContent(contestsAsync),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionRow(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color, color.withValues(alpha: 0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.25),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppTheme.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: AppTheme.white, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.white.withValues(alpha: 0.7),
-                          fontSize: 12,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: AppTheme.white, size: 20),
-          ],
-        ),
+  void _showPremiumSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (_) => _PremiumActionSheet(
+        onCreatePrivate: () {
+          Navigator.of(context).pop();
+          context.push('/create-contest');
+        },
+        onJoinWithCode: () {
+          Navigator.of(context).pop();
+          context.push('/enter-code');
+        },
+        onMyActiveContests: () {
+          Navigator.of(context).pop();
+          context.pop();
+        },
       ),
     );
   }
@@ -280,7 +222,9 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
                     accentColor: accentColor,
                     titleIcon: titleIcon,
                     isJoined: joined,
-                    onJoin: () => context.push('/contest/${contest.id}'),
+                    onJoin: contest.status == 'completed'
+                        ? () => context.push('/contest/${contest.id}/completed')
+                        : () => context.push('/contest/${contest.id}'),
                   ),
                 );
             },
@@ -388,6 +332,178 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PremiumActionSheet extends StatelessWidget {
+  final VoidCallback onCreatePrivate;
+  final VoidCallback onJoinWithCode;
+  final VoidCallback onMyActiveContests;
+
+  const _PremiumActionSheet({
+    required this.onCreatePrivate,
+    required this.onJoinWithCode,
+    required this.onMyActiveContests,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppTheme.secondarySlate,
+            AppTheme.darkSlate,
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Private Contests',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Create, join, or track your private contests',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.greyMedium,
+                      fontSize: 13,
+                    ),
+              ),
+              const SizedBox(height: 24),
+              _sheetOption(
+                context,
+                icon: Icons.add_rounded,
+                iconColor: AppTheme.primaryRed,
+                title: 'Create Private Contest',
+                subtitle: 'Set up your own contest with a custom code',
+                onTap: onCreatePrivate,
+              ),
+              const SizedBox(height: 4),
+              _sheetOption(
+                context,
+                icon: Icons.vpn_key_rounded,
+                iconColor: AppTheme.emeraldGreen,
+                title: 'Join with Code',
+                subtitle: 'Enter an invite code to join a private contest',
+                onTap: onJoinWithCode,
+              ),
+              const SizedBox(height: 4),
+              _sheetOption(
+                context,
+                icon: Icons.sports_esports_rounded,
+                iconColor: AppTheme.goldYellow,
+                title: 'My Active Contests',
+                subtitle: 'View contests you have joined and track progress',
+                onTap: onMyActiveContests,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetOption(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    iconColor.withValues(alpha: 0.2),
+                    iconColor.withValues(alpha: 0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: iconColor.withValues(alpha: 0.2)),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.greyMedium,
+                          fontSize: 12,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.chevron_right_rounded,
+                color: AppTheme.greyMedium.withValues(alpha: 0.6),
+                size: 18,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

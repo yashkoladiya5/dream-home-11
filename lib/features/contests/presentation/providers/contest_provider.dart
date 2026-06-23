@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/models/contest_model.dart';
+import '../../data/models/completed_contest_data.dart';
 import '../../data/models/leaderboard_entry.dart';
 
 final contestListProvider = StateNotifierProvider<ContestListNotifier, AsyncValue<List<ContestModel>>>((ref) {
@@ -187,6 +188,16 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
     } catch (e) {
       debugPrint('[ContestProvider] fetchLeaderboard error: $e');
       return [];
+    }
+  }
+
+  Future<CompletedContestData?> fetchCompletedContest(String contestId) async {
+    try {
+      final response = await _dio.get('/api/v1/contests/$contestId/completed');
+      return CompletedContestData.fromJson(response.data as Map<String, dynamic>);
+    } catch (e) {
+      debugPrint('[ContestProvider] fetchCompletedContest error: $e');
+      return null;
     }
   }
 }

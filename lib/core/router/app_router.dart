@@ -13,6 +13,7 @@ import '../../features/contests/presentation/screens/home_contest_screen.dart';
 import '../../features/contests/presentation/screens/create_contest_screen.dart';
 import '../../features/contests/presentation/screens/enter_code_screen.dart';
 import '../../features/contests/presentation/screens/contest_running_screen.dart';
+import '../../features/contests/presentation/screens/completed_contest_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_layout.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
@@ -102,6 +103,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/contest/:id/live',
         builder: (context, state) => ContestRunningScreen(
+          contestId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/contest/:id/completed',
+        builder: (context, state) => CompletedContestScreen(
           contestId: state.pathParameters['id']!,
         ),
       ),
