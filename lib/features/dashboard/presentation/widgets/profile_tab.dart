@@ -6,6 +6,7 @@ import '../widgets/shimmer_widget.dart';
 import '../screens/edit_profile_screen.dart';
 import '../screens/performance_screen.dart';
 import '../screens/settings_screen.dart';
+import '../../../points/presentation/screens/multiplier_screen.dart';
 
 class ProfileTab extends ConsumerWidget {
   const ProfileTab({super.key});
@@ -222,6 +223,18 @@ class ProfileTab extends ConsumerWidget {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const PerformanceScreen()),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
+                    label: 'Points Multiplier',
+                    value: 'VIEW',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.speed_rounded,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MultiplierScreen()),
                     ),
                   ),
                   const SizedBox(height: 32),

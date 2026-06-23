@@ -5,6 +5,7 @@ import { randomBytes } from 'crypto';
 import { Contest, ContestStatus, ContestType } from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
 import { User, UserLevel } from '../users/entities/user.entity';
+import { PointsEngineService } from '../points/points-engine.service';
 import { QueryContestsDto } from './dto/query-contests.dto';
 import { CreatePrivateContestDto } from './dto/create-private-contest.dto';
 
@@ -16,6 +17,7 @@ export class ContestsService {
     @InjectRepository(ContestMember)
     private readonly contestMemberRepository: Repository<ContestMember>,
     private readonly dataSource: DataSource,
+    private readonly pointsEngineService: PointsEngineService,
   ) {}
 
   async findAll(query: QueryContestsDto): Promise<{ contests: Contest[]; total: number; page: number; limit: number }> {
@@ -228,9 +230,11 @@ export class ContestsService {
         throw new BadRequestException('Already joined this contest');
       }
 
+      const multiplier = this.pointsEngineService.getMultiplier(user.currentTier);
+      const finalPoints = this.pointsEngineService.calculatePoints(contest.pointsToJoin, user.currentTier);
       user.walletBalanceInr = Number(user.walletBalanceInr) - Number(contest.entryFeeInr);
-      user.pointsBalance = Number(user.pointsBalance) + contest.pointsToJoin;
-      user.lifetimePoints = Number(user.lifetimePoints) + contest.pointsToJoin;
+      user.pointsBalance = Number(user.pointsBalance) + finalPoints;
+      user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
 
       if (user.lifetimePoints >= 5000) {
         user.currentTier = UserLevel.PLATINUM;
@@ -242,10 +246,12 @@ export class ContestsService {
 
       await entityManager.save(user);
 
+      await this.pointsEngineService.logPointActionWithEntityManager(entityManager, userId, 'contest_join', contest.pointsToJoin, multiplier, finalPoints);
+
       const member = entityManager.create(ContestMember, {
         contestId,
         userId,
-        pointsEarned: contest.pointsToJoin,
+        pointsEarned: finalPoints,
       });
       await entityManager.save(member);
 

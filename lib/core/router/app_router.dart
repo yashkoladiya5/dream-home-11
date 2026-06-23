@@ -16,6 +16,7 @@ import '../../features/contests/presentation/screens/contest_running_screen.dart
 import '../../features/contests/presentation/screens/completed_contest_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_layout.dart';
 import '../../features/dashboard/presentation/screens/performance_screen.dart';
+import '../../features/points/presentation/screens/multiplier_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -116,6 +117,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/performance',
         builder: (context, state) => const PerformanceScreen(),
+      ),
+      GoRoute(
+        path: '/multiplier',
+        builder: (context, state) => const MultiplierScreen(),
       ),
     ],
   );

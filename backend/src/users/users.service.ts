@@ -4,6 +4,7 @@ import { Repository, In } from 'typeorm';
 import { User, UserLevel } from './entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { Contest } from '../contests/entities/contest.entity';
+import { PointsEngineService } from '../points/points-engine.service';
 
 @Injectable()
 export class UsersService {
@@ -14,6 +15,7 @@ export class UsersService {
     private readonly contestMemberRepository: Repository<ContestMember>,
     @InjectRepository(Contest)
     private readonly contestRepository: Repository<Contest>,
+    private readonly pointsEngineService: PointsEngineService,
   ) {}
 
   async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
@@ -65,10 +67,12 @@ export class UsersService {
     if (Number(user.walletBalanceInr) < entryFee) {
       throw new BadRequestException('Insufficient wallet balance');
     }
+    const multiplier = this.pointsEngineService.getMultiplier(user.currentTier);
+    const finalPoints = this.pointsEngineService.calculatePoints(pointsEarned, user.currentTier);
     user.walletBalanceInr = Number(user.walletBalanceInr) - entryFee;
-    user.pointsBalance = Number(user.pointsBalance) + pointsEarned;
-    user.lifetimePoints = Number(user.lifetimePoints) + pointsEarned;
-    
+    user.pointsBalance = Number(user.pointsBalance) + finalPoints;
+    user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
+
     // Update tier rank based on lifetime points
     if (user.lifetimePoints >= 5000) {
       user.currentTier = UserLevel.PLATINUM;
@@ -78,7 +82,11 @@ export class UsersService {
       user.currentTier = UserLevel.SILVER;
     }
 
-    return this.userRepository.save(user);
+    await this.userRepository.save(user);
+
+    await this.pointsEngineService.logPointAction(userId, 'contest_join', pointsEarned, multiplier, finalPoints);
+
+    return user;
   }
 
   async redeemReward(userId: string, pointsCost: number): Promise<User> {
@@ -116,6 +124,30 @@ export class UsersService {
     }
 
     return this.userRepository.save(user);
+  }
+
+  async getMultiplierInfo(userId: string): Promise<{
+    currentTier: string;
+    currentMultiplier: number;
+    lifetimePoints: number;
+    pointsToNextTier: number | null;
+    nextTier: string | null;
+    nextMultiplier: number | null;
+  }> {
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const { tier, multiplier } = this.pointsEngineService.getTierInfo(user.lifetimePoints);
+    const { nextTier, nextMultiplier, pointsToNextTier } = this.pointsEngineService.getNextTierInfo(user.lifetimePoints);
+
+    return {
+      currentTier: tier,
+      currentMultiplier: multiplier,
+      lifetimePoints: user.lifetimePoints,
+      pointsToNextTier,
+      nextTier,
+      nextMultiplier,
+    };
   }
 
   async getUserStats(userId: string) {
