@@ -164,7 +164,7 @@ export class SeedService implements OnApplicationBootstrap {
           walletBalanceInr: 0,
           pointsBalance: 0,
           lifetimePoints: memberPoints[i],
-          currentTier: UserLevel.BRONZE,
+          currentTier: this.getTierForPoints(memberPoints[i]),
           isActive: true,
           deviceId: `seed-device-${i}`,
         });
@@ -181,6 +181,13 @@ export class SeedService implements OnApplicationBootstrap {
     }
 
     this.logger.log(`Seeded completed contest "${contest.title}" with ${memberNames.length} members`);
+  }
+
+  private getTierForPoints(points: number): UserLevel {
+    if (points >= 5000) return UserLevel.PLATINUM;
+    if (points >= 2000) return UserLevel.GOLD;
+    if (points >= 1000) return UserLevel.SILVER;
+    return UserLevel.BRONZE;
   }
 
   private async _upsertSeedData(): Promise<void> {

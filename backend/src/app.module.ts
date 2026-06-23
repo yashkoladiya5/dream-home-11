@@ -7,6 +7,8 @@ import { User } from './users/entities/user.entity';
 import { Kyc } from './kyc/entities/kyc.entity';
 import { Contest } from './contests/entities/contest.entity';
 import { ContestMember } from './contests/entities/contest-member.entity';
+import { PointLog } from './points/entities/point-log.entity';
+import { PointsModule } from './points/points.module';
 import { UsersModule } from './users/users.module';
 import { KycModule } from './kyc/kyc.module';
 import { AuthModule } from './auth/auth.module';
@@ -29,7 +31,7 @@ import { SeedModule } from './seed/seed.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember],
+        entities: [User, Kyc, Contest, ContestMember, PointLog],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
@@ -37,6 +39,7 @@ import { SeedModule } from './seed/seed.module';
     KycModule,
     AuthModule,
     ContestsModule,
+    PointsModule,
     SeedModule,
   ],
   controllers: [AppController],

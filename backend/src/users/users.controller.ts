@@ -14,6 +14,12 @@ export class UsersController {
     return user;
   }
 
+  @Get('me/multiplier')
+  @UseGuards(JwtAuthGuard)
+  async getMultiplier(@GetUser() user: User) {
+    return this.usersService.getMultiplierInfo(user.id);
+  }
+
   @Get('me/stats')
   @UseGuards(JwtAuthGuard)
   async getUserStats(@GetUser() user: User) {

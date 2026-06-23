@@ -6,6 +6,7 @@ import { ContestsService } from './contests.service';
 import { Contest, ContestStatus, ContestType } from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
 import { User, UserLevel } from '../users/entities/user.entity';
+import { PointsEngineService } from '../points/points-engine.service';
 
 describe('ContestsService', () => {
   let service: ContestsService;
@@ -68,12 +69,22 @@ describe('ContestsService', () => {
 
     contestMemberRepo = {};
 
+    const mockPointsEngineService = {
+      getMultiplier: jest.fn().mockReturnValue(1.0),
+      calculatePoints: jest.fn().mockImplementation((basePoints: number) => basePoints),
+      logPointAction: jest.fn().mockResolvedValue({}),
+      logPointActionWithEntityManager: jest.fn().mockResolvedValue({}),
+      getTierInfo: jest.fn(),
+      getNextTierInfo: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ContestsService,
         { provide: getRepositoryToken(Contest), useValue: contestRepo },
         { provide: getRepositoryToken(ContestMember), useValue: contestMemberRepo },
         { provide: DataSource, useValue: dataSource },
+        { provide: PointsEngineService, useValue: mockPointsEngineService },
       ],
     }).compile();
 
