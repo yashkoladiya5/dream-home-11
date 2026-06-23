@@ -101,6 +101,10 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
+  async updateUser(user: User): Promise<User> {
+    return this.userRepository.save(user);
+  }
+
   async updateProfile(
     userId: string,
     updateData: { fullName?: string; email?: string; avatarUrl?: string },

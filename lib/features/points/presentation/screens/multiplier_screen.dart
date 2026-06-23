@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/multiplier_provider.dart';
 import '../../../../features/dashboard/presentation/widgets/shimmer_widget.dart';
+import 'earn_points_screen.dart';
 
 class MultiplierScreen extends ConsumerStatefulWidget {
   const MultiplierScreen({super.key});
@@ -47,6 +48,8 @@ class _MultiplierScreenState extends ConsumerState<MultiplierScreen> {
                       _buildProgressCard(info),
                       const SizedBox(height: 20),
                       _buildTierLadder(info),
+                      const SizedBox(height: 20),
+                      _buildEarnPointsCard(),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -537,6 +540,83 @@ class _MultiplierScreenState extends ConsumerState<MultiplierScreen> {
       default:
         return -1;
     }
+  }
+
+  Widget _buildEarnPointsCard() {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) {
+          return const EarnPointsScreen();
+        }),
+      ),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0x1FFFFFFF)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryRed.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.stars_rounded, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Earn Daily Points',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Complete daily actions to earn bonus points',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.greyMedium,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.chevron_right_rounded, color: AppTheme.greyMedium, size: 20),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildShimmer() {

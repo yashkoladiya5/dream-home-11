@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, MoreThanOrEqual, In } from 'typeorm';
 import { PointLog } from './entities/point-log.entity';
 
 @Injectable()
@@ -10,6 +10,13 @@ export class PointsEngineService {
     silver: 1.1,
     gold: 1.25,
     platinum: 1.5,
+  };
+
+  private readonly DAILY_ACTIONS: Record<string, { name: string; description: string; basePoints: number; dailyCap: number }> = {
+    app_open: { name: 'App Open', description: 'Open the app daily', basePoints: 10, dailyCap: 1 },
+    notification_on: { name: 'Notification Toggle', description: 'Enable notifications', basePoints: 20, dailyCap: 1 },
+    feed_like_comment: { name: 'Feed Engagement', description: 'Like or comment on posts', basePoints: 10, dailyCap: 5 },
+    daily_login: { name: 'Daily Login', description: 'Log in to the app', basePoints: 10, dailyCap: 1 },
   };
 
   constructor(
@@ -94,5 +101,143 @@ export class PointsEngineService {
       }
     }
     return { nextTier: null, nextMultiplier: null, pointsToNextTier: null };
+  }
+
+  async getTodayActionCount(userId: string, action: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const count = await this.pointLogRepo.count({
+      where: {
+        userId,
+        action,
+        createdAt: MoreThanOrEqual(today) as any,
+      },
+    });
+    return count;
+  }
+
+  async canPerformAction(userId: string, action: string): Promise<{ canPerform: boolean; todayCount: number; dailyCap: number; reason?: string }> {
+    const def = this.DAILY_ACTIONS[action];
+    if (!def) {
+      return { canPerform: false, todayCount: 0, dailyCap: 0, reason: 'Unknown action' };
+    }
+    const todayCount = await this.getTodayActionCount(userId, action);
+    if (todayCount >= def.dailyCap) {
+      return { canPerform: false, todayCount, dailyCap: def.dailyCap, reason: 'Daily cap reached' };
+    }
+    return { canPerform: true, todayCount, dailyCap: def.dailyCap };
+  }
+
+  async getTodayActionsStatus(userId: string): Promise<{
+    actions: {
+      action: string;
+      name: string;
+      description: string;
+      basePoints: number;
+      dailyCap: number;
+      todayCount: number;
+      canPerform: boolean;
+      reason?: string;
+    }[];
+    todayPoints: number;
+    maxDailyPoints: number;
+  }> {
+    const actionKeys = Object.keys(this.DAILY_ACTIONS);
+    let todayPoints = 0;
+    let maxDailyPoints = 0;
+
+    const actions = await Promise.all(
+      actionKeys.map(async (key) => {
+        const def = this.DAILY_ACTIONS[key];
+        const status = await this.canPerformAction(userId, key);
+        maxDailyPoints += def.basePoints * def.dailyCap;
+        return {
+          action: key,
+          name: def.name,
+          description: def.description,
+          basePoints: def.basePoints,
+          dailyCap: def.dailyCap,
+          todayCount: status.todayCount,
+          canPerform: status.canPerform,
+          reason: status.reason,
+        };
+      }),
+    );
+
+    // Calculate today's total earned points for these actions
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayLogs = await this.pointLogRepo.find({
+      where: {
+        userId,
+        action: In(actionKeys),
+        createdAt: MoreThanOrEqual(today) as any,
+      },
+    });
+    todayPoints = todayLogs.reduce((sum, log) => sum + log.finalPoints, 0);
+
+    return { actions, todayPoints, maxDailyPoints };
+  }
+
+  async performDailyAction(
+    userId: string,
+    action: string,
+    tier: string,
+  ): Promise<{
+    success: boolean;
+    action: string;
+    basePoints: number;
+    multiplier: number;
+    finalPoints: number;
+    todayCount: number;
+    dailyCap: number;
+    canPerform: boolean;
+    reason?: string;
+    lifetimePoints: number;
+    currentTier: string;
+  } | null> {
+    const def = this.DAILY_ACTIONS[action];
+    if (!def) return null;
+
+    const status = await this.canPerformAction(userId, action);
+    if (!status.canPerform) {
+      return {
+        success: false,
+        action,
+        basePoints: def.basePoints,
+        multiplier: this.getMultiplier(tier),
+        finalPoints: 0,
+        todayCount: status.todayCount,
+        dailyCap: def.dailyCap,
+        canPerform: false,
+        reason: status.reason,
+        lifetimePoints: 0,
+        currentTier: tier,
+      };
+    }
+
+    const multiplier = this.getMultiplier(tier);
+    const finalPoints = this.calculatePoints(def.basePoints, tier);
+
+    await this.logPointAction(userId, action, def.basePoints, multiplier, finalPoints);
+
+    return {
+      success: true,
+      action,
+      basePoints: def.basePoints,
+      multiplier,
+      finalPoints,
+      todayCount: status.todayCount + 1,
+      dailyCap: def.dailyCap,
+      canPerform: (status.todayCount + 1) < def.dailyCap,
+      lifetimePoints: 0,
+      currentTier: tier,
+    };
   }
 }
