@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/contest_model.dart';
 import '../../../dashboard/data/models/user_profile.dart';
+import 'contest_running_screen.dart';
 
 class JoinSuccessScreen extends StatefulWidget {
   final ContestModel contest;
@@ -298,9 +299,17 @@ class _JoinSuccessScreenState extends State<JoinSuccessScreen>
               ),
               const SizedBox(height: 12),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => ContestRunningScreen(
+                        contestId: widget.contest.id,
+                      ),
+                    ),
+                  );
+                },
                 child: Text(
-                  'View My Contests',
+                  'View Live Contest',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.greyMedium,
                         decoration: TextDecoration.underline,

@@ -63,6 +63,14 @@ export class ContestsController {
     @Body() joinContestDto: JoinContestDto,
     @GetUser() user: User,
   ) {
-    return this.contestsService.joinContest(user.id, id);
+    const result = await this.contestsService.joinContest(user.id, id);
+    this.contestsGateway.emitPointUpdate(id, {
+      userId: user.id,
+      points: result.contest.pointsToJoin,
+      activity: 'contest_joined',
+      description: 'Joined the contest',
+      timestamp: new Date(),
+    });
+    return result;
   }
 }

@@ -65,11 +65,14 @@ Widget _infoRow(BuildContext context, IconData icon, Color color, String text) {
     children: [
       Icon(icon, size: 16, color: color),
       const SizedBox(width: 8),
-      Text(
-        text,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.greyLight,
-            ),
+      Flexible(
+        child: Text(
+          text,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.greyLight,
+              ),
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     ],
   );

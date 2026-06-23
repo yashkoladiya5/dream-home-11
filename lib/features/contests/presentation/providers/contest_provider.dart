@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/models/contest_model.dart';
-import '../../data/models/activity_event.dart';
 import '../../data/models/leaderboard_entry.dart';
 
 final contestListProvider = StateNotifierProvider<ContestListNotifier, AsyncValue<List<ContestModel>>>((ref) {
@@ -17,7 +16,6 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
   DateTime? _lastFetch;
   static const Duration _cacheDuration = Duration(seconds: 60);
   final Set<String> _joinedContestIds = {};
-  List<ContestModel> _myContests = [];
 
   ContestListNotifier(this._dio) : super(const AsyncValue.loading()) {
     fetchContests();
@@ -165,5 +163,30 @@ class ContestListNotifier extends StateNotifier<AsyncValue<List<ContestModel>>> 
       return c;
     }).toList();
     state = AsyncValue.data(_cachedContests!);
+  }
+
+  Future<List<ContestModel>> getMyContests() async {
+    try {
+      final response = await _dio.get('/api/v1/users/me/contests');
+      final data = response.data as Map<String, dynamic>;
+      final list = data['contests'] as List<dynamic>;
+      final contests = list.map((c) => ContestModel.fromJson(c as Map<String, dynamic>)).toList();
+    return contests;
+    } catch (e) {
+      debugPrint('[ContestProvider] getMyContests error: $e');
+      return [];
+    }
+  }
+
+  Future<List<LeaderboardEntry>> fetchLeaderboard(String contestId) async {
+    try {
+      final response = await _dio.get('/api/v1/contests/$contestId/leaderboard');
+      final data = response.data as Map<String, dynamic>;
+      final list = data['leaderboard'] as List<dynamic>;
+      return list.map((e) => LeaderboardEntry.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      debugPrint('[ContestProvider] fetchLeaderboard error: $e');
+      return [];
+    }
   }
 }

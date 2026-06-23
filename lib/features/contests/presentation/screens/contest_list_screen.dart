@@ -81,6 +81,19 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
             color: AppTheme.emeraldGreen,
             onTap: () => context.push('/enter-code'),
           ),
+          const SizedBox(height: 10),
+          _buildActionRow(
+            context,
+            icon: Icons.sports_esports_rounded,
+            title: 'My Active Contests',
+            subtitle: 'View contests you have joined',
+            color: AppTheme.primaryRed.withValues(alpha: 0.85),
+            onTap: () {
+              // For now, navigate to the contest list itself
+              // The user can see their Active tab there
+              context.pop();
+            },
+          ),
         ],
       ),
     );
