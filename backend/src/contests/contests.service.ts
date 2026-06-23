@@ -60,12 +60,24 @@ export class ContestsService {
     return { members, total };
   }
 
-  async findByInviteCode(code: string): Promise<Contest> {
+  async findByInviteCode(code: string): Promise<{ contest: Contest; canJoin: boolean; reason: string | null }> {
     const contest = await this.contestRepository.findOne({ where: { inviteCode: code.toUpperCase() } });
     if (!contest) {
       throw new NotFoundException('Contest not found for this invite code');
     }
-    return contest;
+
+    let canJoin = true;
+    let reason: string | null = null;
+
+    if (contest.status === ContestStatus.COMPLETED) {
+      canJoin = false;
+      reason = 'This contest has already ended';
+    } else if (contest.filledSlots >= contest.maxSlots) {
+      canJoin = false;
+      reason = 'This contest is already full';
+    }
+
+    return { contest, canJoin, reason };
   }
 
   async createPrivateContest(

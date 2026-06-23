@@ -11,6 +11,8 @@ class ContestModel {
   final String? badgeColor;
   final String? rules;
   final String? inviteCode;
+  final bool? canJoin;
+  final String? cannotJoinReason;
   final DateTime startTime;
   final DateTime endTime;
   final String status;
@@ -30,6 +32,8 @@ class ContestModel {
     this.badgeColor,
     this.rules,
     this.inviteCode,
+    this.canJoin,
+    this.cannotJoinReason,
     required this.startTime,
     required this.endTime,
     required this.status,
@@ -51,6 +55,8 @@ class ContestModel {
       badgeColor: json['badgeColor'] as String?,
       rules: json['rules'] as String?,
       inviteCode: json['inviteCode'] as String?,
+      canJoin: json['canJoin'] as bool?,
+      cannotJoinReason: json['reason'] as String?,
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: DateTime.parse(json['endTime'] as String),
       status: json['status'] as String? ?? 'upcoming',

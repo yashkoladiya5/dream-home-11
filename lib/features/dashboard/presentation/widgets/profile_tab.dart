@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/shimmer_widget.dart';
 import '../screens/edit_profile_screen.dart';
+import '../screens/performance_screen.dart';
 import '../screens/settings_screen.dart';
 
 class ProfileTab extends ConsumerWidget {
@@ -209,6 +210,18 @@ class ProfileTab extends ConsumerWidget {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
+                    label: 'Performance Analytics',
+                    value: 'VIEW',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.analytics_rounded,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PerformanceScreen()),
                     ),
                   ),
                   const SizedBox(height: 32),

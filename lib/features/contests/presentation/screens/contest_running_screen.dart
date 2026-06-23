@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/contest_model.dart';
@@ -569,21 +570,39 @@ class _ContestRunningScreenState extends ConsumerState<ContestRunningScreen> {
         else
           ...top5.map(_buildLeaderboardRow),
         const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.white,
-              side: const BorderSide(color: AppTheme.greyDark),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+        if (_remaining == Duration.zero)
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => context.push('/contest/${widget.contestId}/completed'),
+              icon: const Icon(Icons.emoji_events_rounded, size: 18),
+              label: const Text('View Final Results'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryRed,
+                foregroundColor: AppTheme.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
-            child: const Text('View Full Leaderboard'),
+          )
+        else
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.white,
+                side: const BorderSide(color: AppTheme.greyDark),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text('View Full Leaderboard'),
+            ),
           ),
-        ),
       ],
     );
   }
