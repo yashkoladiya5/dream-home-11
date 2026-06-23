@@ -60,12 +60,24 @@ export class ContestsService {
     return { members, total };
   }
 
-  async findByInviteCode(code: string): Promise<Contest> {
+  async findByInviteCode(code: string): Promise<{ contest: Contest; canJoin: boolean; reason: string | null }> {
     const contest = await this.contestRepository.findOne({ where: { inviteCode: code.toUpperCase() } });
     if (!contest) {
       throw new NotFoundException('Contest not found for this invite code');
     }
-    return contest;
+
+    let canJoin = true;
+    let reason: string | null = null;
+
+    if (contest.status === ContestStatus.COMPLETED) {
+      canJoin = false;
+      reason = 'This contest has already ended';
+    } else if (contest.filledSlots >= contest.maxSlots) {
+      canJoin = false;
+      reason = 'This contest is already full';
+    }
+
+    return { contest, canJoin, reason };
   }
 
   async createPrivateContest(
@@ -105,6 +117,71 @@ export class ContestsService {
     await this.contestRepository.save(contest);
 
     return { contest, inviteCode };
+  }
+
+  async getLeaderboard(contestId: string): Promise<{ leaderboard: any[] }> {
+    const members = await this.contestMemberRepository.find({
+      where: { contestId },
+      relations: { user: true },
+      order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
+    });
+
+    const leaderboard = members.map((member, index) => ({
+      userId: member.userId,
+      userName: member.user?.fullName || 'Anonymous',
+      phoneNumber: member.user?.phoneNumber || '',
+      points: member.pointsEarned,
+      rank: index + 1,
+    }));
+
+    return { leaderboard };
+  }
+
+  async getCompletedContestData(contestId: string): Promise<{
+    contest: Contest;
+    members: {
+      userId: string;
+      userName: string;
+      phoneNumber: string;
+      points: number;
+      rank: number;
+    }[];
+    stats: {
+      totalParticipants: number;
+      totalPointsAwarded: number;
+      averagePoints: number;
+    };
+  }> {
+    const contest = await this.contestRepository.findOne({ where: { id: contestId } });
+    if (!contest) {
+      throw new NotFoundException('Contest not found');
+    }
+
+    const members = await this.contestMemberRepository.find({
+      where: { contestId },
+      relations: { user: true },
+      order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
+    });
+
+    const memberList = members.map((m, index) => ({
+      userId: m.userId,
+      userName: m.user?.fullName || 'Anonymous',
+      phoneNumber: m.user?.phoneNumber || '',
+      points: m.pointsEarned,
+      rank: index + 1,
+    }));
+
+    const totalPointsAwarded = members.reduce((sum, m) => sum + m.pointsEarned, 0);
+
+    return {
+      contest,
+      members: memberList,
+      stats: {
+        totalParticipants: members.length,
+        totalPointsAwarded,
+        averagePoints: members.length > 0 ? Math.round(totalPointsAwarded / members.length) : 0,
+      },
+    };
   }
 
   async joinContest(userId: string, contestId: string): Promise<{ user: User; contest: Contest; member: ContestMember }> {

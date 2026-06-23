@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Param, Query, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { ContestsService } from './contests.service';
+import { ContestsGateway } from './contests.gateway';
 import { QueryContestsDto } from './dto/query-contests.dto';
 import { JoinContestDto } from './dto/join-contest.dto';
 import { CreatePrivateContestDto } from './dto/create-private-contest.dto';
@@ -9,7 +10,10 @@ import { User } from '../users/entities/user.entity';
 
 @Controller('api/v1/contests')
 export class ContestsController {
-  constructor(private readonly contestsService: ContestsService) {}
+  constructor(
+    private readonly contestsService: ContestsService,
+    private readonly contestsGateway: ContestsGateway,
+  ) {}
 
   @Get()
   @UseGuards(JwtAuthGuard)
@@ -27,6 +31,18 @@ export class ContestsController {
   @UseGuards(JwtAuthGuard)
   async getMembers(@Param('id') id: string) {
     return this.contestsService.getMembers(id);
+  }
+
+  @Get(':id/completed')
+  @UseGuards(JwtAuthGuard)
+  async getCompletedContestData(@Param('id') id: string) {
+    return this.contestsService.getCompletedContestData(id);
+  }
+
+  @Get(':id/leaderboard')
+  @UseGuards(JwtAuthGuard)
+  async getLeaderboard(@Param('id') id: string) {
+    return this.contestsService.getLeaderboard(id);
   }
 
   @Get('code/:code')
@@ -53,6 +69,14 @@ export class ContestsController {
     @Body() joinContestDto: JoinContestDto,
     @GetUser() user: User,
   ) {
-    return this.contestsService.joinContest(user.id, id);
+    const result = await this.contestsService.joinContest(user.id, id);
+    this.contestsGateway.emitPointUpdate(id, {
+      userId: user.id,
+      points: result.contest.pointsToJoin,
+      activity: 'contest_joined',
+      description: 'Joined the contest',
+      timestamp: new Date(),
+    });
+    return result;
   }
 }

@@ -9,7 +9,7 @@ import 'join_success_screen.dart';
 import '../../../dashboard/data/models/user_profile.dart';
 import '../../../dashboard/presentation/providers/user_profile_provider.dart';
 
-enum _CodeLookupState { idle, loading, found, notFound, full, notRunning, error }
+enum _CodeLookupState { idle, loading, found, notFound, full, notRunning, cannotJoin, alreadyJoined, error }
 
 class EnterCodeScreen extends ConsumerStatefulWidget {
   const EnterCodeScreen({super.key});
@@ -93,6 +93,18 @@ class _EnterCodeScreenState extends ConsumerState<EnterCodeScreen>
           debugPrint('[EnterCodeScreen] status "${contest.status}" != "running" → notRunning state');
           setState(() {
             _lookupState = _CodeLookupState.notRunning;
+            _foundContest = contest;
+          });
+        } else if (ref.read(contestListProvider.notifier).isJoined(contest.id)) {
+          debugPrint('[EnterCodeScreen] user already joined → alreadyJoined state');
+          setState(() {
+            _lookupState = _CodeLookupState.alreadyJoined;
+            _foundContest = contest;
+          });
+        } else if (contest.canJoin == false) {
+          debugPrint('[EnterCodeScreen] canJoin is false → cannotJoin state, reason: "${contest.cannotJoinReason}"');
+          setState(() {
+            _lookupState = _CodeLookupState.cannotJoin;
             _foundContest = contest;
           });
         } else {
@@ -225,6 +237,13 @@ class _EnterCodeScreenState extends ConsumerState<EnterCodeScreen>
             if (_lookupState == _CodeLookupState.notRunning) _buildNotRunningState(),
             if (_lookupState == _CodeLookupState.error) _buildErrorState(),
             if (_lookupState == _CodeLookupState.found && _foundContest != null)
+              _buildContestPreview(_foundContest!),
+            if (_lookupState == _CodeLookupState.cannotJoin && _foundContest != null) ...[
+              _buildContestPreview(_foundContest!),
+              const SizedBox(height: 12),
+              _buildCannotJoinBanner(_foundContest!),
+            ],
+            if (_lookupState == _CodeLookupState.alreadyJoined && _foundContest != null)
               _buildContestPreview(_foundContest!),
           ],
         ),
@@ -593,6 +612,8 @@ class _EnterCodeScreenState extends ConsumerState<EnterCodeScreen>
     final isRunning = contest.status == 'running';
     final statusColor = _statusColor(contest.status);
     final statusLabel = _statusLabel(contest.status);
+    final isAlreadyJoined = _lookupState == _CodeLookupState.alreadyJoined;
+    final isCannotJoin = _lookupState == _CodeLookupState.cannotJoin;
 
     return FadeTransition(
       opacity: _fadeAnim,
@@ -682,6 +703,32 @@ class _EnterCodeScreenState extends ConsumerState<EnterCodeScreen>
                             ],
                           ),
                         ),
+                        if (isAlreadyJoined) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.emeraldGreen.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppTheme.emeraldGreen.withValues(alpha: 0.4),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              'ALREADY JOINED',
+                              style: TextStyle(
+                                color: AppTheme.emeraldGreen,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -772,31 +819,72 @@ class _EnterCodeScreenState extends ConsumerState<EnterCodeScreen>
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: isRunning ? () => _joinContest(contest) : null,
+                    onPressed: !isAlreadyJoined && !isCannotJoin && isRunning
+                        ? () => _joinContest(contest)
+                        : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          isRunning ? AppTheme.emeraldGreen : AppTheme.greyDark,
+                          isRunning && !isAlreadyJoined && !isCannotJoin
+                              ? AppTheme.emeraldGreen
+                              : AppTheme.greyDark,
                       foregroundColor: AppTheme.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      elevation: isRunning ? 4 : 0,
-                      shadowColor: isRunning
+                      elevation: isRunning && !isAlreadyJoined && !isCannotJoin
+                          ? 4
+                          : 0,
+                      shadowColor: isRunning && !isAlreadyJoined && !isCannotJoin
                           ? AppTheme.emeraldGreen.withValues(alpha: 0.4)
                           : null,
                     ),
                     child: Text(
-                      isRunning
-                          ? 'JOIN CONTEST - \u20B9${contest.entryFeeInr.toStringAsFixed(0)}'
-                          : contest.status == 'completed'
-                              ? 'CONTEST ENDED'
-                              : 'COMING SOON',
+                      isAlreadyJoined
+                          ? 'ALREADY JOINED'
+                          : isCannotJoin
+                              ? 'CANNOT JOIN'
+                              : isRunning
+                                  ? 'JOIN CONTEST - \u20B9${contest.entryFeeInr.toStringAsFixed(0)}'
+                                  : contest.status == 'completed'
+                                      ? 'CONTEST ENDED'
+                                      : 'COMING SOON',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.0,
                           ),
                     ),
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCannotJoinBanner(ContestModel contest) {
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryRed.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.error_outline_rounded, color: AppTheme.primaryRed, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  contest.cannotJoinReason ?? 'Cannot join this contest',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.primaryRed,
+                      ),
                 ),
               ),
             ],

@@ -1,13 +1,19 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { User, UserLevel } from './entities/user.entity';
+import { ContestMember } from '../contests/entities/contest-member.entity';
+import { Contest } from '../contests/entities/contest.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(ContestMember)
+    private readonly contestMemberRepository: Repository<ContestMember>,
+    @InjectRepository(Contest)
+    private readonly contestRepository: Repository<Contest>,
   ) {}
 
   async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
@@ -110,6 +116,86 @@ export class UsersService {
     }
 
     return this.userRepository.save(user);
+  }
+
+  async getUserStats(userId: string) {
+    const memberEntries = await this.contestMemberRepository.find({ where: { userId } });
+    const contestIds = memberEntries.map(m => m.contestId);
+
+    const totalContestsJoined = memberEntries.length;
+    const totalPointsEarned = memberEntries.reduce((sum, m) => sum + m.pointsEarned, 0);
+
+    if (totalContestsJoined === 0) {
+      return {
+        totalContestsJoined: 0,
+        totalContestsWon: 0,
+        totalPointsEarned: 0,
+        totalEntryFeesSpent: 0,
+        averageRank: 0,
+        bestRank: null,
+        winRate: 0,
+      };
+    }
+
+    let wonCount = 0;
+    let totalRanks = 0;
+    let bestRank = Number.MAX_SAFE_INTEGER;
+
+    for (const contestId of contestIds) {
+      const allMembers = await this.contestMemberRepository.find({
+        where: { contestId },
+        order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
+      });
+      const rank = allMembers.findIndex(m => m.userId === userId) + 1;
+      totalRanks += rank;
+      if (rank < bestRank) bestRank = rank;
+      if (rank === 1) wonCount++;
+    }
+
+    const contests = await this.contestRepository.find({
+      where: { id: In(contestIds) },
+    });
+    const totalEntryFeesSpent = contests.reduce(
+      (sum, c) => sum + Number(c.entryFeeInr),
+      0,
+    );
+
+    const averageRank = Math.round((totalRanks / totalContestsJoined) * 10) / 10;
+    const winRate = Math.round((wonCount / totalContestsJoined) * 100 * 10) / 10;
+
+    return {
+      totalContestsJoined,
+      totalContestsWon: wonCount,
+      totalPointsEarned,
+      totalEntryFeesSpent,
+      averageRank,
+      bestRank,
+      winRate,
+    };
+  }
+
+  async getMyContests(userId: string): Promise<{ contests: any[] }> {
+    const members = await this.contestMemberRepository.find({
+      where: { userId },
+      relations: { contest: true },
+      order: { joinedAt: 'DESC' },
+    });
+
+    const contests = await Promise.all(members.map(async (member) => {
+      const myPoints = member.pointsEarned;
+
+      const rankResult = await this.contestMemberRepository
+        .createQueryBuilder('cm')
+        .select('COUNT(*)', 'rank')
+        .where('cm.contestId = :contestId', { contestId: member.contestId })
+        .andWhere('cm.pointsEarned > :myPoints', { myPoints })
+        .getRawOne();
+      const myRank = (rankResult?.rank || 0) + 1;
+
+      return { ...member.contest, myPoints, myRank };
+    }));
+
+    return { contests };
   }
 }
 

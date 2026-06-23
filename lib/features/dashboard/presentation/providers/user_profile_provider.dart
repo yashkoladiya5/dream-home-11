@@ -2,10 +2,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/models/user_profile.dart';
+import '../../data/models/user_stats.dart';
 
 final userProfileProvider = StateNotifierProvider<UserProfileNotifier, AsyncValue<UserProfile>>((ref) {
   final dio = ref.watch(apiClientProvider);
   return UserProfileNotifier(dio);
+});
+
+final userStatsProvider = StateNotifierProvider<UserStatsNotifier, AsyncValue<UserStats>>((ref) {
+  final dio = ref.watch(apiClientProvider);
+  return UserStatsNotifier(dio);
 });
 
 class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
@@ -86,6 +92,23 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
       return true;
     } catch (_) {
       return false;
+    }
+  }
+}
+
+class UserStatsNotifier extends StateNotifier<AsyncValue<UserStats>> {
+  final Dio _dio;
+
+  UserStatsNotifier(this._dio) : super(const AsyncValue.loading());
+
+  Future<void> fetchStats() async {
+    state = const AsyncValue.loading();
+    try {
+      final response = await _dio.get('/api/v1/users/me/stats');
+      final data = UserStats.fromJson(response.data as Map<String, dynamic>);
+      state = AsyncValue.data(data);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 }

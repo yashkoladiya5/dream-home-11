@@ -14,6 +14,18 @@ export class UsersController {
     return user;
   }
 
+  @Get('me/stats')
+  @UseGuards(JwtAuthGuard)
+  async getUserStats(@GetUser() user: User) {
+    return this.usersService.getUserStats(user.id);
+  }
+
+  @Get('me/contests')
+  @UseGuards(JwtAuthGuard)
+  async getMyContests(@GetUser() user: User) {
+    return this.usersService.getMyContests(user.id);
+  }
+
   @Post('deposit')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)

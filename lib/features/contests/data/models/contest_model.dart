@@ -11,9 +11,13 @@ class ContestModel {
   final String? badgeColor;
   final String? rules;
   final String? inviteCode;
+  final bool? canJoin;
+  final String? cannotJoinReason;
   final DateTime startTime;
   final DateTime endTime;
   final String status;
+  final int? myPoints;
+  final int? myRank;
 
   ContestModel({
     required this.id,
@@ -28,9 +32,13 @@ class ContestModel {
     this.badgeColor,
     this.rules,
     this.inviteCode,
+    this.canJoin,
+    this.cannotJoinReason,
     required this.startTime,
     required this.endTime,
     required this.status,
+    this.myPoints,
+    this.myRank,
   });
 
   factory ContestModel.fromJson(Map<String, dynamic> json) {
@@ -47,9 +55,13 @@ class ContestModel {
       badgeColor: json['badgeColor'] as String?,
       rules: json['rules'] as String?,
       inviteCode: json['inviteCode'] as String?,
+      canJoin: json['canJoin'] as bool?,
+      cannotJoinReason: json['reason'] as String?,
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: DateTime.parse(json['endTime'] as String),
       status: json['status'] as String? ?? 'upcoming',
+      myPoints: json['myPoints'] as int?,
+      myRank: json['myRank'] as int?,
     );
   }
 
