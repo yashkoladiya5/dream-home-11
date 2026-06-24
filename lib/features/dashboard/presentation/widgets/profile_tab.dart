@@ -241,6 +241,15 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _buildInfoTile(
                     context,
+                    label: 'Rewards Catalog',
+                    value: 'REDEEM',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.card_giftcard_rounded,
+                    onTap: () => context.push('/rewards'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
                     label: 'Share & Earn',
                     value: 'EARN',
                     valueColor: AppTheme.primaryRed,

@@ -22,6 +22,8 @@ import '../../features/points/presentation/screens/streak_screen.dart';
 import '../../features/notifications/presentation/screens/reminders_screen.dart';
 import '../../features/notifications/presentation/screens/create_reminder_screen.dart';
 import '../../features/share_tracker/presentation/screens/share_tracker_screen.dart';
+import '../../features/rewards/presentation/screens/rewards_catalog_screen.dart';
+import '../../features/rewards/presentation/screens/reward_detail_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -146,6 +148,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/share-tracker',
         builder: (context, state) => const ShareTrackerScreen(),
+      ),
+      GoRoute(
+        path: '/rewards',
+        builder: (context, state) => const RewardsCatalogScreen(),
+      ),
+      GoRoute(
+        path: '/rewards/:id',
+        builder: (context, state) => RewardDetailScreen(
+          rewardId: state.pathParameters['id']!,
+        ),
       ),
     ],
   );
