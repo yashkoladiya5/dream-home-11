@@ -289,4 +289,45 @@ export class ContestsService {
       return { user, contest, member };
     });
   }
+
+  async getWinnersHistory(): Promise<{
+    contestId: string;
+    contestTitle: string;
+    prize: string;
+    completedAt: Date;
+    winners: { userId: string; userName: string; points: number; rank: number }[];
+  }[]> {
+    const completedContests = await this.contestRepository.find({
+      where: { status: ContestStatus.COMPLETED },
+      order: { endTime: 'DESC' },
+    });
+
+    const result = await Promise.all(
+      completedContests.map(async (contest) => {
+        const members = await this.contestMemberRepository.find({
+          where: { contestId: contest.id },
+          relations: { user: true },
+          order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
+          take: 3,
+        });
+
+        const winners = members.map((m, index) => ({
+          userId: m.userId,
+          userName: m.user?.fullName || 'Anonymous',
+          points: m.pointsEarned,
+          rank: index + 1,
+        }));
+
+        return {
+          contestId: contest.id,
+          contestTitle: contest.title,
+          prize: contest.prize || 'N/A',
+          completedAt: contest.endTime,
+          winners,
+        };
+      }),
+    );
+
+    return result;
+  }
 }

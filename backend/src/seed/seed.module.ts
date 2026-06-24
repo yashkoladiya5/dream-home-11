@@ -4,10 +4,12 @@ import { Contest } from '../contests/entities/contest.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User } from '../users/entities/user.entity';
 import { Reward } from '../rewards/entities/reward.entity';
+import { Banner } from '../banners/entities/banner.entity';
+import { Achievement } from '../achievements/entities/achievement.entity';
 import { SeedService } from './seed.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward])],
+  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement])],
   providers: [SeedService],
 })
 export class SeedModule {}

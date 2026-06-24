@@ -5,6 +5,8 @@ import { Contest, ContestType, ContestStatus } from '../contests/entities/contes
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User, UserLevel } from '../users/entities/user.entity';
 import { Reward } from '../rewards/entities/reward.entity';
+import { Banner } from '../banners/entities/banner.entity';
+import { Achievement } from '../achievements/entities/achievement.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -19,6 +21,10 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Reward)
     private readonly rewardRepository: Repository<Reward>,
+    @InjectRepository(Banner)
+    private readonly bannerRepository: Repository<Banner>,
+    @InjectRepository(Achievement)
+    private readonly achievementRepository: Repository<Achievement>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -130,6 +136,9 @@ export class SeedService implements OnApplicationBootstrap {
 
     await this._ensureCompletedContest();
     await this._seedRewards();
+    await this._seedMoreCompletedContests();
+    await this._seedBanners();
+    await this._seedAchievements();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -185,6 +194,96 @@ export class SeedService implements OnApplicationBootstrap {
     }
 
     this.logger.log(`Seeded completed contest "${contest.title}" with ${memberNames.length} members`);
+  }
+
+  private async _seedMoreCompletedContests(): Promise<void> {
+    const existing = await this.contestRepository.find({ where: { status: ContestStatus.COMPLETED } });
+    if (existing.length >= 3) {
+      this.logger.log('Additional completed contests already exist — skipping');
+      return;
+    }
+
+    const now = new Date();
+    const moreContests: Partial<Contest>[] = [
+      {
+        title: 'Dream Villa Championship',
+        type: ContestType.NORMAL as any,
+        entryFeeInr: 149.0,
+        pointsToJoin: 300,
+        maxSlots: 100,
+        filledSlots: 100,
+        prize: 'Luxury Villa in Lonavala',
+        badgeText: 'COMPLETED',
+        badgeColor: '#6B7280',
+        inviteCode: undefined,
+        startTime: new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000),
+        endTime: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000),
+        status: ContestStatus.COMPLETED,
+        rules: '1. Entry fee is non-refundable.\n2. This contest has been completed.\n3. Winners will be contacted via registered mobile number.\n4. Prize distribution within 7 working days.\n5. All decisions are final.',
+      },
+      {
+        title: 'Premier League Showdown',
+        type: ContestType.MEGA as any,
+        entryFeeInr: 199.0,
+        pointsToJoin: 500,
+        maxSlots: 500,
+        filledSlots: 500,
+        prize: '₹1,00,000 Grand Cash Prize',
+        badgeText: 'COMPLETED',
+        badgeColor: '#6B7280',
+        inviteCode: undefined,
+        startTime: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000),
+        endTime: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000),
+        status: ContestStatus.COMPLETED,
+        rules: '1. Entry fee is non-refundable.\n2. This mega contest has been completed.\n3. Top 3 winners will receive cash prizes.\n4. Winners must complete KYC within 7 days.\n5. All decisions are final.',
+      },
+    ];
+
+    for (const contestData of moreContests) {
+      const contest = this.contestRepository.create(contestData);
+      await this.contestRepository.save(contest);
+
+      const memberNames = [
+        ['Rohit Sharma', 'Sara Khan', 'Amit Patel'],
+        ['Priya Singh', 'Arun Kumar', 'Neha Gupta'],
+      ];
+      const memberPoints = [
+        [1500, 1100, 750],
+        [2000, 1600, 1200],
+      ];
+
+      const idx = moreContests.indexOf(contestData);
+      const names = memberNames[idx];
+      const points = memberPoints[idx];
+
+      for (let i = 0; i < names.length; i++) {
+        const phoneNumber = `+9191000000${idx * 3 + i}`;
+        let user = await this.userRepository.findOne({ where: { phoneNumber } });
+        if (!user) {
+          user = this.userRepository.create({
+            fullName: names[i],
+            phoneNumber,
+            walletBalanceInr: 0,
+            pointsBalance: 0,
+            lifetimePoints: points[i],
+            currentTier: this.getTierForPoints(points[i]),
+            isActive: true,
+            deviceId: `seed-device-extra-${idx}-${i}`,
+          });
+          await this.userRepository.save(user);
+        }
+
+        const member = this.contestMemberRepository.create({
+          contestId: contest.id,
+          userId: user.id,
+          pointsEarned: points[i],
+          joinedAt: new Date(now.getTime() - (50 + idx * 10 + i) * 24 * 60 * 60 * 1000),
+        });
+        await this.contestMemberRepository.save(member);
+      }
+    }
+
+    this.logger.log(`Seeded ${moreContests.length} additional completed contests with winners`);
   }
 
   private async _seedRewards(): Promise<void> {
@@ -309,6 +408,164 @@ export class SeedService implements OnApplicationBootstrap {
 
     await this.rewardRepository.save(rewards);
     this.logger.log(`Seeded ${rewards.length} rewards successfully`);
+  }
+
+  private async _seedAchievements(): Promise<void> {
+    const count = await this.achievementRepository.count();
+    if (count > 0) {
+      this.logger.log(`Achievements already seeded (${count} existing) — skipping`);
+      return;
+    }
+
+    const achievements: Partial<Achievement>[] = [
+      {
+        key: 'first_contest',
+        title: 'First Steps',
+        description: 'Join your first contest',
+        icon: 'emoji_events',
+        bonusPoints: 50,
+        sortOrder: 1,
+      },
+      {
+        key: 'ten_contests',
+        title: 'Dedicated Player',
+        description: 'Join 10 contests',
+        icon: 'military_tech',
+        bonusPoints: 100,
+        sortOrder: 2,
+      },
+      {
+        key: 'fifty_contests',
+        title: 'Contest Veteran',
+        description: 'Join 50 contests',
+        icon: 'workspace_premium',
+        bonusPoints: 500,
+        sortOrder: 3,
+      },
+      {
+        key: 'streak_7',
+        title: 'Streak Master',
+        description: 'Achieve a 7-day login streak',
+        icon: 'local_fire_department',
+        bonusPoints: 100,
+        sortOrder: 4,
+      },
+      {
+        key: 'streak_30',
+        title: 'Streak Legend',
+        description: 'Achieve a 30-day login streak',
+        icon: 'whatshot',
+        bonusPoints: 500,
+        sortOrder: 5,
+      },
+      {
+        key: 'share_first',
+        title: 'Social Butterfly',
+        description: 'Share the app for the first time',
+        icon: 'share',
+        bonusPoints: 25,
+        sortOrder: 6,
+      },
+      {
+        key: 'share_ten',
+        title: 'Influencer',
+        description: 'Share the app 10 times',
+        icon: 'groups',
+        bonusPoints: 100,
+        sortOrder: 7,
+      },
+      {
+        key: 'points_5000',
+        title: 'Points Collector',
+        description: 'Earn 5,000 lifetime points',
+        icon: 'stars',
+        bonusPoints: 300,
+        sortOrder: 8,
+      },
+      {
+        key: 'points_10000',
+        title: 'Points Millionaire',
+        description: 'Earn 10,000 lifetime points',
+        icon: 'auto_awesome',
+        bonusPoints: 800,
+        sortOrder: 9,
+      },
+      {
+        key: 'first_redeem',
+        title: 'Premium Member',
+        description: 'Redeem your first reward',
+        icon: 'card_giftcard',
+        bonusPoints: 150,
+        sortOrder: 10,
+      },
+    ];
+
+    await this.achievementRepository.save(achievements);
+    this.logger.log(`Seeded ${achievements.length} achievements successfully`);
+  }
+
+  private async _seedBanners(): Promise<void> {
+    const count = await this.bannerRepository.count();
+    if (count > 0) {
+      this.logger.log(`Banners already seeded (${count} existing) — skipping`);
+      return;
+    }
+
+    const banners: Partial<Banner>[] = [
+      {
+        title: 'Mega Dream Contest',
+        subtitle: 'Win a 3 BHK Luxury Apartment in Mumbai! Entry starts at just ₹49.',
+        imageUrl: null,
+        link: '/mega-contests',
+        linkLabel: 'JOIN NOW',
+        backgroundColor: '#D22C2C',
+        sortOrder: 1,
+        isActive: true,
+      },
+      {
+        title: 'Rewards Catalog',
+        subtitle: 'Redeem your points for gift cards, merchandise & more!',
+        imageUrl: null,
+        link: '/rewards',
+        linkLabel: 'EXPLORE',
+        backgroundColor: '#F59E0B',
+        sortOrder: 2,
+        isActive: true,
+      },
+      {
+        title: 'Share & Earn',
+        subtitle: 'Invite friends and earn bonus points for every referral!',
+        imageUrl: null,
+        link: '/share-tracker',
+        linkLabel: 'SHARE NOW',
+        backgroundColor: '#10B981',
+        sortOrder: 3,
+        isActive: true,
+      },
+      {
+        title: 'Complete Your KYC',
+        subtitle: 'Verify your account to unlock all features and win big prizes!',
+        imageUrl: null,
+        link: '/home',
+        linkLabel: 'VERIFY',
+        backgroundColor: '#8B5CF6',
+        sortOrder: 4,
+        isActive: true,
+      },
+      {
+        title: 'Premium Membership',
+        subtitle: 'Go premium for exclusive contests, rewards & priority support.',
+        imageUrl: null,
+        link: '/rewards',
+        linkLabel: 'LEARN MORE',
+        backgroundColor: '#D22C2C',
+        sortOrder: 5,
+        isActive: true,
+      },
+    ];
+
+    await this.bannerRepository.save(banners);
+    this.logger.log(`Seeded ${banners.length} banners successfully`);
   }
 
   private getTierForPoints(points: number): UserLevel {

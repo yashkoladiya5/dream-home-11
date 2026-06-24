@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/shimmer_widget.dart';
+import '../widgets/banner_carousel.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -149,42 +150,9 @@ class HomeScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 40),
-                  
-                  Text(
-                    'Dashboard Active',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.2,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Phase 1 Setup completed successfully! Welcome to the new core structure.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.greyMedium,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
-                  Center(
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppTheme.emeraldGreen.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.emeraldGreen.withValues(alpha: 0.2)),
-                      ),
-                      child: const Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: AppTheme.emeraldGreen,
-                        size: 48,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 32),
+                  const BannerCarousel(),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),

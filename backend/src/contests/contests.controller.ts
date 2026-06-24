@@ -21,6 +21,18 @@ export class ContestsController {
     return this.contestsService.findAll(query);
   }
 
+  @Get('winners')
+  @UseGuards(JwtAuthGuard)
+  async getWinnersHistory() {
+    return this.contestsService.getWinnersHistory();
+  }
+
+  @Get('code/:code')
+  @UseGuards(JwtAuthGuard)
+  async findByInviteCode(@Param('code') code: string) {
+    return this.contestsService.findByInviteCode(code);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async findById(@Param('id') id: string) {
@@ -43,12 +55,6 @@ export class ContestsController {
   @UseGuards(JwtAuthGuard)
   async getLeaderboard(@Param('id') id: string) {
     return this.contestsService.getLeaderboard(id);
-  }
-
-  @Get('code/:code')
-  @UseGuards(JwtAuthGuard)
-  async findByInviteCode(@Param('code') code: string) {
-    return this.contestsService.findByInviteCode(code);
   }
 
   @Post('private')
