@@ -133,6 +133,7 @@ export class SeedService implements OnApplicationBootstrap {
 
     await this._ensureCompletedContest();
     await this._seedRewards();
+    await this._seedMoreCompletedContests();
     await this._seedBanners();
   }
 
@@ -189,6 +190,96 @@ export class SeedService implements OnApplicationBootstrap {
     }
 
     this.logger.log(`Seeded completed contest "${contest.title}" with ${memberNames.length} members`);
+  }
+
+  private async _seedMoreCompletedContests(): Promise<void> {
+    const existing = await this.contestRepository.find({ where: { status: ContestStatus.COMPLETED } });
+    if (existing.length >= 3) {
+      this.logger.log('Additional completed contests already exist — skipping');
+      return;
+    }
+
+    const now = new Date();
+    const moreContests: Partial<Contest>[] = [
+      {
+        title: 'Dream Villa Championship',
+        type: ContestType.NORMAL as any,
+        entryFeeInr: 149.0,
+        pointsToJoin: 300,
+        maxSlots: 100,
+        filledSlots: 100,
+        prize: 'Luxury Villa in Lonavala',
+        badgeText: 'COMPLETED',
+        badgeColor: '#6B7280',
+        inviteCode: undefined,
+        startTime: new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000),
+        endTime: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000),
+        status: ContestStatus.COMPLETED,
+        rules: '1. Entry fee is non-refundable.\n2. This contest has been completed.\n3. Winners will be contacted via registered mobile number.\n4. Prize distribution within 7 working days.\n5. All decisions are final.',
+      },
+      {
+        title: 'Premier League Showdown',
+        type: ContestType.MEGA as any,
+        entryFeeInr: 199.0,
+        pointsToJoin: 500,
+        maxSlots: 500,
+        filledSlots: 500,
+        prize: '₹1,00,000 Grand Cash Prize',
+        badgeText: 'COMPLETED',
+        badgeColor: '#6B7280',
+        inviteCode: undefined,
+        startTime: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000),
+        endTime: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000),
+        status: ContestStatus.COMPLETED,
+        rules: '1. Entry fee is non-refundable.\n2. This mega contest has been completed.\n3. Top 3 winners will receive cash prizes.\n4. Winners must complete KYC within 7 days.\n5. All decisions are final.',
+      },
+    ];
+
+    for (const contestData of moreContests) {
+      const contest = this.contestRepository.create(contestData);
+      await this.contestRepository.save(contest);
+
+      const memberNames = [
+        ['Rohit Sharma', 'Sara Khan', 'Amit Patel'],
+        ['Priya Singh', 'Arun Kumar', 'Neha Gupta'],
+      ];
+      const memberPoints = [
+        [1500, 1100, 750],
+        [2000, 1600, 1200],
+      ];
+
+      const idx = moreContests.indexOf(contestData);
+      const names = memberNames[idx];
+      const points = memberPoints[idx];
+
+      for (let i = 0; i < names.length; i++) {
+        const phoneNumber = `+9191000000${idx * 3 + i}`;
+        let user = await this.userRepository.findOne({ where: { phoneNumber } });
+        if (!user) {
+          user = this.userRepository.create({
+            fullName: names[i],
+            phoneNumber,
+            walletBalanceInr: 0,
+            pointsBalance: 0,
+            lifetimePoints: points[i],
+            currentTier: this.getTierForPoints(points[i]),
+            isActive: true,
+            deviceId: `seed-device-extra-${idx}-${i}`,
+          });
+          await this.userRepository.save(user);
+        }
+
+        const member = this.contestMemberRepository.create({
+          contestId: contest.id,
+          userId: user.id,
+          pointsEarned: points[i],
+          joinedAt: new Date(now.getTime() - (50 + idx * 10 + i) * 24 * 60 * 60 * 1000),
+        });
+        await this.contestMemberRepository.save(member);
+      }
+    }
+
+    this.logger.log(`Seeded ${moreContests.length} additional completed contests with winners`);
   }
 
   private async _seedRewards(): Promise<void> {
