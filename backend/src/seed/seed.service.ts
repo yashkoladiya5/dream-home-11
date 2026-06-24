@@ -6,6 +6,7 @@ import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User, UserLevel } from '../users/entities/user.entity';
 import { Reward } from '../rewards/entities/reward.entity';
 import { Banner } from '../banners/entities/banner.entity';
+import { Achievement } from '../achievements/entities/achievement.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -22,6 +23,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly rewardRepository: Repository<Reward>,
     @InjectRepository(Banner)
     private readonly bannerRepository: Repository<Banner>,
+    @InjectRepository(Achievement)
+    private readonly achievementRepository: Repository<Achievement>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -135,6 +138,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedRewards();
     await this._seedMoreCompletedContests();
     await this._seedBanners();
+    await this._seedAchievements();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -404,6 +408,100 @@ export class SeedService implements OnApplicationBootstrap {
 
     await this.rewardRepository.save(rewards);
     this.logger.log(`Seeded ${rewards.length} rewards successfully`);
+  }
+
+  private async _seedAchievements(): Promise<void> {
+    const count = await this.achievementRepository.count();
+    if (count > 0) {
+      this.logger.log(`Achievements already seeded (${count} existing) — skipping`);
+      return;
+    }
+
+    const achievements: Partial<Achievement>[] = [
+      {
+        key: 'first_contest',
+        title: 'First Steps',
+        description: 'Join your first contest',
+        icon: 'emoji_events',
+        bonusPoints: 50,
+        sortOrder: 1,
+      },
+      {
+        key: 'ten_contests',
+        title: 'Dedicated Player',
+        description: 'Join 10 contests',
+        icon: 'military_tech',
+        bonusPoints: 100,
+        sortOrder: 2,
+      },
+      {
+        key: 'fifty_contests',
+        title: 'Contest Veteran',
+        description: 'Join 50 contests',
+        icon: 'workspace_premium',
+        bonusPoints: 500,
+        sortOrder: 3,
+      },
+      {
+        key: 'streak_7',
+        title: 'Streak Master',
+        description: 'Achieve a 7-day login streak',
+        icon: 'local_fire_department',
+        bonusPoints: 100,
+        sortOrder: 4,
+      },
+      {
+        key: 'streak_30',
+        title: 'Streak Legend',
+        description: 'Achieve a 30-day login streak',
+        icon: 'whatshot',
+        bonusPoints: 500,
+        sortOrder: 5,
+      },
+      {
+        key: 'share_first',
+        title: 'Social Butterfly',
+        description: 'Share the app for the first time',
+        icon: 'share',
+        bonusPoints: 25,
+        sortOrder: 6,
+      },
+      {
+        key: 'share_ten',
+        title: 'Influencer',
+        description: 'Share the app 10 times',
+        icon: 'groups',
+        bonusPoints: 100,
+        sortOrder: 7,
+      },
+      {
+        key: 'points_5000',
+        title: 'Points Collector',
+        description: 'Earn 5,000 lifetime points',
+        icon: 'stars',
+        bonusPoints: 300,
+        sortOrder: 8,
+      },
+      {
+        key: 'points_10000',
+        title: 'Points Millionaire',
+        description: 'Earn 10,000 lifetime points',
+        icon: 'auto_awesome',
+        bonusPoints: 800,
+        sortOrder: 9,
+      },
+      {
+        key: 'first_redeem',
+        title: 'Premium Member',
+        description: 'Redeem your first reward',
+        icon: 'card_giftcard',
+        bonusPoints: 150,
+        sortOrder: 10,
+      },
+    ];
+
+    await this.achievementRepository.save(achievements);
+    this.logger.log(`Seeded ${achievements.length} achievements successfully`);
   }
 
   private async _seedBanners(): Promise<void> {

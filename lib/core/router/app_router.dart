@@ -25,6 +25,7 @@ import '../../features/share_tracker/presentation/screens/share_tracker_screen.d
 import '../../features/rewards/presentation/screens/rewards_catalog_screen.dart';
 import '../../features/rewards/presentation/screens/reward_detail_screen.dart';
 import '../../features/winners/presentation/screens/winners_history_screen.dart';
+import '../../features/achievements/presentation/screens/achievements_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -163,6 +164,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/winners',
         builder: (context, state) => const WinnersHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/achievements',
+        builder: (context, state) => const AchievementsScreen(),
       ),
     ],
   );

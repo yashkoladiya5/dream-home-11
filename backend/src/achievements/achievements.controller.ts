@@ -1,0 +1,19 @@
+import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { AchievementsService } from './achievements.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+@Controller('api/v1/achievements')
+@UseGuards(JwtAuthGuard)
+export class AchievementsController {
+  constructor(private readonly achievementsService: AchievementsService) {}
+
+  @Get()
+  async getAchievements(@Req() req) {
+    return this.achievementsService.getAchievementsWithProgress(req.user.id);
+  }
+
+  @Post('check')
+  async checkAndAward(@Req() req) {
+    return this.achievementsService.checkAndAwardAchievements(req.user.id);
+  }
+}
