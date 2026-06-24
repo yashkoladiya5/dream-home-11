@@ -1,48 +1,54 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { randomBytes } from 'crypto';
 import { Share } from './entities/share.entity';
 import { PointsEngineService } from '../points/points-engine.service';
+
+export const SHARE_POINTS = 5;
 
 @Injectable()
 export class ShareTrackerService {
   constructor(
     @InjectRepository(Share)
-    private readonly shareRepository: Repository<Share>,
+    private readonly shareRepo: Repository<Share>,
     private readonly pointsEngineService: PointsEngineService,
   ) {}
 
-  async logShare(userId: string, contestId: string, shareChannel: string): Promise<Share> {
+  async logShare(userId: string, contestId: string | null, shareChannel: string): Promise<Share> {
     const inviteCode = this.generateInviteCode();
-    const share = this.shareRepository.create({
+    const share = this.shareRepo.create({
       userId,
       contestId,
       shareChannel,
       status: 'sent',
-      pointsAwarded: 5,
+      pointsAwarded: SHARE_POINTS,
       inviteCode,
     });
-    await this.shareRepository.save(share);
-    await this.pointsEngineService.logPointAction(userId, 'share_contest', 5, 1.0, 5);
-    return share;
+    const saved = await this.shareRepo.save(share);
+    await this.pointsEngineService.logPointAction(userId, 'share_contest', SHARE_POINTS, 1.0, SHARE_POINTS);
+    return saved;
   }
 
   async getShareHistory(userId: string): Promise<Share[]> {
-    return this.shareRepository.find({
+    return this.shareRepo.find({
       where: { userId },
       order: { sharedAt: 'DESC' },
     });
   }
 
-  async getShareStats(userId: string): Promise<{ totalShares: number; totalPointsEarned: number }> {
-    const shares = await this.shareRepository.find({ where: { userId } });
+  async getShareStats(userId: string): Promise<{ totalShares: number; totalPoints: number; inviteCode: string | null }> {
+    const shares = await this.shareRepo.find({ where: { userId } });
     const totalShares = shares.length;
-    const totalPointsEarned = shares.reduce((sum, s) => sum + s.pointsAwarded, 0);
-    return { totalShares, totalPointsEarned };
+    const totalPoints = shares.reduce((sum, s) => sum + s.pointsAwarded, 0);
+    const latestShare = shares.length > 0 ? shares[0] : null;
+    return {
+      totalShares,
+      totalPoints,
+      inviteCode: latestShare?.inviteCode ?? null,
+    };
   }
 
-  generateInviteCode(): string {
-    return randomBytes(4).toString('hex').toUpperCase().slice(0, 8);
+  private generateInviteCode(): string {
+    return Math.random().toString(36).substring(2, 10).toUpperCase();
   }
 }

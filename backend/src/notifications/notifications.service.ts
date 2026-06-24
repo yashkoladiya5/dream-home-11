@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -6,6 +6,8 @@ import { getMessaging } from 'firebase-admin/messaging';
 import { FcmToken } from './entities/fcm-token.entity';
 import { Reminder } from './entities/reminder.entity';
 import { PointsEngineService } from '../points/points-engine.service';
+
+export const REMINDER_POINTS = 10;
 
 @Injectable()
 export class NotificationsService {
@@ -35,6 +37,12 @@ export class NotificationsService {
   }
 
   async createReminder(userId: string, contestId: string, remindAt: Date): Promise<Reminder> {
+    const existing = await this.reminderRepo.findOne({ where: { userId, contestId, status: 'pending' } });
+    if (existing) {
+      this.logger.warn(`Duplicate reminder attempt for user ${userId}, contest ${contestId}`);
+      return existing;
+    }
+
     const reminder = this.reminderRepo.create({ userId, contestId, remindAt });
     const saved = await this.reminderRepo.save(reminder);
 
@@ -47,7 +55,7 @@ export class NotificationsService {
       this.scheduledTimeouts.set(saved.id, timeout);
     }
 
-    await this.pointsEngineService.logPointAction(userId, 'reminder_created', 10, 1.0, 10);
+    await this.pointsEngineService.logPointAction(userId, 'reminder_created', REMINDER_POINTS, 1.0, REMINDER_POINTS);
 
     return saved;
   }
@@ -55,6 +63,7 @@ export class NotificationsService {
   async getUserReminders(userId: string): Promise<Reminder[]> {
     return this.reminderRepo.find({
       where: { userId },
+      relations: { contest: true },
       order: { remindAt: 'DESC' },
     });
   }
@@ -91,7 +100,7 @@ export class NotificationsService {
       try {
         await getMessaging().send(message);
         this.logger.log(`Reminder sent to device ${fcmToken.id}`);
-      } catch (error) {
+      } catch (error: any) {
         this.logger.error(`Failed to send FCM to token ${fcmToken.id}: ${error.message}`);
       }
     }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/share_provider.dart';
 import '../../data/models/share_event.dart';
@@ -13,6 +16,9 @@ class ShareTrackerScreen extends ConsumerStatefulWidget {
 }
 
 class _ShareTrackerScreenState extends ConsumerState<ShareTrackerScreen> {
+  // ignore: unused_field
+  String? _sharingChannel;
+
   @override
   void initState() {
     super.initState();
@@ -20,16 +26,56 @@ class _ShareTrackerScreenState extends ConsumerState<ShareTrackerScreen> {
   }
 
   Future<void> _share(String channel) async {
-    final success = await ref.read(shareHistoryProvider.notifier).logShare(shareChannel: channel);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'Shared successfully! +5 points' : 'Failed to share'),
-          backgroundColor: success ? AppTheme.emeraldGreen : AppTheme.primaryRed,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+    setState(() => _sharingChannel = channel);
+
+    final history = ref.read(shareHistoryProvider);
+    final inviteCode = history.whenOrNull(data: (shares) => shares.isNotEmpty ? shares.first.inviteCode : null) ?? 'DREAM11';
+    final shareText = 'Join me on Dream Home 11! 🏏\n\nUse my invite code: $inviteCode\n\nDownload now and start winning!';
+
+    try {
+      switch (channel) {
+        case 'copy_link':
+          await Clipboard.setData(ClipboardData(text: inviteCode));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Invite code copied!'), backgroundColor: AppTheme.emeraldGreen, behavior: SnackBarBehavior.floating),
+            );
+          }
+          break;
+        case 'whatsapp':
+          final uri = Uri.parse('whatsapp://send?text=${Uri.encodeComponent(shareText)}');
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri);
+          } else {
+            await Share.share(shareText, subject: 'Dream Home 11');
+          }
+          break;
+        case 'telegram':
+          final uri = Uri.parse('tg://msg?text=${Uri.encodeComponent(shareText)}');
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri);
+          } else {
+            await Share.share(shareText, subject: 'Dream Home 11');
+          }
+          break;
+        default:
+          await Share.share(shareText, subject: 'Dream Home 11');
+      }
+
+      await ref.read(shareHistoryProvider.notifier).logShare(shareChannel: channel);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Shared successfully! +5 points'), backgroundColor: AppTheme.emeraldGreen, behavior: SnackBarBehavior.floating),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to share'), backgroundColor: AppTheme.primaryRed, behavior: SnackBarBehavior.floating),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sharingChannel = null);
     }
   }
 
@@ -236,28 +282,44 @@ class _ShareTrackerScreenState extends ConsumerState<ShareTrackerScreen> {
   }
 
   Widget _buildChannelButton(IconData icon, String label, String channel) {
+    final isLoading = _sharingChannel == channel;
     return InkWell(
-      onTap: () => _share(channel),
+      onTap: isLoading ? null : () => _share(channel),
       borderRadius: BorderRadius.circular(16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
+          SizedBox(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(
-              gradient: AppTheme.darkCardGradient,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryRed.withValues(alpha: 0.15),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.darkCardGradient,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withValues(alpha: isLoading ? 0.05 : 0.1)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryRed.withValues(alpha: isLoading ? 0.05 : 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, color: isLoading ? AppTheme.greyMedium : AppTheme.primaryRed, size: 26),
                 ),
+                if (isLoading)
+                  const SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.primaryRed),
+                  ),
               ],
             ),
-            child: Icon(icon, color: AppTheme.primaryRed, size: 26),
           ),
           const SizedBox(height: 8),
           Text(

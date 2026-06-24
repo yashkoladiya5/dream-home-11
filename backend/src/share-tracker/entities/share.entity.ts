@@ -14,7 +14,7 @@ export class Share {
   user: User;
 
   @Column({ name: 'contest_id', type: 'uuid', nullable: true })
-  contestId: string;
+  contestId: string | null;
 
   @Column({ name: 'share_channel', type: 'varchar', length: 50, nullable: false })
   shareChannel: string;
@@ -26,7 +26,7 @@ export class Share {
   pointsAwarded: number;
 
   @Column({ name: 'invite_code', type: 'varchar', length: 20, nullable: true })
-  inviteCode: string;
+  inviteCode: string | null;
 
   @CreateDateColumn({ name: 'shared_at', type: 'timestamp with time zone' })
   sharedAt: Date;

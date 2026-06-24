@@ -28,7 +28,9 @@ export class NotificationsController {
     if (!contestId || !remindAt) return { success: false, reason: 'contestId and remindAt are required' };
     if (!UUID_REGEX.test(contestId)) throw new BadRequestException('Invalid contest ID format');
     const reminder = await this.notificationsService.createReminder(userId, contestId, new Date(remindAt));
-    return { success: true, reminder };
+    const reminders = await this.notificationsService.getUserReminders(userId);
+    const created = reminders.find(r => r.id === reminder.id);
+    return { success: true, reminder: created || reminder };
   }
 
   @Delete('reminders/:id')

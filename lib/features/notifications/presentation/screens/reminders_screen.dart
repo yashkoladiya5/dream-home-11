@@ -224,7 +224,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Contest starting',
+                    reminder.contestTitle ?? 'Contest starting',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
