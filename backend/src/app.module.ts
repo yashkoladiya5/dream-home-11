@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { User } from './users/entities/user.entity';
@@ -8,12 +9,20 @@ import { Kyc } from './kyc/entities/kyc.entity';
 import { Contest } from './contests/entities/contest.entity';
 import { ContestMember } from './contests/entities/contest-member.entity';
 import { PointLog } from './points/entities/point-log.entity';
+import { FcmToken } from './notifications/entities/fcm-token.entity';
+import { Reminder } from './notifications/entities/reminder.entity';
+import { Share } from './share-tracker/entities/share.entity';
+import { Reward } from './rewards/entities/reward.entity';
+import { RewardRedemption } from './rewards/entities/reward-redemption.entity';
+import { RewardsModule } from './rewards/rewards.module';
 import { PointsModule } from './points/points.module';
 import { UsersModule } from './users/users.module';
 import { KycModule } from './kyc/kyc.module';
 import { AuthModule } from './auth/auth.module';
 import { ContestsModule } from './contests/contests.module';
 import { SeedModule } from './seed/seed.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ShareTrackerModule } from './share-tracker/share-tracker.module';
 
 @Module({
   imports: [
@@ -31,16 +40,20 @@ import { SeedModule } from './seed/seed.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
+    ScheduleModule.forRoot(),
     UsersModule,
     KycModule,
     AuthModule,
     ContestsModule,
     PointsModule,
+    RewardsModule,
     SeedModule,
+    NotificationsModule,
+    ShareTrackerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

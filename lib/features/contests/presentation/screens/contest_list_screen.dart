@@ -17,6 +17,21 @@ class ContestListScreen extends ConsumerStatefulWidget {
 class _ContestListScreenState extends ConsumerState<ContestListScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _showFilters = false;
+  bool _sortAsc = true;
+  String _sortBy = 'entryFee';
+  String? _selectedType;
+  String? _selectedStatus;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  final _typeFilters = ['All', 'Mega', 'Head to Head', 'League'];
+  final _statusFilters = ['Upcoming', 'Live', 'Completed'];
+  final _sortOptions = [
+    {'label': 'Entry Fee', 'value': 'entryFee'},
+    {'label': 'Prize Pool', 'value': 'prizePool'},
+    {'label': 'Start Time', 'value': 'startTime'},
+  ];
 
   @override
   void initState() {
@@ -32,6 +47,8 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -70,6 +87,7 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
       body: Column(
         children: [
           _buildTabBar(),
+          if (_showFilters) _buildFilterBar(),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -110,63 +128,311 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
   }
 
   Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.secondarySlate,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        dividerColor: Colors.transparent,
-        indicatorPadding: const EdgeInsets.symmetric(
-          horizontal: -20,
-          vertical: 6,
-        ),
-        indicator: BoxDecoration(
-          color: AppTheme.primaryRed.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.3)),
-        ),
-
-        // indicatorPadding: EdgeInsetsGeometry.all(5),
-        labelColor: AppTheme.white,
-        unselectedLabelColor: AppTheme.greyMedium,
-        labelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.3,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.3,
-        ),
-        tabs: const [
-          Tab(text: 'All'),
-          Tab(text: 'Active'),
-          Tab(text: 'Mega'),
-          Tab(text: 'Home'),
-          Tab(text: 'Past'),
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppTheme.secondarySlate,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                dividerColor: Colors.transparent,
+                indicatorPadding: const EdgeInsets.symmetric(
+                  horizontal: -20,
+                  vertical: 6,
+                ),
+                indicator: BoxDecoration(
+                  color: AppTheme.primaryRed.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.3)),
+                ),
+                labelColor: AppTheme.white,
+                unselectedLabelColor: AppTheme.greyMedium,
+                labelStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.3,
+                ),
+                tabs: const [
+                  Tab(text: 'All'),
+                  Tab(text: 'Active'),
+                  Tab(text: 'Mega'),
+                  Tab(text: 'Home'),
+                  Tab(text: 'Past'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: _showFilters ? AppTheme.primaryRed : AppTheme.secondarySlate,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _showFilters
+                    ? AppTheme.primaryRed
+                    : Colors.white.withValues(alpha: 0.06),
+              ),
+            ),
+            child: IconButton(
+              onPressed: () => setState(() => _showFilters = !_showFilters),
+              icon: Icon(
+                Icons.filter_list_rounded,
+                color: _showFilters ? AppTheme.white : AppTheme.greyMedium,
+                size: 20,
+              ),
+              padding: EdgeInsets.zero,
+            ),
+          ),
         ],
       ),
     );
   }
 
+  Widget _buildFilterBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 4),
+          _buildSearchField(),
+          const SizedBox(height: 12),
+          _buildFilterChips(),
+          const SizedBox(height: 12),
+          _buildSortRow(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.secondarySlate,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        style: const TextStyle(color: AppTheme.white, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: 'Search contests...',
+          hintStyle: TextStyle(color: AppTheme.greyMedium.withValues(alpha: 0.7), fontSize: 14),
+          prefixIcon: Icon(Icons.search_rounded, color: AppTheme.greyMedium, size: 20),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {});
+                  },
+                  icon: Icon(Icons.close_rounded, color: AppTheme.greyMedium, size: 18),
+                )
+              : null,
+          border: InputBorder.none,
+          filled: false,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 34,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              ..._typeFilters.map((type) => _buildChip(
+                type,
+                selected: type == 'All' ? _selectedType == null : _selectedType == type.toLowerCase(),
+                onTap: () {
+                  setState(() {
+                    _selectedType = type == 'All' ? null : type.toLowerCase();
+                    _selectedStatus = null;
+                  });
+                },
+              )),
+              const SizedBox(width: 8),
+              Container(width: 1, height: 20, color: Colors.white.withValues(alpha: 0.08)),
+              const SizedBox(width: 8),
+              ..._statusFilters.map((status) => _buildChip(
+                status,
+                selected: _selectedStatus == status.toLowerCase(),
+                onTap: () {
+                  setState(() {
+                    _selectedStatus = _selectedStatus == status.toLowerCase() ? null : status.toLowerCase();
+                    _selectedType = null;
+                  });
+                },
+              )),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChip(String label, {required bool selected, required VoidCallback onTap}) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: selected ? AppTheme.primaryRed : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? AppTheme.primaryRed : Colors.white.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? AppTheme.white : AppTheme.greyMedium,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSortRow() {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: AppTheme.secondarySlate,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _sortBy,
+              dropdownColor: AppTheme.secondarySlate,
+              isDense: true,
+              style: const TextStyle(
+                color: AppTheme.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              items: _sortOptions.map((opt) {
+                return DropdownMenuItem(
+                  value: opt['value'],
+                  child: Text(opt['label']!, style: const TextStyle(fontSize: 12)),
+                );
+              }).toList(),
+              onChanged: (val) {
+                if (val != null) setState(() => _sortBy = val);
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: AppTheme.secondarySlate,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          ),
+          child: IconButton(
+            onPressed: () => setState(() => _sortAsc = !_sortAsc),
+            icon: Icon(
+              _sortAsc ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+              color: AppTheme.greyMedium,
+              size: 18,
+            ),
+            padding: EdgeInsets.zero,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          _searchController.text.isEmpty ? '' : '"${_searchController.text}" ',
+          style: const TextStyle(color: AppTheme.greyMedium, fontSize: 11),
+        ),
+      ],
+    );
+  }
+
   List<ContestModel> _filteredContests(List<ContestModel> contests) {
+    var result = List<ContestModel>.from(contests);
+
+    // Apply tab filter
     switch (_tabController.index) {
       case 1:
-        return contests.where((c) => c.status == 'running').toList();
+        result = result.where((c) => c.status == 'running').toList();
+        break;
       case 2:
-        return contests.where((c) => c.type == 'mega').toList();
+        result = result.where((c) => c.type == 'mega').toList();
+        break;
       case 3:
-        return contests.where((c) => c.type == 'home').toList();
+        result = result.where((c) => c.type == 'home').toList();
+        break;
       case 4:
-        return contests.where((c) => c.status == 'completed').toList();
-      default:
-        return contests;
+        result = result.where((c) => c.status == 'completed').toList();
+        break;
     }
+
+    // Apply additional filters
+    if (_selectedType != null) {
+      result = result.where((c) => c.type == _selectedType).toList();
+    }
+    if (_selectedStatus != null) {
+      result = result.where((c) => c.status == _selectedStatus).toList();
+    }
+
+    // Apply search
+    if (_searchController.text.isNotEmpty) {
+      final query = _searchController.text.toLowerCase();
+      result = result.where((c) =>
+        c.title.toLowerCase().contains(query) ||
+        c.type.toLowerCase().contains(query) ||
+        c.status.toLowerCase().contains(query)
+      ).toList();
+    }
+
+    // Apply sort
+    result.sort((a, b) {
+      int cmp;
+      switch (_sortBy) {
+        case 'prizePool':
+          cmp = (a.prize ?? '').compareTo(b.prize ?? '');
+          break;
+        case 'startTime':
+          cmp = a.startTime.compareTo(b.startTime);
+          break;
+        case 'entryFee':
+        default:
+          cmp = a.entryFeeInr.compareTo(b.entryFeeInr);
+          break;
+      }
+      return _sortAsc ? cmp : -cmp;
+    });
+
+    return result;
   }
 
   Color? _accentColorForTab() {

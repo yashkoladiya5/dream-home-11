@@ -4,6 +4,7 @@ import { Repository, IsNull } from 'typeorm';
 import { Contest, ContestType, ContestStatus } from '../contests/entities/contest.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User, UserLevel } from '../users/entities/user.entity';
+import { Reward } from '../rewards/entities/reward.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -16,6 +17,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly contestMemberRepository: Repository<ContestMember>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Reward)
+    private readonly rewardRepository: Repository<Reward>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -126,6 +129,7 @@ export class SeedService implements OnApplicationBootstrap {
     }
 
     await this._ensureCompletedContest();
+    await this._seedRewards();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -181,6 +185,130 @@ export class SeedService implements OnApplicationBootstrap {
     }
 
     this.logger.log(`Seeded completed contest "${contest.title}" with ${memberNames.length} members`);
+  }
+
+  private async _seedRewards(): Promise<void> {
+    const count = await this.rewardRepository.count();
+    if (count > 0) {
+      this.logger.log(`Rewards already seeded (${count} existing) — skipping`);
+      return;
+    }
+
+    const rewards: Partial<Reward>[] = [
+      {
+        title: '₹100 Amazon Gift Card',
+        description: 'Redeem for any product on Amazon.in. Instant digital delivery to your email.',
+        imageUrl: null,
+        pointsRequired: 500,
+        stock: 100,
+        category: 'gift_card',
+        isActive: true,
+        sortOrder: 1,
+      },
+      {
+        title: '₹500 Flipkart Voucher',
+        description: 'Shop anything on Flipkart with this digital gift voucher. Valid for 6 months.',
+        imageUrl: null,
+        pointsRequired: 2000,
+        stock: 50,
+        category: 'gift_card',
+        isActive: true,
+        sortOrder: 2,
+      },
+      {
+        title: '₹1000 Myntra Voucher',
+        description: 'Fashion & lifestyle shopping voucher for Myntra. Valid on all products.',
+        imageUrl: null,
+        pointsRequired: 3500,
+        stock: 30,
+        category: 'gift_card',
+        isActive: true,
+        sortOrder: 3,
+      },
+      {
+        title: 'Dream11 Premium Cap',
+        description: 'Official Dream11 premium cotton cap with embroidered logo. One size fits all.',
+        imageUrl: null,
+        pointsRequired: 800,
+        stock: 20,
+        category: 'merchandise',
+        isActive: true,
+        sortOrder: 4,
+      },
+      {
+        title: 'Dream11 Branded T-Shirt',
+        description: 'Premium quality black t-shirt with Dream11 signature print. Available in M, L, XL.',
+        imageUrl: null,
+        pointsRequired: 1200,
+        stock: 15,
+        category: 'merchandise',
+        isActive: true,
+        sortOrder: 5,
+      },
+      {
+        title: 'Dream11 Limited Edition Hoodie',
+        description: 'Exclusive limited edition fleece hoodie. Only 10 ever produced. Collectors item.',
+        imageUrl: null,
+        pointsRequired: 2500,
+        stock: 10,
+        category: 'merchandise',
+        isActive: true,
+        sortOrder: 6,
+      },
+      {
+        title: '1 Month Dream11 Premium',
+        description: 'Unlock premium contests, exclusive rewards, and priority support for 1 month.',
+        imageUrl: null,
+        pointsRequired: 1500,
+        stock: null,
+        category: 'subscription',
+        isActive: true,
+        sortOrder: 7,
+      },
+      {
+        title: '3 Month Dream11 Premium',
+        description: 'Premium subscription for 3 months. Best value for dedicated players.',
+        imageUrl: null,
+        pointsRequired: 3500,
+        stock: null,
+        category: 'subscription',
+        isActive: true,
+        sortOrder: 8,
+      },
+      {
+        title: '1 Year Dream11 Premium',
+        description: 'Full year of Dream11 Premium. All benefits unlocked for 12 months.',
+        imageUrl: null,
+        pointsRequired: 8000,
+        stock: null,
+        category: 'subscription',
+        isActive: true,
+        sortOrder: 9,
+      },
+      {
+        title: 'Exclusive Dream11 Trophy Replica',
+        description: 'Gold-plated miniature replica of the Dream11 Championship Trophy. Numbered edition.',
+        imageUrl: null,
+        pointsRequired: 5000,
+        stock: 5,
+        category: 'special',
+        isActive: true,
+        sortOrder: 10,
+      },
+      {
+        title: 'VIP Contest Direct Entry Pass',
+        description: 'Direct entry to any VIP contest of your choice for one year. Skip the queue!',
+        imageUrl: null,
+        pointsRequired: 10000,
+        stock: 3,
+        category: 'special',
+        isActive: true,
+        sortOrder: 11,
+      },
+    ];
+
+    await this.rewardRepository.save(rewards);
+    this.logger.log(`Seeded ${rewards.length} rewards successfully`);
   }
 
   private getTierForPoints(points: number): UserLevel {

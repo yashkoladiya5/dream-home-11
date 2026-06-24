@@ -8,6 +8,8 @@ class UserProfile {
   final int lifetimePoints;
   final double walletBalanceInr;
   final int pointsBalance;
+  final int currentStreak;
+  final int longestStreak;
   final KycProfile? kyc;
 
   UserProfile({
@@ -20,6 +22,8 @@ class UserProfile {
     required this.lifetimePoints,
     required this.walletBalanceInr,
     required this.pointsBalance,
+    required this.currentStreak,
+    required this.longestStreak,
     this.kyc,
   });
 
@@ -34,6 +38,8 @@ class UserProfile {
       lifetimePoints: json['lifetimePoints'] as int? ?? 0,
       walletBalanceInr: double.tryParse(json['walletBalanceInr']?.toString() ?? '0.0') ?? 0.0,
       pointsBalance: json['pointsBalance'] as int? ?? 0,
+      currentStreak: (json['currentStreak'] as num?)?.toInt() ?? 0,
+      longestStreak: (json['longestStreak'] as num?)?.toInt() ?? 0,
       kyc: json['kyc'] != null ? KycProfile.fromJson(json['kyc'] as Map<String, dynamic>) : null,
     );
   }

@@ -18,6 +18,12 @@ import '../../features/dashboard/presentation/screens/dashboard_layout.dart';
 import '../../features/dashboard/presentation/screens/performance_screen.dart';
 import '../../features/points/presentation/screens/multiplier_screen.dart';
 import '../../features/points/presentation/screens/earn_points_screen.dart';
+import '../../features/points/presentation/screens/streak_screen.dart';
+import '../../features/notifications/presentation/screens/reminders_screen.dart';
+import '../../features/notifications/presentation/screens/create_reminder_screen.dart';
+import '../../features/share_tracker/presentation/screens/share_tracker_screen.dart';
+import '../../features/rewards/presentation/screens/rewards_catalog_screen.dart';
+import '../../features/rewards/presentation/screens/reward_detail_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -126,6 +132,32 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/earn-points',
         builder: (context, state) => const EarnPointsScreen(),
+      ),
+      GoRoute(
+        path: '/streak',
+        builder: (context, state) => const StreakScreen(),
+      ),
+      GoRoute(
+        path: '/reminders',
+        builder: (context, state) => const RemindersScreen(),
+      ),
+      GoRoute(
+        path: '/create-reminder',
+        builder: (context, state) => const CreateReminderScreen(),
+      ),
+      GoRoute(
+        path: '/share-tracker',
+        builder: (context, state) => const ShareTrackerScreen(),
+      ),
+      GoRoute(
+        path: '/rewards',
+        builder: (context, state) => const RewardsCatalogScreen(),
+      ),
+      GoRoute(
+        path: '/rewards/:id',
+        builder: (context, state) => RewardDetailScreen(
+          rewardId: state.pathParameters['id']!,
+        ),
       ),
     ],
   );

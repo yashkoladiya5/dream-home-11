@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Req, UseGuards, BadRequestException } from '@nestjs/common';
 import { PointsEngineService } from './points-engine.service';
+import { StreakService } from './streak.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { UserLevel } from '../users/entities/user.entity';
@@ -9,6 +10,7 @@ import { UserLevel } from '../users/entities/user.entity';
 export class PointsController {
   constructor(
     private readonly pointsEngineService: PointsEngineService,
+    private readonly streakService: StreakService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -16,6 +18,12 @@ export class PointsController {
   async getTodayActions(@Req() req) {
     const userId = req.user.id;
     return this.pointsEngineService.getTodayActionsStatus(userId);
+  }
+
+  @Get('streak')
+  async getStreak(@Req() req) {
+    const userId = req.user.id;
+    return this.streakService.getStreakInfo(userId);
   }
 
   @Post('action')
@@ -52,6 +60,32 @@ export class PointsController {
 
       result.lifetimePoints = user.lifetimePoints;
       result.currentTier = user.currentTier;
+
+      // Handle streak for daily_login
+      if (action === 'daily_login') {
+        const streakResult = await this.streakService.updateStreak(userId);
+        (result as any).streak = streakResult.currentStreak;
+        (result as any).longestStreak = streakResult.longestStreak;
+        (result as any).streakBonusAwarded = streakResult.bonusAwarded;
+        (result as any).streakBonusPoints = streakResult.bonusPoints;
+
+        if (streakResult.bonusPoints > 0) {
+          user.lifetimePoints = Number(user.lifetimePoints) + streakResult.bonusPoints;
+          user.pointsBalance = Number(user.pointsBalance) + streakResult.bonusPoints;
+
+          if (user.lifetimePoints >= 5000) {
+            user.currentTier = UserLevel.PLATINUM;
+          } else if (user.lifetimePoints >= 2000) {
+            user.currentTier = UserLevel.GOLD;
+          } else if (user.lifetimePoints >= 1000) {
+            user.currentTier = UserLevel.SILVER;
+          }
+
+          await this.usersService.updateUser(user);
+          result.lifetimePoints = user.lifetimePoints;
+          result.currentTier = user.currentTier;
+        }
+      }
     }
 
     return result;
