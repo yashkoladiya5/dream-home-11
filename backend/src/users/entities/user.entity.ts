@@ -73,6 +73,15 @@ export class User {
   @Column({ name: 'device_id', type: 'varchar', length: 255, nullable: false })
   deviceId: string;
 
+  @Column({ name: 'current_streak', type: 'integer', default: 0 })
+  currentStreak: number;
+
+  @Column({ name: 'longest_streak', type: 'integer', default: 0 })
+  longestStreak: number;
+
+  @Column({ name: 'last_streak_date', type: 'date', nullable: true })
+  lastStreakDate: Date | null;
+
   @OneToOne(() => Kyc, (kyc) => kyc.user)
   kyc: Kyc;
 }

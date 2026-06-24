@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/daily_actions_provider.dart';
+import '../providers/streak_provider.dart';
 import '../../../../features/dashboard/presentation/widgets/shimmer_widget.dart';
+import 'streak_screen.dart';
 
 class EarnPointsScreen extends ConsumerStatefulWidget {
   const EarnPointsScreen({super.key});
@@ -92,6 +94,8 @@ class _EarnPointsScreenState extends ConsumerState<EarnPointsScreen> {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _buildActionCard(action),
                       )),
+                      const SizedBox(height: 8),
+                      _buildStreakCard(),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -390,6 +394,132 @@ class _EarnPointsScreenState extends ConsumerState<EarnPointsScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStreakCard() {
+    final theme = Theme.of(context);
+    final streakAsync = ref.watch(streakProvider);
+    final streakInfo = streakAsync.valueOrNull;
+    final currentStreak = streakInfo?.currentStreak ?? 0;
+    final isOnStreak = streakInfo?.isOnStreak ?? false;
+    final nextMilestone = streakInfo?.nextMilestone;
+    final daysToNext = streakInfo?.daysToNextMilestone;
+
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const StreakScreen()),
+      ),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: AppTheme.darkCardGradient,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isOnStreak
+                ? AppTheme.primaryRed.withValues(alpha: 0.25)
+                : const Color(0x1FFFFFFF),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: isOnStreak
+                    ? const LinearGradient(
+                        colors: [Color(0xFFFF6B35), AppTheme.primaryRed],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : LinearGradient(
+                        colors: [AppTheme.greyMedium.withValues(alpha: 0.2), AppTheme.greyMedium.withValues(alpha: 0.05)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                boxShadow: isOnStreak
+                    ? [
+                        BoxShadow(
+                          color: AppTheme.primaryRed.withValues(alpha: 0.35),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                Icons.local_fire_department_rounded,
+                color: isOnStreak ? Colors.white : AppTheme.greyMedium,
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Login Streak',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: (isOnStreak ? AppTheme.primaryRed : AppTheme.greyMedium).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isOnStreak ? '$currentStreak day' : '0 days',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isOnStreak ? AppTheme.primaryRed : AppTheme.greyMedium,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isOnStreak && nextMilestone != null
+                        ? '$daysToNext day${daysToNext != null && daysToNext > 1 ? 's' : ''} to $nextMilestone-day milestone'
+                        : 'Log in daily to build your streak and earn bonus rewards',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.greyMedium,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isOnStreak
+                    ? AppTheme.primaryRed.withValues(alpha: 0.1)
+                    : Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.chevron_right_rounded,
+                color: isOnStreak ? AppTheme.primaryRed : AppTheme.greyMedium,
+                size: 20,
+              ),
+            ),
+          ],
         ),
       ),
     );

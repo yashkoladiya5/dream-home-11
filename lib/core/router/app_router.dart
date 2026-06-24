@@ -18,6 +18,7 @@ import '../../features/dashboard/presentation/screens/dashboard_layout.dart';
 import '../../features/dashboard/presentation/screens/performance_screen.dart';
 import '../../features/points/presentation/screens/multiplier_screen.dart';
 import '../../features/points/presentation/screens/earn_points_screen.dart';
+import '../../features/points/presentation/screens/streak_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -126,6 +127,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/earn-points',
         builder: (context, state) => const EarnPointsScreen(),
+      ),
+      GoRoute(
+        path: '/streak',
+        builder: (context, state) => const StreakScreen(),
       ),
     ],
   );
