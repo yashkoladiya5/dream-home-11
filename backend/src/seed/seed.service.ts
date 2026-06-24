@@ -5,6 +5,7 @@ import { Contest, ContestType, ContestStatus } from '../contests/entities/contes
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User, UserLevel } from '../users/entities/user.entity';
 import { Reward } from '../rewards/entities/reward.entity';
+import { Banner } from '../banners/entities/banner.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -19,6 +20,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Reward)
     private readonly rewardRepository: Repository<Reward>,
+    @InjectRepository(Banner)
+    private readonly bannerRepository: Repository<Banner>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -130,6 +133,7 @@ export class SeedService implements OnApplicationBootstrap {
 
     await this._ensureCompletedContest();
     await this._seedRewards();
+    await this._seedBanners();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -309,6 +313,70 @@ export class SeedService implements OnApplicationBootstrap {
 
     await this.rewardRepository.save(rewards);
     this.logger.log(`Seeded ${rewards.length} rewards successfully`);
+  }
+
+  private async _seedBanners(): Promise<void> {
+    const count = await this.bannerRepository.count();
+    if (count > 0) {
+      this.logger.log(`Banners already seeded (${count} existing) — skipping`);
+      return;
+    }
+
+    const banners: Partial<Banner>[] = [
+      {
+        title: 'Mega Dream Contest',
+        subtitle: 'Win a 3 BHK Luxury Apartment in Mumbai! Entry starts at just ₹49.',
+        imageUrl: null,
+        link: '/mega-contests',
+        linkLabel: 'JOIN NOW',
+        backgroundColor: '#D22C2C',
+        sortOrder: 1,
+        isActive: true,
+      },
+      {
+        title: 'Rewards Catalog',
+        subtitle: 'Redeem your points for gift cards, merchandise & more!',
+        imageUrl: null,
+        link: '/rewards',
+        linkLabel: 'EXPLORE',
+        backgroundColor: '#F59E0B',
+        sortOrder: 2,
+        isActive: true,
+      },
+      {
+        title: 'Share & Earn',
+        subtitle: 'Invite friends and earn bonus points for every referral!',
+        imageUrl: null,
+        link: '/share-tracker',
+        linkLabel: 'SHARE NOW',
+        backgroundColor: '#10B981',
+        sortOrder: 3,
+        isActive: true,
+      },
+      {
+        title: 'Complete Your KYC',
+        subtitle: 'Verify your account to unlock all features and win big prizes!',
+        imageUrl: null,
+        link: '/home',
+        linkLabel: 'VERIFY',
+        backgroundColor: '#8B5CF6',
+        sortOrder: 4,
+        isActive: true,
+      },
+      {
+        title: 'Premium Membership',
+        subtitle: 'Go premium for exclusive contests, rewards & priority support.',
+        imageUrl: null,
+        link: '/rewards',
+        linkLabel: 'LEARN MORE',
+        backgroundColor: '#D22C2C',
+        sortOrder: 5,
+        isActive: true,
+      },
+    ];
+
+    await this.bannerRepository.save(banners);
+    this.logger.log(`Seeded ${banners.length} banners successfully`);
   }
 
   private getTierForPoints(points: number): UserLevel {
