@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/shimmer_widget.dart';
@@ -236,6 +237,24 @@ class ProfileTab extends ConsumerWidget {
                       context,
                       MaterialPageRoute(builder: (context) => const MultiplierScreen()),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
+                    label: 'Share & Earn',
+                    value: 'EARN',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.share_rounded,
+                    onTap: () => context.push('/share-tracker'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
+                    label: 'Reminders',
+                    value: 'SET',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.notifications_active_rounded,
+                    onTap: () => context.push('/reminders'),
                   ),
                   const SizedBox(height: 32),
                 ],

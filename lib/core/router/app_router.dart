@@ -19,6 +19,9 @@ import '../../features/dashboard/presentation/screens/performance_screen.dart';
 import '../../features/points/presentation/screens/multiplier_screen.dart';
 import '../../features/points/presentation/screens/earn_points_screen.dart';
 import '../../features/points/presentation/screens/streak_screen.dart';
+import '../../features/notifications/presentation/screens/reminders_screen.dart';
+import '../../features/notifications/presentation/screens/create_reminder_screen.dart';
+import '../../features/share_tracker/presentation/screens/share_tracker_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -131,6 +134,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/streak',
         builder: (context, state) => const StreakScreen(),
+      ),
+      GoRoute(
+        path: '/reminders',
+        builder: (context, state) => const RemindersScreen(),
+      ),
+      GoRoute(
+        path: '/create-reminder',
+        builder: (context, state) => const CreateReminderScreen(),
+      ),
+      GoRoute(
+        path: '/share-tracker',
+        builder: (context, state) => const ShareTrackerScreen(),
       ),
     ],
   );

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { randomBytes } from 'crypto';
 import { Contest, ContestStatus, ContestType } from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
@@ -21,7 +21,7 @@ export class ContestsService {
   ) {}
 
   async findAll(query: QueryContestsDto): Promise<{ contests: Contest[]; total: number; page: number; limit: number }> {
-    const { type, status, page = 1, limit = 20 } = query;
+    const { type, status, page = 1, limit = 20, search, sortBy, sortOrder, prizeMin, prizeMax, feeMin, feeMax } = query;
     const where: Record<string, unknown> = {};
 
     if (type) {
@@ -30,10 +30,38 @@ export class ContestsService {
     if (status) {
       where.status = status;
     }
+    if (search) {
+      where.title = Like(`%${search}%`);
+    }
+    if (prizeMin !== undefined && prizeMax !== undefined) {
+      where.prize = Between(prizeMin, prizeMax);
+    } else {
+      if (prizeMin !== undefined) where.prize = MoreThanOrEqual(prizeMin);
+      if (prizeMax !== undefined) where.prize = LessThanOrEqual(prizeMax);
+    }
+    if (feeMin !== undefined && feeMax !== undefined) {
+      where.entryFeeInr = Between(feeMin, feeMax);
+    } else {
+      if (feeMin !== undefined) where.entryFeeInr = MoreThanOrEqual(feeMin);
+      if (feeMax !== undefined) where.entryFeeInr = LessThanOrEqual(feeMax);
+    }
+
+    const order: Record<string, string> = {};
+    if (sortBy) {
+      const sortMap: Record<string, string> = {
+        entry_fee: 'entryFeeInr',
+        prize_pool: 'prize',
+        start_time: 'startTime',
+        created_at: 'createdAt',
+      };
+      order[sortMap[sortBy] || 'startTime'] = sortOrder || 'ASC';
+    } else {
+      order.startTime = 'ASC';
+    }
 
     const [contests, total] = await this.contestRepository.findAndCount({
       where,
-      order: { startTime: 'ASC' },
+      order,
       skip: (page - 1) * limit,
       take: limit,
     });
