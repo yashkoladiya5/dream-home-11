@@ -174,10 +174,7 @@ class ProfileTab extends ConsumerWidget {
                     value: kycStatus.toUpperCase(),
                     valueColor: kycColor,
                     icon: Icons.verified_user_rounded,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                    ),
+                    onTap: () => context.push('/kyc'),
                   ),
                   const SizedBox(height: 12),
                   _buildInfoTile(

@@ -9,10 +9,11 @@ import { Achievement } from '../achievements/entities/achievement.entity';
 import { PrizeHome } from '../prize-homes/entities/prize-home.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { SavedPaymentMethod } from '../payment-methods/entities/saved-payment-method.entity';
+import { Kyc } from '../kyc/entities/kyc.entity';
 import { SeedService } from './seed.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement, PrizeHome, Transaction, SavedPaymentMethod])],
+  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement, PrizeHome, Transaction, SavedPaymentMethod, Kyc])],
   providers: [SeedService],
 })
 export class SeedModule {}

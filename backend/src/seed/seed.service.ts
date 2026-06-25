@@ -10,6 +10,7 @@ import { Achievement } from '../achievements/entities/achievement.entity';
 import { PrizeHome } from '../prize-homes/entities/prize-home.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { SavedPaymentMethod } from '../payment-methods/entities/saved-payment-method.entity';
+import { Kyc } from '../kyc/entities/kyc.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -34,6 +35,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly transactionRepo: Repository<Transaction>,
     @InjectRepository(SavedPaymentMethod)
     private readonly paymentMethodRepo: Repository<SavedPaymentMethod>,
+    @InjectRepository(Kyc)
+    private readonly kycRepo: Repository<Kyc>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -150,6 +153,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedAchievements();
     await this._seedPrizeHomes();
     await this._seedTransactions();
+    await this._seedKyc();
     await this._seedPaymentMethods();
   }
 
@@ -708,6 +712,32 @@ export class SeedService implements OnApplicationBootstrap {
     if (points >= 2000) return UserLevel.GOLD;
     if (points >= 1000) return UserLevel.SILVER;
     return UserLevel.BRONZE;
+  }
+
+  private async _seedKyc(): Promise<void> {
+    const kycRepo = this.kycRepo || (this as any).kycRepo;
+    const count = await kycRepo.count();
+    if (count > 0) {
+      this.logger.log('KYC already seeded — skipping');
+      return;
+    }
+
+    const users = await this.userRepository.find();
+    for (const user of users) {
+      const userIndex = users.indexOf(user);
+      const aadhaar = `${300000000000 + userIndex}`;
+      const pan = `ABCDE${String(1000 + userIndex)}F`;
+
+      const kyc = kycRepo.create({
+        userId: user.id,
+        aadhaarNumber: aadhaar,
+        panNumber: pan,
+        status: 'approved' as any,
+        verifiedAt: new Date(),
+      });
+      await kycRepo.save(kyc);
+    }
+    this.logger.log(`Seeded KYC for ${users.length} users`);
   }
 
   private async _seedPaymentMethods(): Promise<void> {
