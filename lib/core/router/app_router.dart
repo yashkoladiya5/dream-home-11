@@ -34,6 +34,9 @@ import '../../features/wallet/presentation/screens/wallet_screen.dart';
 import '../../features/wallet/presentation/screens/my_balance_screen.dart';
 import '../../features/wallet/presentation/screens/add_cash_screen.dart';
 import '../../features/wallet/presentation/screens/payment_options_screen.dart';
+import '../../features/wallet/presentation/screens/contest_transactions_screen.dart';
+import '../../features/wallet/presentation/screens/deposit_transactions_screen.dart';
+import '../../features/wallet/presentation/screens/other_transactions_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -213,6 +216,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/payment-options',
         builder: (context, state) => const PaymentOptionsScreen(),
+      ),
+      GoRoute(
+        path: '/transactions/contest',
+        builder: (context, state) => const ContestTransactionsScreen(),
+      ),
+      GoRoute(
+        path: '/transactions/deposit',
+        builder: (context, state) => const DepositTransactionsScreen(),
+      ),
+      GoRoute(
+        path: '/transactions/others',
+        builder: (context, state) => const OtherTransactionsScreen(),
       ),
     ],
   );

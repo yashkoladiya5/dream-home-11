@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual } from 'typeorm';
+import { Repository, LessThanOrEqual, In } from 'typeorm';
 import { Transaction } from './entities/transaction.entity';
 
 @Injectable()
@@ -41,9 +41,14 @@ export class TransactionsService {
     return this.transactionRepo.save(tx);
   }
 
-  async getHistory(userId: string, page = 1, limit = 20): Promise<{ transactions: Transaction[]; total: number; page: number; limit: number }> {
+  async getHistory(userId: string, page = 1, limit = 20, type?: string): Promise<{ transactions: Transaction[]; total: number; page: number; limit: number }> {
+    const where: any = { userId };
+    if (type) {
+      const types = type.split(',').map(t => t.trim());
+      where.type = In(types);
+    }
     const [transactions, total] = await this.transactionRepo.findAndCount({
-      where: { userId },
+      where,
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,

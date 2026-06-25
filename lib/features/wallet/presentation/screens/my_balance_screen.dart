@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../dashboard/presentation/providers/user_profile_provider.dart';
 import '../../data/models/transaction.dart';
@@ -222,6 +223,73 @@ class MyBalanceScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => context.push('/transactions/contest'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.darkCardGradient,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0x1FFFFFFF)),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.emoji_events_rounded, color: AppTheme.goldYellow, size: 24),
+                            const SizedBox(height: 6),
+                            Text('Contests', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => context.push('/transactions/deposit'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.darkCardGradient,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0x1FFFFFFF)),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.add_circle_outline_rounded, color: AppTheme.emeraldGreen, size: 24),
+                            const SizedBox(height: 6),
+                            Text('Deposits', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => context.push('/transactions/others'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.darkCardGradient,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0x1FFFFFFF)),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.more_horiz_rounded, color: AppTheme.greyMedium, size: 24),
+                            const SizedBox(height: 6),
+                            Text('Others', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               Container(
