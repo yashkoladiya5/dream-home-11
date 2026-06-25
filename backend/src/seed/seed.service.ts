@@ -7,6 +7,7 @@ import { User, UserLevel } from '../users/entities/user.entity';
 import { Reward } from '../rewards/entities/reward.entity';
 import { Banner } from '../banners/entities/banner.entity';
 import { Achievement } from '../achievements/entities/achievement.entity';
+import { PrizeHome } from '../prize-homes/entities/prize-home.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -25,6 +26,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly bannerRepository: Repository<Banner>,
     @InjectRepository(Achievement)
     private readonly achievementRepository: Repository<Achievement>,
+    @InjectRepository(PrizeHome)
+    private readonly prizeHomeRepository: Repository<PrizeHome>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -139,6 +142,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedMoreCompletedContests();
     await this._seedBanners();
     await this._seedAchievements();
+    await this._seedPrizeHomes();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -566,6 +570,49 @@ export class SeedService implements OnApplicationBootstrap {
 
     await this.bannerRepository.save(banners);
     this.logger.log(`Seeded ${banners.length} banners successfully`);
+  }
+
+  private async _seedPrizeHomes(): Promise<void> {
+    const imageByTitle: Record<string, string> = {
+      '3 BHK Luxury Apartment': 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
+      'Premium Villa': 'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=400&h=300&fit=crop',
+      'Beachfront Villa': 'https://images.unsplash.com/photo-1499793983690-e29f59e2f1ad?w=400&h=300&fit=crop',
+      'Mountain Cottage': 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=400&h=300&fit=crop',
+      'Sea-facing Penthouse': 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=300&fit=crop',
+      'Luxury Villa in Lonavala': 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop',
+      'Studio Apartment in Bandra': 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
+      'Farmhouse in Pune': 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=400&h=300&fit=crop',
+    };
+
+    const count = await this.prizeHomeRepository.count();
+    if (count === 0) {
+      const homes: Partial<PrizeHome>[] = [
+        { title: '3 BHK Luxury Apartment', description: 'A stunning 3-bedroom luxury apartment in the heart of Mumbai. Features modern interiors, panoramic city views, and world-class amenities including a swimming pool, gym, and 24/7 security.', imageUrl: imageByTitle['3 BHK Luxury Apartment'], city: 'Mumbai', state: 'Maharashtra', location: 'Bandra West, Mumbai', valueInr: 12000000, bedrooms: 3, bathrooms: 3, area: '1650 sq ft', features: ['Swimming Pool', 'Gym', '24/7 Security', 'Power Backup', 'Parking', 'Club House'], type: 'apartment', emoji: '\u{1F3E0}', sortOrder: 1, isActive: true },
+        { title: 'Premium Villa', description: 'A beautiful premium villa in North Goa with private pool, garden, and modern architecture. Perfect for weekend getaways and luxury living.', imageUrl: imageByTitle['Premium Villa'], city: 'Goa', state: 'Goa', location: 'North Goa, Near Calangute Beach', valueInr: 8500000, bedrooms: 4, bathrooms: 4, area: '2800 sq ft', features: ['Private Pool', 'Garden', 'Outdoor BBQ', 'Parking', 'Servants Quarter'], type: 'villa', emoji: '\u{1F3E1}', sortOrder: 2, isActive: true },
+        { title: 'Beachfront Villa', description: 'Exclusive beachfront villa in Kerala with direct beach access. Enjoy stunning sunsets, coconut groves, and traditional Kerala architecture blended with modern luxury.', imageUrl: imageByTitle['Beachfront Villa'], city: 'Kerala', state: 'Kerala', location: 'Kovalam Beach, Kerala', valueInr: 25000000, bedrooms: 5, bathrooms: 5, area: '4200 sq ft', features: ['Beach Access', 'Infinity Pool', 'Spa Room', 'Home Theater', 'Rooftop Terrace'], type: 'villa', emoji: '\u{1F3D6}\uFE0F', sortOrder: 3, isActive: true },
+        { title: 'Mountain Cottage', description: 'A cozy mountain cottage in Manali surrounded by pine forests and snow-capped peaks. Perfect for those seeking peace and natural beauty.', imageUrl: imageByTitle['Mountain Cottage'], city: 'Manali', state: 'Himachal Pradesh', location: 'Old Manali, Himachal Pradesh', valueInr: 4500000, bedrooms: 2, bathrooms: 2, area: '1200 sq ft', features: ['Fireplace', 'Mountain View', 'Wooden Deck', 'Garden', 'Parking'], type: 'cottage', emoji: '\u{1F3D4}\uFE0F', sortOrder: 4, isActive: true },
+        { title: 'Sea-facing Penthouse', description: 'A magnificent sea-facing penthouse in North Goa with 360-degree ocean views. Features a private rooftop pool, smart home automation, and premium finishes throughout.', imageUrl: imageByTitle['Sea-facing Penthouse'], city: 'Goa', state: 'Goa', location: 'Calangute, North Goa', valueInr: 38000000, bedrooms: 4, bathrooms: 4, area: '3500 sq ft', features: ['Rooftop Pool', 'Smart Home', 'Ocean View', 'Private Elevator', 'Wine Cellar', 'Home Automation'], type: 'penthouse', emoji: '\u{1F30A}', sortOrder: 5, isActive: true },
+        { title: 'Luxury Villa in Lonavala', description: 'A luxurious villa in the hill station of Lonavala with panoramic valley views, private infinity pool, and lush green surroundings. Ideal for weekend escapes from Mumbai/Pune.', imageUrl: imageByTitle['Luxury Villa in Lonavala'], city: 'Lonavala', state: 'Maharashtra', location: 'Lonavala, Maharashtra', valueInr: 15000000, bedrooms: 4, bathrooms: 4, area: '3000 sq ft', features: ['Infinity Pool', 'Valley View', 'Landscaped Garden', 'Outdoor Jacuzzi', 'BBQ Area'], type: 'villa', emoji: '\u{1F3E1}', sortOrder: 6, isActive: true },
+        { title: 'Studio Apartment in Bandra', description: 'A modern studio apartment in Bandra, Mumbai. Perfect for young professionals with easy access to business districts and nightlife.', imageUrl: imageByTitle['Studio Apartment in Bandra'], city: 'Mumbai', state: 'Maharashtra', location: 'Bandra West, Mumbai', valueInr: 3500000, bedrooms: 1, bathrooms: 1, area: '550 sq ft', features: ['Modular Kitchen', 'Gym Access', 'Rooftop Lounge', 'Security'], type: 'apartment', emoji: '\u{1F3E0}', sortOrder: 7, isActive: true },
+        { title: 'Farmhouse in Pune', description: 'A sprawling farmhouse on the outskirts of Pune with organic farm, private lake, and ample outdoor space for entertaining.', imageUrl: imageByTitle['Farmhouse in Pune'], city: 'Pune', state: 'Maharashtra', location: 'Mulshi, Pune', valueInr: 22000000, bedrooms: 5, bathrooms: 5, area: '5000 sq ft', features: ['Private Lake', 'Organic Farm', 'Swimming Pool', 'Tennis Court', 'Gazebo'], type: 'farmhouse', emoji: '\u{1F3E1}', sortOrder: 8, isActive: true },
+      ];
+      await this.prizeHomeRepository.save(homes);
+      this.logger.log(`Seeded ${homes.length} prize homes successfully`);
+    } else {
+      const nullImageHomes = await this.prizeHomeRepository.find({ where: { imageUrl: IsNull() } });
+      for (const home of nullImageHomes) {
+        const url = imageByTitle[home.title];
+        if (url) {
+          await this.prizeHomeRepository.update(home.id, { imageUrl: url });
+          this.logger.log(`  Updated imageUrl for "${home.title}"`);
+        }
+      }
+      if (nullImageHomes.length === 0) {
+        this.logger.log(`All ${count} prize homes already have images — no update needed`);
+      } else {
+        this.logger.log(`Updated ${nullImageHomes.length} prize homes with image URLs`);
+      }
+    }
   }
 
   private getTierForPoints(points: number): UserLevel {

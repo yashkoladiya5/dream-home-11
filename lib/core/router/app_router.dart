@@ -26,6 +26,10 @@ import '../../features/rewards/presentation/screens/rewards_catalog_screen.dart'
 import '../../features/rewards/presentation/screens/reward_detail_screen.dart';
 import '../../features/winners/presentation/screens/winners_history_screen.dart';
 import '../../features/achievements/presentation/screens/achievements_screen.dart';
+import '../../features/prize_homes/presentation/screens/home_gallery_screen.dart';
+import '../../features/prize_homes/presentation/screens/home_spec_detail_screen.dart';
+import '../../features/prize_homes/presentation/screens/location_selection_screen.dart';
+import '../../features/winners/presentation/screens/winner_profile_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -168,6 +172,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/achievements',
         builder: (context, state) => const AchievementsScreen(),
+      ),
+      GoRoute(
+        path: '/prize-homes',
+        builder: (context, state) => const HomeGalleryScreen(),
+      ),
+      GoRoute(
+        path: '/prize-homes/:id',
+        builder: (context, state) => HomeSpecDetailScreen(
+          prizeHomeId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/locations',
+        builder: (context, state) => const LocationSelectionScreen(),
+      ),
+      GoRoute(
+        path: '/winner-profile/:contestId/:userId',
+        builder: (context, state) => WinnerProfileScreen(
+          contestId: state.pathParameters['contestId']!,
+          winnerUserId: state.pathParameters['userId']!,
+        ),
       ),
     ],
   );

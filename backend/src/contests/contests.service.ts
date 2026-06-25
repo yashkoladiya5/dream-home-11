@@ -290,6 +290,46 @@ export class ContestsService {
     });
   }
 
+  async getContestWinnersDetail(contestId: string): Promise<{
+    contestId: string;
+    contestTitle: string;
+    prize: string;
+    completedAt: Date;
+    totalParticipants: number;
+    winners: { userId: string; userName: string; phoneNumber: string; points: number; rank: number }[];
+  }> {
+    const contest = await this.contestRepository.findOne({ where: { id: contestId } });
+    if (!contest) {
+      throw new NotFoundException('Contest not found');
+    }
+
+    const members = await this.contestMemberRepository.find({
+      where: { contestId },
+      relations: { user: true },
+      order: { pointsEarned: 'DESC' },
+      take: 3,
+    });
+
+    const winners = members.map((m, index) => ({
+      userId: m.userId,
+      userName: m.user?.fullName || 'Anonymous',
+      phoneNumber: m.user?.phoneNumber || '',
+      points: m.pointsEarned,
+      rank: index + 1,
+    }));
+
+    const totalParticipants = await this.contestMemberRepository.count({ where: { contestId } });
+
+    return {
+      contestId: contest.id,
+      contestTitle: contest.title,
+      prize: contest.prize || 'N/A',
+      completedAt: contest.endTime,
+      totalParticipants,
+      winners,
+    };
+  }
+
   async getWinnersHistory(): Promise<{
     contestId: string;
     contestTitle: string;
