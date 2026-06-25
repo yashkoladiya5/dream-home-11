@@ -29,6 +29,8 @@ import { SeedModule } from './seed/seed.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrizeHome } from './prize-homes/entities/prize-home.entity';
 import { PrizeHomesModule } from './prize-homes/prize-homes.module';
+import { Transaction } from './transactions/entities/transaction.entity';
+import { TransactionsModule } from './transactions/transactions.module';
 import { ShareTrackerModule } from './share-tracker/share-tracker.module';
 
 @Module({
@@ -47,7 +49,7 @@ import { ShareTrackerModule } from './share-tracker/share-tracker.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
@@ -64,6 +66,7 @@ import { ShareTrackerModule } from './share-tracker/share-tracker.module';
     NotificationsModule,
     ShareTrackerModule,
     PrizeHomesModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

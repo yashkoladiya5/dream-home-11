@@ -6,6 +6,7 @@ import { Contest, ContestStatus, ContestType } from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
 import { User, UserLevel } from '../users/entities/user.entity';
 import { PointsEngineService } from '../points/points-engine.service';
+import { Transaction } from '../transactions/entities/transaction.entity';
 import { QueryContestsDto } from './dto/query-contests.dto';
 import { CreatePrivateContestDto } from './dto/create-private-contest.dto';
 
@@ -275,6 +276,21 @@ export class ContestsService {
       await entityManager.save(user);
 
       await this.pointsEngineService.logPointActionWithEntityManager(entityManager, userId, 'contest_join', contest.pointsToJoin, multiplier, finalPoints);
+
+      await entityManager.save(Transaction, entityManager.create(Transaction, {
+        userId,
+        type: 'entry_fee',
+        cashAmount: Number(contest.entryFeeInr),
+        pointsAmount: finalPoints,
+        cashBalanceBefore: Number(user.walletBalanceInr) + Number(contest.entryFeeInr),
+        cashBalanceAfter: Number(user.walletBalanceInr),
+        pointsBalanceBefore: Number(user.pointsBalance) - finalPoints,
+        pointsBalanceAfter: Number(user.pointsBalance),
+        description: `Joined contest: ${contest.title}`,
+        referenceType: 'contest',
+        referenceId: contestId,
+        status: 'completed',
+      }));
 
       const member = entityManager.create(ContestMember, {
         contestId,

@@ -8,6 +8,7 @@ import { Reward } from '../rewards/entities/reward.entity';
 import { Banner } from '../banners/entities/banner.entity';
 import { Achievement } from '../achievements/entities/achievement.entity';
 import { PrizeHome } from '../prize-homes/entities/prize-home.entity';
+import { Transaction } from '../transactions/entities/transaction.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -28,6 +29,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly achievementRepository: Repository<Achievement>,
     @InjectRepository(PrizeHome)
     private readonly prizeHomeRepository: Repository<PrizeHome>,
+    @InjectRepository(Transaction)
+    private readonly transactionRepo: Repository<Transaction>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -143,6 +146,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedBanners();
     await this._seedAchievements();
     await this._seedPrizeHomes();
+    await this._seedTransactions();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -613,6 +617,43 @@ export class SeedService implements OnApplicationBootstrap {
         this.logger.log(`Updated ${nullImageHomes.length} prize homes with image URLs`);
       }
     }
+  }
+
+  private async _seedTransactions(): Promise<void> {
+    const count = await this.transactionRepo.count();
+    if (count > 0) {
+      this.logger.log(`Transactions already seeded (${count} existing) — skipping`);
+      return;
+    }
+
+    const users = await this.userRepository.find();
+    for (const user of users) {
+      const txes: Partial<Transaction>[] = [
+        {
+          userId: user.id,
+          type: 'deposit',
+          cashAmount: 1000,
+          pointsAmount: 0,
+          cashBalanceBefore: 0,
+          cashBalanceAfter: 1000,
+          description: 'Welcome bonus deposit',
+          status: 'completed',
+        },
+        {
+          userId: user.id,
+          type: 'points_earned',
+          cashAmount: 0,
+          pointsAmount: 500,
+          pointsBalanceBefore: 0,
+          pointsBalanceAfter: 500,
+          description: 'Initial points credit',
+          referenceType: 'onboarding',
+          status: 'completed',
+        },
+      ];
+      await this.transactionRepo.save(txes);
+    }
+    this.logger.log(`Seeded transactions for ${users.length} users`);
   }
 
   private getTierForPoints(points: number): UserLevel {

@@ -4,6 +4,7 @@ import { Repository, In } from 'typeorm';
 import { User, UserLevel } from './entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { Contest } from '../contests/entities/contest.entity';
+import { Transaction } from '../transactions/entities/transaction.entity';
 import { PointsEngineService } from '../points/points-engine.service';
 
 @Injectable()
@@ -15,6 +16,8 @@ export class UsersService {
     private readonly contestMemberRepository: Repository<ContestMember>,
     @InjectRepository(Contest)
     private readonly contestRepository: Repository<Contest>,
+    @InjectRepository(Transaction)
+    private readonly transactionRepo: Repository<Transaction>,
     private readonly pointsEngineService: PointsEngineService,
   ) {}
 
@@ -55,8 +58,21 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    user.walletBalanceInr = Number(user.walletBalanceInr) + amount;
-    return this.userRepository.save(user);
+    const balanceBefore = Number(user.walletBalanceInr);
+    user.walletBalanceInr = balanceBefore + amount;
+    const saved = await this.userRepository.save(user);
+
+    await this.transactionRepo.save(this.transactionRepo.create({
+      userId,
+      type: 'deposit',
+      cashAmount: amount,
+      cashBalanceBefore: balanceBefore,
+      cashBalanceAfter: Number(saved.walletBalanceInr),
+      description: `Deposit of \u20B9${amount}`,
+      status: 'completed',
+    }));
+
+    return saved;
   }
 
   async joinContest(userId: string, entryFee: number, pointsEarned: number): Promise<User> {
