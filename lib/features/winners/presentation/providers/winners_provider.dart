@@ -9,3 +9,9 @@ final winnersProvider = FutureProvider<List<WinnerContest>>((ref) async {
       .map((e) => WinnerContest.fromJson(e as Map<String, dynamic>))
       .toList();
 });
+
+final contestWinnerDetailProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, contestId) async {
+  final dio = ref.watch(apiClientProvider);
+  final response = await dio.get('/api/v1/contests/winners/$contestId');
+  return response.data as Map<String, dynamic>;
+});

@@ -27,6 +27,12 @@ export class ContestsController {
     return this.contestsService.getWinnersHistory();
   }
 
+  @Get('winners/:contestId')
+  @UseGuards(JwtAuthGuard)
+  async getContestWinnersDetail(@Param('contestId') contestId: string) {
+    return this.contestsService.getContestWinnersDetail(contestId);
+  }
+
   @Get('code/:code')
   @UseGuards(JwtAuthGuard)
   async findByInviteCode(@Param('code') code: string) {
