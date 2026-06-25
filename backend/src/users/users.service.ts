@@ -117,6 +117,23 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
+  async awardPoints(userId: string, points: number): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+    user.pointsBalance = Number(user.pointsBalance) + points;
+    user.lifetimePoints = Number(user.lifetimePoints) + points;
+
+    if (user.lifetimePoints >= 5000) {
+      user.currentTier = UserLevel.PLATINUM;
+    } else if (user.lifetimePoints >= 2000) {
+      user.currentTier = UserLevel.GOLD;
+    } else if (user.lifetimePoints >= 1000) {
+      user.currentTier = UserLevel.SILVER;
+    }
+
+    return this.userRepository.save(user);
+  }
+
   async updateUser(user: User): Promise<User> {
     return this.userRepository.save(user);
   }

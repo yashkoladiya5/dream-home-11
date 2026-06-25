@@ -33,6 +33,7 @@ import '../../features/winners/presentation/screens/winner_profile_screen.dart';
 import '../../features/wallet/presentation/screens/wallet_screen.dart';
 import '../../features/wallet/presentation/screens/my_balance_screen.dart';
 import '../../features/wallet/presentation/screens/add_cash_screen.dart';
+import '../../features/wallet/presentation/screens/payment_options_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -208,6 +209,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/add-cash',
         builder: (context, state) => const AddCashScreen(),
+      ),
+      GoRoute(
+        path: '/payment-options',
+        builder: (context, state) => const PaymentOptionsScreen(),
       ),
     ],
   );

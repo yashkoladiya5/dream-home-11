@@ -32,6 +32,10 @@ import { PrizeHomesModule } from './prize-homes/prize-homes.module';
 import { Transaction } from './transactions/entities/transaction.entity';
 import { TransactionsModule } from './transactions/transactions.module';
 import { ShareTrackerModule } from './share-tracker/share-tracker.module';
+import { Payment } from './payments/entities/payment.entity';
+import { PaymentsModule } from './payments/payments.module';
+import { SavedPaymentMethod } from './payment-methods/entities/saved-payment-method.entity';
+import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 
 @Module({
   imports: [
@@ -49,7 +53,7 @@ import { ShareTrackerModule } from './share-tracker/share-tracker.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
@@ -67,6 +71,8 @@ import { ShareTrackerModule } from './share-tracker/share-tracker.module';
     ShareTrackerModule,
     PrizeHomesModule,
     TransactionsModule,
+    PaymentsModule,
+    PaymentMethodsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

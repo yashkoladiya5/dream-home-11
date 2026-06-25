@@ -9,6 +9,7 @@ import { Banner } from '../banners/entities/banner.entity';
 import { Achievement } from '../achievements/entities/achievement.entity';
 import { PrizeHome } from '../prize-homes/entities/prize-home.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import { SavedPaymentMethod } from '../payment-methods/entities/saved-payment-method.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -31,6 +32,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly prizeHomeRepository: Repository<PrizeHome>,
     @InjectRepository(Transaction)
     private readonly transactionRepo: Repository<Transaction>,
+    @InjectRepository(SavedPaymentMethod)
+    private readonly paymentMethodRepo: Repository<SavedPaymentMethod>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -147,6 +150,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedAchievements();
     await this._seedPrizeHomes();
     await this._seedTransactions();
+    await this._seedPaymentMethods();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -661,6 +665,36 @@ export class SeedService implements OnApplicationBootstrap {
     if (points >= 2000) return UserLevel.GOLD;
     if (points >= 1000) return UserLevel.SILVER;
     return UserLevel.BRONZE;
+  }
+
+  private async _seedPaymentMethods(): Promise<void> {
+    const count = await this.paymentMethodRepo.count();
+    if (count > 0) {
+      this.logger.log('Payment methods already seeded — skipping');
+      return;
+    }
+
+    const users = await this.userRepository.find();
+    for (const user of users) {
+      const methods = [
+        {
+          userId: user.id,
+          category: 'upi',
+          label: 'My UPI',
+          displayValue: 'user@paytm',
+          providerName: 'Paytm',
+        },
+        {
+          userId: user.id,
+          category: 'card',
+          label: 'HDFC Credit Card',
+          displayValue: 'xxxx-xxxx-xxxx-1234',
+          providerName: 'Visa',
+        },
+      ];
+      await this.paymentMethodRepo.save(methods);
+    }
+    this.logger.log(`Seeded payment methods for ${users.length} users`);
   }
 
   private async _upsertSeedData(): Promise<void> {
