@@ -1,9 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../kyc/data/models/kyc_document_type.dart';
 import '../../data/models/kyc_status.dart';
 import '../providers/kyc_provider.dart';
+import '../providers/kyc_upload_provider.dart';
+import '../widgets/kyc_image_picker.dart';
+import '../widgets/kyc_photo_card.dart';
 
 class KycDetailsScreen extends ConsumerStatefulWidget {
   const KycDetailsScreen({super.key});
@@ -19,12 +24,30 @@ class _KycDetailsScreenState extends ConsumerState<KycDetailsScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isSubmitting = false;
 
+  final Map<String, File?> _pickedFiles = {};
+
   @override
   void dispose() {
     _aadhaarController.dispose();
     _panController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(KycDocumentType docType) async {
+    final file = await KycImagePicker.showPickerSheet(context);
+    if (file != null && mounted) {
+      setState(() => _pickedFiles[docType.apiValue] = File(file.path));
+      final uploadNotifier = ref.read(kycUploadProvider.notifier);
+      uploadNotifier.uploadDocument(
+        documentType: docType.apiValue,
+        file: File(file.path),
+      );
+    }
+  }
+
+  void _removeImage(String docType) {
+    setState(() => _pickedFiles.remove(docType));
   }
 
   Future<void> _submit() async {
@@ -66,6 +89,7 @@ class _KycDetailsScreenState extends ConsumerState<KycDetailsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final kycAsync = ref.watch(kycStatusProvider);
+    final uploadState = ref.watch(kycUploadProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.darkSlate,
@@ -92,19 +116,22 @@ class _KycDetailsScreenState extends ConsumerState<KycDetailsScreen> {
             ],
           ),
         ),
-        data: (kycStatus) => SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              _buildStatusHeader(theme, kycStatus),
-              const SizedBox(height: 24),
-              if (kycStatus.isApproved)
-                _buildVerifiedState(theme, kycStatus)
-              else
-                _buildForm(theme),
-            ],
+        data: (kycStatus) => GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+                _buildStatusHeader(theme, kycStatus),
+                const SizedBox(height: 24),
+                if (kycStatus.isApproved)
+                  _buildVerifiedState(theme, kycStatus)
+                else
+                  _buildForm(theme, kycStatus, uploadState),
+              ],
+            ),
           ),
         ),
       ),
@@ -233,7 +260,7 @@ class _KycDetailsScreenState extends ConsumerState<KycDetailsScreen> {
     );
   }
 
-  Widget _buildForm(ThemeData theme) {
+  Widget _buildForm(ThemeData theme, KycStatusModel kycStatus, KycUploadState uploadState) {
     return Form(
       key: _formKey,
       child: Column(
@@ -334,6 +361,35 @@ class _KycDetailsScreenState extends ConsumerState<KycDetailsScreen> {
               return null;
             },
           ),
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              Text('Upload Documents', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              const Spacer(),
+              Text(
+                '${_uploadedDocCount(kycStatus, uploadState)}/4',
+                style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.greyMedium),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('Upload clear photos of your documents', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.greyMedium)),
+          const SizedBox(height: 14),
+          ...KycDocumentType.values.map((docType) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: KycPhotoCard(
+              documentType: docType,
+              imageFile: _pickedFiles[docType.apiValue],
+              imageUrl: _getDocUrl(kycStatus, docType.apiValue),
+              isUploading: uploadState.isUploading(docType.apiValue),
+              uploadProgress: uploadState.getProgress(docType.apiValue),
+              errorMessage: uploadState.getError(docType.apiValue),
+              onPickImage: () => _pickImage(docType),
+              onRemove: (_pickedFiles[docType.apiValue] != null)
+                  ? () => _removeImage(docType.apiValue)
+                  : null,
+            ),
+          )),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(12),
@@ -375,6 +431,32 @@ class _KycDetailsScreenState extends ConsumerState<KycDetailsScreen> {
         ],
       ),
     );
+  }
+
+  int _uploadedDocCount(KycStatusModel kycStatus, KycUploadState uploadState) {
+    int count = 0;
+    for (final docType in KycDocumentType.values) {
+      final apiVal = docType.apiValue;
+      if (_pickedFiles[apiVal] != null || _getDocUrl(kycStatus, apiVal) != null) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  String? _getDocUrl(KycStatusModel kycStatus, String docType) {
+    switch (docType) {
+      case 'aadhaar_front':
+        return kycStatus.aadhaarFrontUrl;
+      case 'aadhaar_back':
+        return kycStatus.aadhaarBackUrl;
+      case 'pan_card':
+        return kycStatus.panCardUrl;
+      case 'selfie':
+        return kycStatus.selfieUrl;
+      default:
+        return null;
+    }
   }
 
   Widget _detailRow(String label, String value, Color color) {

@@ -734,6 +734,10 @@ export class SeedService implements OnApplicationBootstrap {
         panNumber: pan,
         status: 'approved' as any,
         verifiedAt: new Date(),
+        aadhaarFrontUrl: `/uploads/kyc/${user.id}/aadhaar_front.jpg`,
+        aadhaarBackUrl: `/uploads/kyc/${user.id}/aadhaar_back.jpg`,
+        panCardUrl: `/uploads/kyc/${user.id}/pan_card.jpg`,
+        selfieUrl: `/uploads/kyc/${user.id}/selfie.jpg`,
       });
       await kycRepo.save(kyc);
     }

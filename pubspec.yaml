@@ -39,6 +39,7 @@ dependencies:
   dio: ^5.4.0
   flutter_secure_storage: ^9.0.0
   google_fonts: ^6.1.0
+  image_picker: ^1.0.4
   flutter_svg: ^2.0.9
   firebase_core: ^2.15.0
   firebase_auth: ^4.7.0

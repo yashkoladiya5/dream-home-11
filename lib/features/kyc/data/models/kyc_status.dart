@@ -1,9 +1,13 @@
 class KycStatusModel {
-  final String status; // 'unverified', 'pending', 'approved', 'rejected'
+  final String status;
   final bool aadhaarVerified;
   final bool panVerified;
   final DateTime? verifiedAt;
   final String? rejectionReason;
+  final String? aadhaarFrontUrl;
+  final String? aadhaarBackUrl;
+  final String? panCardUrl;
+  final String? selfieUrl;
 
   const KycStatusModel({
     required this.status,
@@ -11,6 +15,10 @@ class KycStatusModel {
     this.panVerified = false,
     this.verifiedAt,
     this.rejectionReason,
+    this.aadhaarFrontUrl,
+    this.aadhaarBackUrl,
+    this.panCardUrl,
+    this.selfieUrl,
   });
 
   bool get isApproved => status == 'approved';
@@ -25,8 +33,18 @@ class KycStatusModel {
       panVerified: json['panVerified'] as bool? ?? false,
       verifiedAt: json['verifiedAt'] != null ? DateTime.parse(json['verifiedAt'] as String) : null,
       rejectionReason: json['rejectionReason'] as String?,
+      aadhaarFrontUrl: json['aadhaarFrontUrl'] as String?,
+      aadhaarBackUrl: json['aadhaarBackUrl'] as String?,
+      panCardUrl: json['panCardUrl'] as String?,
+      selfieUrl: json['selfieUrl'] as String?,
     );
   }
+
+  bool get allDocumentsUploaded =>
+      aadhaarFrontUrl != null &&
+      aadhaarBackUrl != null &&
+      panCardUrl != null &&
+      selfieUrl != null;
 }
 
 class KycSubmissionResponse {

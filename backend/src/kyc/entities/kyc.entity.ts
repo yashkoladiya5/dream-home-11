@@ -59,4 +59,16 @@ export class Kyc {
 
   @Column({ name: 'rejection_reason', type: 'text', nullable: true })
   rejectionReason: string;
+
+  @Column({ name: 'aadhaar_front_url', type: 'varchar', nullable: true })
+  aadhaarFrontUrl: string;
+
+  @Column({ name: 'aadhaar_back_url', type: 'varchar', nullable: true })
+  aadhaarBackUrl: string;
+
+  @Column({ name: 'pan_card_url', type: 'varchar', nullable: true })
+  panCardUrl: string;
+
+  @Column({ name: 'selfie_url', type: 'varchar', nullable: true })
+  selfieUrl: string;
 }
