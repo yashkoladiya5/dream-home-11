@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../dashboard/presentation/providers/user_profile_provider.dart';
 import '../providers/withdraw_provider.dart';
 import '../providers/bank_details_provider.dart';
+import '../../data/models/restricted_states.dart';
 
 class WithdrawScreen extends ConsumerStatefulWidget {
   const WithdrawScreen({super.key});
@@ -120,6 +121,10 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen>
 
     if (_showSuccess) return _buildSuccess(theme);
 
+    final userState = profileAsync.value?.state;
+    final restrictedMessage = getRestrictedStateMessage(userState);
+    final isRestricted = restrictedMessage != null;
+
     return Scaffold(
       backgroundColor: AppTheme.darkSlate,
       appBar: AppBar(
@@ -136,13 +141,17 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen>
             const SizedBox(height: 8),
             _buildBalanceCard(theme, profileAsync),
             const SizedBox(height: 24),
-            _buildAmountSection(theme),
-            const SizedBox(height: 20),
-            _buildPaymentMethod(theme, bankDetails),
-            const SizedBox(height: 24),
-            _buildInfoNotice(theme),
-            const SizedBox(height: 24),
-            _buildSubmitButton(theme),
+            if (isRestricted)
+              _buildRestrictedWarning(theme, restrictedMessage)
+            else ...[
+              _buildAmountSection(theme),
+              const SizedBox(height: 20),
+              _buildPaymentMethod(theme, bankDetails),
+              const SizedBox(height: 24),
+              _buildInfoNotice(theme),
+              const SizedBox(height: 24),
+              _buildSubmitButton(theme),
+            ],
             const SizedBox(height: 32),
           ],
         ),
@@ -375,6 +384,34 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen>
         child: _isProcessing
             ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
             : const Text('Withdraw', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+      ),
+    );
+  }
+
+  Widget _buildRestrictedWarning(ThemeData theme, String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryRed.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.gpp_bad_rounded, color: AppTheme.primaryRed, size: 48),
+          const SizedBox(height: 12),
+          Text('Withdrawals Not Available', style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryRed,
+          )),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.greyLight),
+          ),
+        ],
       ),
     );
   }

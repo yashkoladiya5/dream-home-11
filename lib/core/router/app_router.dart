@@ -38,6 +38,7 @@ import '../../features/wallet/presentation/screens/contest_transactions_screen.d
 import '../../features/wallet/presentation/screens/deposit_transactions_screen.dart';
 import '../../features/wallet/presentation/screens/other_transactions_screen.dart';
 import '../../features/wallet/presentation/screens/withdraw_screen.dart';
+import '../../features/wallet/presentation/screens/withdraw_history_screen.dart';
 import '../../features/wallet/presentation/screens/manage_payment_screen.dart';
 import '../../features/kyc/presentation/screens/kyc_details_screen.dart';
 
@@ -227,6 +228,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/withdraw',
         builder: (context, state) => const WithdrawScreen(),
+      ),
+      GoRoute(
+        path: '/withdraw-history',
+        builder: (context, state) => const WithdrawHistoryScreen(),
       ),
       GoRoute(
         path: '/manage-payment',

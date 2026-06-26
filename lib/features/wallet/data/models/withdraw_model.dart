@@ -54,6 +54,7 @@ class WithdrawalRecord {
   final String? bankName;
   final String? upiId;
   final String? utrNumber;
+  final String? rejectionReason;
   final DateTime createdAt;
 
   const WithdrawalRecord({
@@ -64,6 +65,7 @@ class WithdrawalRecord {
     this.bankName,
     this.upiId,
     this.utrNumber,
+    this.rejectionReason,
     required this.createdAt,
   });
 
@@ -76,6 +78,7 @@ class WithdrawalRecord {
       bankName: json['bankName'] as String?,
       upiId: json['upiId'] as String?,
       utrNumber: json['utrNumber'] as String?,
+      rejectionReason: json['rejectionReason'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }

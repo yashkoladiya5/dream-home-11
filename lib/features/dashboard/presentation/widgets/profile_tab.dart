@@ -256,6 +256,15 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _buildInfoTile(
                     context,
+                    label: 'Withdraw History',
+                    value: 'VIEW',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.history_rounded,
+                    onTap: () => context.push('/withdraw-history'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
                     label: 'Rewards Catalog',
                     value: 'REDEEM',
                     valueColor: AppTheme.primaryRed,

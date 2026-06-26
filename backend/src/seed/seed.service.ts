@@ -796,17 +796,78 @@ export class SeedService implements OnApplicationBootstrap {
     if (users.length === 0) return;
 
     const user = users[0];
-    const withdrawal = this.withdrawalRepo.create({
-      userId: user.id,
-      amount: 500,
-      status: 'approved' as any,
-      bankAccountNumber: user.bankAccountNumber || 'XXXXXXXXXX1234',
-      bankIfsc: user.bankIfsc || 'SBIN0001234',
-      bankName: user.bankName || 'State Bank of India',
-      utrNumber: 'HDFC' + Date.now().toString().slice(-10),
-    });
-    await this.withdrawalRepo.save(withdrawal);
-    this.logger.log('Seeded 1 sample withdrawal');
+    const now = new Date();
+
+    const withdrawals = [
+      {
+        userId: user.id,
+        amount: 500,
+        status: 'approved' as any,
+        bankAccountNumber: user.bankAccountNumber || 'XXXXXXXXXX1234',
+        bankIfsc: user.bankIfsc || 'SBIN0001234',
+        bankName: user.bankName || 'State Bank of India',
+        utrNumber: 'HDFC' + (now.getTime() - 86400000).toString().slice(-10),
+      },
+      {
+        userId: user.id,
+        amount: 1200,
+        status: 'approved' as any,
+        bankAccountNumber: user.bankAccountNumber || 'XXXXXXXXXX1234',
+        bankIfsc: user.bankIfsc || 'SBIN0001234',
+        bankName: user.bankName || 'State Bank of India',
+        utrNumber: 'SBIN' + (now.getTime() - 172800000).toString().slice(-10),
+      },
+      {
+        userId: user.id,
+        amount: 300,
+        status: 'pending' as any,
+        bankAccountNumber: user.bankAccountNumber || 'XXXXXXXXXX1234',
+        bankIfsc: user.bankIfsc || 'SBIN0001234',
+        bankName: user.bankName || 'State Bank of India',
+      },
+      {
+        userId: user.id,
+        amount: 2500,
+        status: 'pending' as any,
+        upiId: user.upiId || 'user@paytm',
+      },
+      {
+        userId: user.id,
+        amount: 750,
+        status: 'rejected' as any,
+        bankAccountNumber: user.bankAccountNumber || 'XXXXXXXXXX1234',
+        bankIfsc: user.bankIfsc || 'SBIN0001234',
+        bankName: user.bankName || 'State Bank of India',
+        rejectionReason: 'Insufficient KYC documents',
+      },
+      {
+        userId: user.id,
+        amount: 100,
+        status: 'rejected' as any,
+        upiId: user.upiId || 'user@paytm',
+        rejectionReason: 'Bank account mismatch',
+      },
+      {
+        userId: user.id,
+        amount: 1800,
+        status: 'approved' as any,
+        bankAccountNumber: user.bankAccountNumber || 'XXXXXXXXXX1234',
+        bankIfsc: user.bankIfsc || 'SBIN0001234',
+        bankName: user.bankName || 'State Bank of India',
+        utrNumber: 'ICIC' + (now.getTime() - 432000000).toString().slice(-10),
+      },
+      {
+        userId: user.id,
+        amount: 600,
+        status: 'pending' as any,
+        bankAccountNumber: user.bankAccountNumber || 'XXXXXXXXXX1234',
+        bankIfsc: user.bankIfsc || 'SBIN0001234',
+        bankName: user.bankName || 'State Bank of India',
+      },
+    ];
+
+    await this.withdrawalRepo.save(withdrawals);
+    this.logger.log(`Seeded ${withdrawals.length} sample withdrawals with varied statuses`);
   }
 
   private async _upsertSeedData(): Promise<void> {

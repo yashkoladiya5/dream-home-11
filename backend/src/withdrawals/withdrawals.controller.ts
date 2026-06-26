@@ -45,6 +45,11 @@ export class WithdrawalsController {
     return this.withdrawalsService.getWithdrawalHistory(user.id, pageNum, limitNum);
   }
 
+  @Get('withdraw/stats')
+  async getWithdrawalStats(@GetUser() user: User) {
+    return this.withdrawalsService.getWithdrawalStats(user.id);
+  }
+
   @Get('withdraw/:id')
   async getWithdrawalById(
     @GetUser() user: User,

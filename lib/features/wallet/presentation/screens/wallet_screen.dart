@@ -125,6 +125,15 @@ class WalletScreen extends ConsumerWidget {
                           onTap: () => context.push('/withdraw'),
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () => context.push('/withdraw-history'),
+                          icon: Icon(Icons.history_rounded, size: 16, color: AppTheme.greyMedium),
+                          label: Text('View History', style: TextStyle(color: AppTheme.greyMedium, fontSize: 12)),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),

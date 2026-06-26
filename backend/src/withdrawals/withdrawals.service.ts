@@ -103,7 +103,7 @@ export class WithdrawalsService {
     userId: string,
     page: number = 1,
     limit: number = 20,
-  ): Promise<{ withdrawals: Withdrawal[]; total: number; page: number; totalPages: number }> {
+  ): Promise<{ withdrawals: Withdrawal[]; total: number; page: number; totalPages: number; totalWithdrawn: number }> {
     const [withdrawals, total] = await this.withdrawalRepo.findAndCount({
       where: { userId },
       order: { createdAt: 'DESC' },
@@ -111,11 +111,53 @@ export class WithdrawalsService {
       take: limit,
     });
 
+    const result = await this.withdrawalRepo
+      .createQueryBuilder('w')
+      .select('SUM(w.amount)', 'totalWithdrawn')
+      .where('w.userId = :userId', { userId })
+      .andWhere('w.status = :status', { status: WithdrawalStatus.APPROVED })
+      .getRawOne();
+
     return {
       withdrawals,
       total,
       page,
       totalPages: Math.ceil(total / limit),
+      totalWithdrawn: result?.totalWithdrawn ? Number(result.totalWithdrawn) : 0,
+    };
+  }
+
+  async getWithdrawalStats(userId: string): Promise<{
+    totalWithdrawn: number;
+    pendingCount: number;
+    approvedCount: number;
+    rejectedCount: number;
+    totalCount: number;
+  }> {
+    const withdrawals = await this.withdrawalRepo.find({ where: { userId } });
+    let totalWithdrawn = 0;
+    let pendingCount = 0;
+    let approvedCount = 0;
+    let rejectedCount = 0;
+
+    for (const w of withdrawals) {
+      const amt = Number(w.amount);
+      if (w.status === WithdrawalStatus.APPROVED) {
+        totalWithdrawn += amt;
+        approvedCount++;
+      } else if (w.status === WithdrawalStatus.PENDING) {
+        pendingCount++;
+      } else if (w.status === WithdrawalStatus.REJECTED) {
+        rejectedCount++;
+      }
+    }
+
+    return {
+      totalWithdrawn: Math.round(totalWithdrawn * 100) / 100,
+      pendingCount,
+      approvedCount,
+      rejectedCount,
+      totalCount: withdrawals.length,
     };
   }
 
