@@ -29,6 +29,7 @@ describe('WithdrawalsService', () => {
     save: jest.fn(),
     findAndCount: jest.fn(),
     findOne: jest.fn(),
+    createQueryBuilder: jest.fn(),
   };
 
   const mockUserRepo = {
@@ -244,6 +245,12 @@ describe('WithdrawalsService', () => {
       ];
 
       mockWithdrawalRepo.findAndCount.mockResolvedValue([mockWithdrawals, 2]);
+      mockWithdrawalRepo.createQueryBuilder.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getRawOne: jest.fn().mockResolvedValue({ totalWithdrawn: '500' }),
+      });
 
       const result = await service.getWithdrawalHistory('user-1', 1, 10);
 
@@ -251,10 +258,17 @@ describe('WithdrawalsService', () => {
       expect(result.total).toBe(2);
       expect(result.page).toBe(1);
       expect(result.totalPages).toBe(1);
+      expect(result.totalWithdrawn).toBe(500);
     });
 
     it('should return empty history for new user', async () => {
       mockWithdrawalRepo.findAndCount.mockResolvedValue([[], 0]);
+      mockWithdrawalRepo.createQueryBuilder.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getRawOne: jest.fn().mockResolvedValue({ totalWithdrawn: '0' }),
+      });
 
       const result = await service.getWithdrawalHistory('new-user', 1, 20);
 

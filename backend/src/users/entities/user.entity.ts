@@ -55,6 +55,12 @@ export class User {
   @Column({ name: 'lifetime_points', type: 'integer', default: 0 })
   lifetimePoints: number;
 
+  @Column({ name: 'weekly_points', type: 'integer', default: 0 })
+  weeklyPoints: number;
+
+  @Column({ name: 'monthly_points', type: 'integer', default: 0 })
+  monthlyPoints: number;
+
   @Column({
     name: 'wallet_balance_inr',
     type: 'numeric',
