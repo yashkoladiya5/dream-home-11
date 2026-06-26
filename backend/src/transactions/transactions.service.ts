@@ -61,6 +61,7 @@ export class TransactionsService {
     totalCashSpent: number;
     totalPointsEarned: number;
     totalPointsSpent: number;
+    totalWithdrawn: number;
   }> {
     const deposits = await this.transactionRepo.find({
       where: { userId, type: 'deposit' },
@@ -74,12 +75,16 @@ export class TransactionsService {
     const redemptions = await this.transactionRepo.find({
       where: { userId, type: 'redemption' },
     });
+    const withdrawals = await this.transactionRepo.find({
+      where: { userId, type: 'withdrawal', status: 'completed' },
+    });
 
     const totalCashDeposited = deposits.reduce((s, t) => s + Number(t.cashAmount), 0);
     const totalCashSpent = entries.reduce((s, t) => s + Number(t.cashAmount), 0);
     const totalPointsEarned = pointsEarned.reduce((s, t) => s + t.pointsAmount, 0);
     const totalPointsSpent = redemptions.reduce((s, t) => s + t.pointsAmount, 0);
+    const totalWithdrawn = withdrawals.reduce((s, t) => s + Number(t.cashAmount), 0);
 
-    return { totalCashDeposited, totalCashSpent, totalPointsEarned, totalPointsSpent };
+    return { totalCashDeposited, totalCashSpent, totalPointsEarned, totalPointsSpent, totalWithdrawn };
   }
 }

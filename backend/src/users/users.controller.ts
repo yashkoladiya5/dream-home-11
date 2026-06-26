@@ -68,5 +68,30 @@ export class UsersController {
   ): Promise<User> {
     return this.usersService.updateProfile(user.id, { fullName, email, avatarUrl });
   }
+
+  @Patch('bank-details')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateBankDetails(
+    @GetUser() user: User,
+    @Body('bankAccountNumber') bankAccountNumber?: string,
+    @Body('bankIfsc') bankIfsc?: string,
+    @Body('bankName') bankName?: string,
+    @Body('upiId') upiId?: string,
+  ) {
+    return this.usersService.updateBankDetails(user.id, {
+      bankAccountNumber,
+      bankIfsc,
+      bankName,
+      upiId,
+    });
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@GetUser() user: User) {
+    return this.usersService.getProfile(user.id);
+  }
 }
 

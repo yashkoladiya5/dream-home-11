@@ -11,6 +11,7 @@ import { PrizeHome } from '../prize-homes/entities/prize-home.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { SavedPaymentMethod } from '../payment-methods/entities/saved-payment-method.entity';
 import { Kyc } from '../kyc/entities/kyc.entity';
+import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -37,6 +38,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly paymentMethodRepo: Repository<SavedPaymentMethod>,
     @InjectRepository(Kyc)
     private readonly kycRepo: Repository<Kyc>,
+    @InjectRepository(Withdrawal)
+    private readonly withdrawalRepo: Repository<Withdrawal>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -155,6 +158,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedTransactions();
     await this._seedKyc();
     await this._seedPaymentMethods();
+    await this._seedWithdrawals();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -187,16 +191,21 @@ export class SeedService implements OnApplicationBootstrap {
     for (let i = 0; i < memberNames.length; i++) {
       let user = await this.userRepository.findOne({ where: { phoneNumber: `+9190000000${i}` } });
       if (!user) {
-        user = this.userRepository.create({
-          fullName: memberNames[i],
-          phoneNumber: `+9190000000${i}`,
-          walletBalanceInr: 0,
-          pointsBalance: 0,
-          lifetimePoints: memberPoints[i],
-          currentTier: this.getTierForPoints(memberPoints[i]),
-          isActive: true,
-          deviceId: `seed-device-${i}`,
-        });
+          user = this.userRepository.create({
+            fullName: memberNames[i],
+            phoneNumber: `+9190000000${i}`,
+            walletBalanceInr: i < 3 ? 10000 : 5000,
+            pointsBalance: 0,
+            lifetimePoints: memberPoints[i],
+            currentTier: this.getTierForPoints(memberPoints[i]),
+            isActive: true,
+            deviceId: `seed-device-${i}`,
+            state: ['Maharashtra', 'Karnataka', 'Delhi', 'Uttar Pradesh', 'Tamil Nadu'][i],
+            bankAccountNumber: ['XXXXXXXXXX1234', 'XXXXXXXXXX5678', 'XXXXXXXXXX9012', 'XXXXXXXXXX3456', 'XXXXXXXXXX7890'][i],
+            bankIfsc: 'SBIN0001234',
+            bankName: 'State Bank of India',
+            upiId: `user${i}@paytm`,
+          });
         await this.userRepository.save(user);
       }
 
@@ -274,17 +283,19 @@ export class SeedService implements OnApplicationBootstrap {
 
       for (let i = 0; i < names.length; i++) {
         const phoneNumber = `+9191000000${idx * 3 + i}`;
+        const globalIdx = 5 + idx * 3 + i;
         let user = await this.userRepository.findOne({ where: { phoneNumber } });
         if (!user) {
           user = this.userRepository.create({
             fullName: names[i],
             phoneNumber,
-            walletBalanceInr: 0,
+            walletBalanceInr: globalIdx < 6 ? 5000 : 2000,
             pointsBalance: 0,
             lifetimePoints: points[i],
             currentTier: this.getTierForPoints(points[i]),
             isActive: true,
             deviceId: `seed-device-extra-${idx}-${i}`,
+            state: ['Maharashtra', 'Karnataka', 'Delhi', 'Uttar Pradesh', 'Tamil Nadu', 'Gujarat', 'Rajasthan', 'West Bengal'][globalIdx % 8],
           });
           await this.userRepository.save(user);
         }
@@ -772,6 +783,30 @@ export class SeedService implements OnApplicationBootstrap {
       await this.paymentMethodRepo.save(methods);
     }
     this.logger.log(`Seeded payment methods for ${users.length} users`);
+  }
+
+  private async _seedWithdrawals(): Promise<void> {
+    const count = await this.withdrawalRepo.count();
+    if (count > 0) {
+      this.logger.log('Withdrawals already seeded — skipping');
+      return;
+    }
+
+    const users = await this.userRepository.find();
+    if (users.length === 0) return;
+
+    const user = users[0];
+    const withdrawal = this.withdrawalRepo.create({
+      userId: user.id,
+      amount: 500,
+      status: 'approved' as any,
+      bankAccountNumber: user.bankAccountNumber || 'XXXXXXXXXX1234',
+      bankIfsc: user.bankIfsc || 'SBIN0001234',
+      bankName: user.bankName || 'State Bank of India',
+      utrNumber: 'HDFC' + Date.now().toString().slice(-10),
+    });
+    await this.withdrawalRepo.save(withdrawal);
+    this.logger.log('Seeded 1 sample withdrawal');
   }
 
   private async _upsertSeedData(): Promise<void> {

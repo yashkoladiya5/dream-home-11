@@ -36,6 +36,8 @@ import { Payment } from './payments/entities/payment.entity';
 import { PaymentsModule } from './payments/payments.module';
 import { SavedPaymentMethod } from './payment-methods/entities/saved-payment-method.entity';
 import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
+import { Withdrawal } from './withdrawals/entities/withdrawal.entity';
+import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 
 @Module({
   imports: [
@@ -53,7 +55,7 @@ import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
@@ -73,6 +75,7 @@ import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
     TransactionsModule,
     PaymentsModule,
     PaymentMethodsModule,
+    WithdrawalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

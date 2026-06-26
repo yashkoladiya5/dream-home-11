@@ -138,6 +138,39 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
+  async updateBankDetails(
+    userId: string,
+    data: {
+      bankAccountNumber?: string;
+      bankIfsc?: string;
+      bankName?: string;
+      upiId?: string;
+    },
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (data.bankAccountNumber !== undefined) user.bankAccountNumber = data.bankAccountNumber;
+    if (data.bankIfsc !== undefined) user.bankIfsc = data.bankIfsc;
+    if (data.bankName !== undefined) user.bankName = data.bankName;
+    if (data.upiId !== undefined) user.upiId = data.upiId;
+
+    return this.userRepository.save(user);
+  }
+
+  async getProfile(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: { kyc: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
   async updateProfile(
     userId: string,
     updateData: { fullName?: string; email?: string; avatarUrl?: string },
