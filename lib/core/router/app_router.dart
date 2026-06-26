@@ -30,6 +30,14 @@ import '../../features/prize_homes/presentation/screens/home_gallery_screen.dart
 import '../../features/prize_homes/presentation/screens/home_spec_detail_screen.dart';
 import '../../features/prize_homes/presentation/screens/location_selection_screen.dart';
 import '../../features/winners/presentation/screens/winner_profile_screen.dart';
+import '../../features/wallet/presentation/screens/wallet_screen.dart';
+import '../../features/wallet/presentation/screens/my_balance_screen.dart';
+import '../../features/wallet/presentation/screens/add_cash_screen.dart';
+import '../../features/wallet/presentation/screens/payment_options_screen.dart';
+import '../../features/wallet/presentation/screens/contest_transactions_screen.dart';
+import '../../features/wallet/presentation/screens/deposit_transactions_screen.dart';
+import '../../features/wallet/presentation/screens/other_transactions_screen.dart';
+import '../../features/kyc/presentation/screens/kyc_details_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -193,6 +201,38 @@ final routerProvider = Provider<GoRouter>((ref) {
           contestId: state.pathParameters['contestId']!,
           winnerUserId: state.pathParameters['userId']!,
         ),
+      ),
+      GoRoute(
+        path: '/wallet',
+        builder: (context, state) => const WalletScreen(),
+      ),
+      GoRoute(
+        path: '/my-balance',
+        builder: (context, state) => const MyBalanceScreen(),
+      ),
+      GoRoute(
+        path: '/add-cash',
+        builder: (context, state) => const AddCashScreen(),
+      ),
+      GoRoute(
+        path: '/payment-options',
+        builder: (context, state) => const PaymentOptionsScreen(),
+      ),
+      GoRoute(
+        path: '/kyc',
+        builder: (context, state) => const KycDetailsScreen(),
+      ),
+      GoRoute(
+        path: '/transactions/contest',
+        builder: (context, state) => const ContestTransactionsScreen(),
+      ),
+      GoRoute(
+        path: '/transactions/deposit',
+        builder: (context, state) => const DepositTransactionsScreen(),
+      ),
+      GoRoute(
+        path: '/transactions/others',
+        builder: (context, state) => const OtherTransactionsScreen(),
       ),
     ],
   );

@@ -174,10 +174,7 @@ class ProfileTab extends ConsumerWidget {
                     value: kycStatus.toUpperCase(),
                     valueColor: kycColor,
                     icon: Icons.verified_user_rounded,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                    ),
+                    onTap: () => context.push('/kyc'),
                   ),
                   const SizedBox(height: 12),
                   _buildInfoTile(
@@ -237,6 +234,15 @@ class ProfileTab extends ConsumerWidget {
                       context,
                       MaterialPageRoute(builder: (context) => const MultiplierScreen()),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
+                    label: 'My Wallet',
+                    value: 'VIEW',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.account_balance_wallet_rounded,
+                    onTap: () => context.push('/wallet'),
                   ),
                   const SizedBox(height: 12),
                   _buildInfoTile(

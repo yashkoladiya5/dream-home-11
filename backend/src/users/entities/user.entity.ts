@@ -70,6 +70,21 @@ export class User {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({ name: 'state', type: 'varchar', length: 50, nullable: true })
+  state: string;
+
+  @Column({ name: 'bank_account_number', type: 'varchar', length: 30, nullable: true })
+  bankAccountNumber: string;
+
+  @Column({ name: 'bank_ifsc', type: 'varchar', length: 20, nullable: true })
+  bankIfsc: string;
+
+  @Column({ name: 'bank_name', type: 'varchar', length: 100, nullable: true })
+  bankName: string;
+
+  @Column({ name: 'upi_id', type: 'varchar', length: 100, nullable: true })
+  upiId: string;
+
   @Column({ name: 'device_id', type: 'varchar', length: 255, nullable: false })
   deviceId: string;
 
