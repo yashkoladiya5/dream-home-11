@@ -43,7 +43,6 @@ export class WithdrawalsService {
       const user = await entityManager.findOne(User, {
         where: { id: userId },
         lock: { mode: 'pessimistic_write' },
-        relations: { kyc: true },
       });
 
       if (!user) {
@@ -59,7 +58,8 @@ export class WithdrawalsService {
         throw new BadRequestException('Insufficient balance');
       }
 
-      if (!user.kyc || user.kyc.status !== 'approved') {
+      const kyc = await entityManager.findOne(Kyc, { where: { userId } });
+      if (!kyc || kyc.status !== 'approved') {
         throw new ForbiddenException('KYC verification required for withdrawal');
       }
 
@@ -71,7 +71,7 @@ export class WithdrawalsService {
       user.walletBalanceInr = balanceBefore - amount;
       await entityManager.save(user);
 
-      const [savedWithdrawal] = await entityManager.save(Withdrawal, {
+      const savedWithdrawal = await entityManager.save(Withdrawal, {
         userId,
         amount,
         status: WithdrawalStatus.PENDING,

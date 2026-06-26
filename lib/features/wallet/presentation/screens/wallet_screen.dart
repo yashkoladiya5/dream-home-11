@@ -89,25 +89,40 @@ class WalletScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
+                  Column(
                     children: [
-                      Expanded(
-                        child: _ActionCard(
-                          icon: Icons.add_circle_outline_rounded,
-                          iconColor: AppTheme.goldYellow,
-                          title: 'Add Cash',
-                          subtitle: 'Deposit money',
-                          onTap: () => context.push('/add-cash'),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _ActionCard(
+                              icon: Icons.add_circle_outline_rounded,
+                              iconColor: AppTheme.goldYellow,
+                              title: 'Add Cash',
+                              subtitle: 'Deposit money',
+                              onTap: () => context.push('/add-cash'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _ActionCard(
+                              icon: Icons.account_balance_wallet_rounded,
+                              iconColor: AppTheme.emeraldGreen,
+                              title: 'My Balance',
+                              subtitle: 'View details',
+                              onTap: () => context.push('/my-balance'),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
                         child: _ActionCard(
-                          icon: Icons.account_balance_wallet_rounded,
-                          iconColor: AppTheme.emeraldGreen,
-                          title: 'My Balance',
-                          subtitle: 'View details',
-                          onTap: () => context.push('/my-balance'),
+                          icon: Icons.logout_rounded,
+                          iconColor: AppTheme.goldYellow,
+                          title: 'Withdraw',
+                          subtitle: 'Transfer to bank',
+                          onTap: () => context.push('/withdraw'),
                         ),
                       ),
                     ],
