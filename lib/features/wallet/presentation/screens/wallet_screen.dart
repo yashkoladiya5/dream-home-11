@@ -89,25 +89,49 @@ class WalletScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
+                  Column(
                     children: [
-                      Expanded(
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _ActionCard(
+                              icon: Icons.add_circle_outline_rounded,
+                              iconColor: AppTheme.goldYellow,
+                              title: 'Add Cash',
+                              subtitle: 'Deposit money',
+                              onTap: () => context.push('/add-cash'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _ActionCard(
+                              icon: Icons.account_balance_wallet_rounded,
+                              iconColor: AppTheme.emeraldGreen,
+                              title: 'My Balance',
+                              subtitle: 'View details',
+                              onTap: () => context.push('/my-balance'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
                         child: _ActionCard(
-                          icon: Icons.add_circle_outline_rounded,
+                          icon: Icons.logout_rounded,
                           iconColor: AppTheme.goldYellow,
-                          title: 'Add Cash',
-                          subtitle: 'Deposit money',
-                          onTap: () => context.push('/add-cash'),
+                          title: 'Withdraw',
+                          subtitle: 'Transfer to bank',
+                          onTap: () => context.push('/withdraw'),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _ActionCard(
-                          icon: Icons.account_balance_wallet_rounded,
-                          iconColor: AppTheme.emeraldGreen,
-                          title: 'My Balance',
-                          subtitle: 'View details',
-                          onTap: () => context.push('/my-balance'),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () => context.push('/withdraw-history'),
+                          icon: Icon(Icons.history_rounded, size: 16, color: AppTheme.greyMedium),
+                          label: Text('View History', style: TextStyle(color: AppTheme.greyMedium, fontSize: 12)),
                         ),
                       ),
                     ],

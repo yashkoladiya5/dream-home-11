@@ -101,10 +101,9 @@ describe('WithdrawalsService', () => {
     });
 
     it('should reject insufficient balance', async () => {
-      (mockEntityManager.findOne as jest.Mock).mockResolvedValue({
-        ...mockUser,
-        walletBalanceInr: 50,
-      });
+      (mockEntityManager.findOne as jest.Mock)
+        .mockResolvedValueOnce({ ...mockUser, walletBalanceInr: 50 })
+        .mockResolvedValueOnce({ status: 'approved' });
 
       await expect(
         service.requestWithdrawal('user-1', 200, {}),
@@ -112,10 +111,9 @@ describe('WithdrawalsService', () => {
     });
 
     it('should reject unverified KYC', async () => {
-      (mockEntityManager.findOne as jest.Mock).mockResolvedValue({
-        ...mockUser,
-        kyc: { status: 'pending' },
-      });
+      (mockEntityManager.findOne as jest.Mock)
+        .mockResolvedValueOnce({ ...mockUser })
+        .mockResolvedValueOnce({ status: 'pending' });
 
       await expect(
         service.requestWithdrawal('user-1', 200, {}),
@@ -123,10 +121,9 @@ describe('WithdrawalsService', () => {
     });
 
     it('should reject inactive account', async () => {
-      (mockEntityManager.findOne as jest.Mock).mockResolvedValue({
-        ...mockUser,
-        isActive: false,
-      });
+      (mockEntityManager.findOne as jest.Mock)
+        .mockResolvedValueOnce({ ...mockUser, isActive: false })
+        .mockResolvedValueOnce({ status: 'approved' });
 
       await expect(
         service.requestWithdrawal('user-1', 200, {}),
@@ -135,10 +132,9 @@ describe('WithdrawalsService', () => {
 
     it('should reject restricted states', async () => {
       for (const state of ['Assam', 'Odisha', 'Telangana']) {
-        (mockEntityManager.findOne as jest.Mock).mockResolvedValue({
-          ...mockUser,
-          state,
-        });
+        (mockEntityManager.findOne as jest.Mock)
+          .mockResolvedValueOnce({ ...mockUser, state })
+          .mockResolvedValueOnce({ status: 'approved' });
 
         await expect(
           service.requestWithdrawal('user-1', 200, {}),
@@ -158,13 +154,13 @@ describe('WithdrawalsService', () => {
         createdAt: new Date(),
       };
 
-      (mockEntityManager.findOne as jest.Mock).mockResolvedValue({
-        ...mockUser,
-      });
+      (mockEntityManager.findOne as jest.Mock)
+        .mockResolvedValueOnce({ ...mockUser })
+        .mockResolvedValueOnce({ status: 'approved' });
       (mockEntityManager.save as jest.Mock).mockImplementation(
         (...args: any[]) => {
           if (args.length === 2) {
-            return [savedWithdrawal];
+            return savedWithdrawal;
           }
           return { ...mockUser, walletBalanceInr: 4000 };
         },
@@ -190,13 +186,13 @@ describe('WithdrawalsService', () => {
         createdAt: new Date(),
       };
 
-      (mockEntityManager.findOne as jest.Mock).mockResolvedValue({
-        ...mockUser,
-      });
+      (mockEntityManager.findOne as jest.Mock)
+        .mockResolvedValueOnce({ ...mockUser })
+        .mockResolvedValueOnce({ status: 'approved' });
       (mockEntityManager.save as jest.Mock).mockImplementation(
         (...args: any[]) => {
           if (args.length === 2) {
-            return [savedWithdrawal];
+            return savedWithdrawal;
           }
           return args[0];
         },
@@ -216,9 +212,9 @@ describe('WithdrawalsService', () => {
     it('should deduct balance correctly', async () => {
       let savedUser: any = null;
 
-      (mockEntityManager.findOne as jest.Mock).mockResolvedValue({
-        ...mockUser,
-      });
+      (mockEntityManager.findOne as jest.Mock)
+        .mockResolvedValueOnce({ ...mockUser })
+        .mockResolvedValueOnce({ status: 'approved' });
       (mockEntityManager.save as jest.Mock).mockImplementation(
         (...args: any[]) => {
           if (args.length === 1) {
@@ -228,7 +224,7 @@ describe('WithdrawalsService', () => {
             }
             return entity;
           }
-          return [{}];
+          return {};
         },
       );
       (mockEntityManager.create as jest.Mock).mockReturnValue({});

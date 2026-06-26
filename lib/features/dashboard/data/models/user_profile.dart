@@ -11,6 +11,7 @@ class UserProfile {
   final int currentStreak;
   final int longestStreak;
   final KycProfile? kyc;
+  final String? state;
 
   UserProfile({
     required this.id,
@@ -25,6 +26,7 @@ class UserProfile {
     required this.currentStreak,
     required this.longestStreak,
     this.kyc,
+    this.state,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class UserProfile {
       currentStreak: (json['currentStreak'] as num?)?.toInt() ?? 0,
       longestStreak: (json['longestStreak'] as num?)?.toInt() ?? 0,
       kyc: json['kyc'] != null ? KycProfile.fromJson(json['kyc'] as Map<String, dynamic>) : null,
+      state: json['state'] as String?,
     );
   }
 }
