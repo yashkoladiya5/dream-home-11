@@ -159,6 +159,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedKyc();
     await this._seedPaymentMethods();
     await this._seedWithdrawals();
+    await this._backfillUserPoints();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -197,6 +198,8 @@ export class SeedService implements OnApplicationBootstrap {
             walletBalanceInr: i < 3 ? 10000 : 5000,
             pointsBalance: 0,
             lifetimePoints: memberPoints[i],
+            weeklyPoints: Math.round(memberPoints[i] * 0.2),
+            monthlyPoints: Math.round(memberPoints[i] * 0.5),
             currentTier: this.getTierForPoints(memberPoints[i]),
             isActive: true,
             deviceId: `seed-device-${i}`,
@@ -292,6 +295,8 @@ export class SeedService implements OnApplicationBootstrap {
             walletBalanceInr: globalIdx < 6 ? 5000 : 2000,
             pointsBalance: 0,
             lifetimePoints: points[i],
+            weeklyPoints: Math.round(points[i] * 0.2),
+            monthlyPoints: Math.round(points[i] * 0.5),
             currentTier: this.getTierForPoints(points[i]),
             isActive: true,
             deviceId: `seed-device-extra-${idx}-${i}`,
@@ -783,6 +788,20 @@ export class SeedService implements OnApplicationBootstrap {
       await this.paymentMethodRepo.save(methods);
     }
     this.logger.log(`Seeded payment methods for ${users.length} users`);
+  }
+
+  private async _backfillUserPoints(): Promise<void> {
+    const users = await this.userRepository.find({ where: { weeklyPoints: IsNull() } });
+    if (users.length === 0) {
+      this.logger.log('All users already have weekly/monthly points — skipping backfill');
+      return;
+    }
+    for (const user of users) {
+      user.weeklyPoints = Math.round(user.lifetimePoints * 0.2);
+      user.monthlyPoints = Math.round(user.lifetimePoints * 0.5);
+    }
+    await this.userRepository.save(users);
+    this.logger.log(`Backfilled weekly/monthly points for ${users.length} users`);
   }
 
   private async _seedWithdrawals(): Promise<void> {

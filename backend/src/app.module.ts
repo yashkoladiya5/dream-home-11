@@ -31,6 +31,7 @@ import { PrizeHome } from './prize-homes/entities/prize-home.entity';
 import { PrizeHomesModule } from './prize-homes/prize-homes.module';
 import { Transaction } from './transactions/entities/transaction.entity';
 import { TransactionsModule } from './transactions/transactions.module';
+import { RedisModule } from './redis/redis.module';
 import { ShareTrackerModule } from './share-tracker/share-tracker.module';
 import { Payment } from './payments/entities/payment.entity';
 import { PaymentsModule } from './payments/payments.module';
@@ -38,6 +39,7 @@ import { SavedPaymentMethod } from './payment-methods/entities/saved-payment-met
 import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 import { Withdrawal } from './withdrawals/entities/withdrawal.entity';
 import { WithdrawalsModule } from './withdrawals/withdrawals.module';
+import { LeaderboardModule } from './leaderboard/leaderboard.module';
 
 @Module({
   imports: [
@@ -71,11 +73,13 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
     SeedModule,
     NotificationsModule,
     ShareTrackerModule,
+    RedisModule,
     PrizeHomesModule,
     TransactionsModule,
     PaymentsModule,
     PaymentMethodsModule,
     WithdrawalsModule,
+    LeaderboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

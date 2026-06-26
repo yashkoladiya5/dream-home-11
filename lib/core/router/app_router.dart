@@ -41,6 +41,8 @@ import '../../features/wallet/presentation/screens/withdraw_screen.dart';
 import '../../features/wallet/presentation/screens/withdraw_history_screen.dart';
 import '../../features/wallet/presentation/screens/manage_payment_screen.dart';
 import '../../features/kyc/presentation/screens/kyc_details_screen.dart';
+import '../../features/leaderboard/presentation/screens/leaderboard_screen.dart';
+import '../../features/leaderboard/presentation/screens/series_leaderboard_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -232,6 +234,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/withdraw-history',
         builder: (context, state) => const WithdrawHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/leaderboard',
+        builder: (context, state) => const LeaderboardScreen(),
+      ),
+      GoRoute(
+        path: '/series-leaderboard',
+        builder: (context, state) => const SeriesLeaderboardScreen(),
       ),
       GoRoute(
         path: '/manage-payment',
