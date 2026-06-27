@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, ILike } from 'typeorm';
 import { User, UserLevel } from './entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { Contest } from '../contests/entities/contest.entity';
@@ -384,6 +384,27 @@ export class UsersService {
       });
 
     return { contests: filtered };
+  }
+
+  async searchUsers(query: string, page: number = 1, limit: number = 20): Promise<{ users: Partial<User>[]; total: number }> {
+    const [users, total] = await this.userRepository.findAndCount({
+      where: [
+        { fullName: ILike(`%${query.trim()}%`) },
+        { phoneNumber: ILike(`%${query.trim()}%`) },
+      ],
+      select: {
+        id: true,
+        fullName: true,
+        avatarUrl: true,
+        currentTier: true,
+        lifetimePoints: true,
+      },
+      order: { lifetimePoints: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return { users, total };
   }
 }
 

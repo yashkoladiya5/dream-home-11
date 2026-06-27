@@ -33,25 +33,31 @@ export class FeedService {
 
     const postIds = posts.map((p) => p.id);
 
-    const likeCounts = await this.likeRepo
-      .createQueryBuilder('like')
-      .select('like.postId', 'postId')
-      .addSelect('COUNT(*)', 'count')
-      .where('like.postId IN (:...postIds)', { postIds })
-      .groupBy('like.postId')
-      .getRawMany();
+    let likeCounts: any[] = [];
+    let userLikes: Like[] = [];
+    let commentCounts: any[] = [];
 
-    const userLikes = await this.likeRepo.find({
-      where: { userId, postId: postIds.length > 0 ? In(postIds) : '' },
-    });
+    if (postIds.length > 0) {
+      likeCounts = await this.likeRepo
+        .createQueryBuilder('like')
+        .select('like.postId', 'postId')
+        .addSelect('COUNT(*)', 'count')
+        .where('like.postId IN (:...postIds)', { postIds })
+        .groupBy('like.postId')
+        .getRawMany();
 
-    const commentCounts = await this.commentRepo
-      .createQueryBuilder('comment')
-      .select('comment.postId', 'postId')
-      .addSelect('COUNT(*)', 'count')
-      .where('comment.postId IN (:...postIds)', { postIds })
-      .groupBy('comment.postId')
-      .getRawMany();
+      userLikes = await this.likeRepo.find({
+        where: { userId, postId: In(postIds) },
+      });
+
+      commentCounts = await this.commentRepo
+        .createQueryBuilder('comment')
+        .select('comment.postId', 'postId')
+        .addSelect('COUNT(*)', 'count')
+        .where('comment.postId IN (:...postIds)', { postIds })
+        .groupBy('comment.postId')
+        .getRawMany();
+    }
 
     const likeCountMap = new Map<string, number>(
       likeCounts.map((r: any) => [r.postId, parseInt(r.count, 10) || 0]),

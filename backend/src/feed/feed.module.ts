@@ -6,9 +6,10 @@ import { Comment } from './entities/comment.entity';
 import { FeedService } from './feed.service';
 import { FeedController } from './feed.controller';
 import { RateLimiterService } from './rate-limiter.service';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post, Like, Comment])],
+  imports: [TypeOrmModule.forFeature([Post, Like, Comment]), UsersModule],
   providers: [FeedService, RateLimiterService],
   controllers: [FeedController],
   exports: [TypeOrmModule],

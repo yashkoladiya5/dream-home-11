@@ -44,6 +44,10 @@ import '../../features/kyc/presentation/screens/kyc_details_screen.dart';
 import '../../features/leaderboard/presentation/screens/leaderboard_screen.dart';
 import '../../features/leaderboard/presentation/screens/series_leaderboard_screen.dart';
 import '../../features/contests/presentation/screens/my_home_contest_screen.dart';
+import '../../features/feed/presentation/screens/feed_screen.dart';
+import '../../features/feed/presentation/screens/find_people_screen.dart';
+import '../../features/gamification/presentation/screens/spin_screen.dart';
+import '../../features/polls/presentation/screens/vote_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -124,6 +128,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/my-contests',
         builder: (context, state) => const MyHomeContestScreen(),
+      ),
+      GoRoute(
+        path: '/feed',
+        builder: (context, state) => const FeedScreen(),
+      ),
+      GoRoute(
+        path: '/find-people',
+        builder: (context, state) => const FindPeopleScreen(),
       ),
       GoRoute(
         path: '/create-contest',
@@ -259,6 +271,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/transactions/deposit',
         builder: (context, state) => const DepositTransactionsScreen(),
+      ),
+      GoRoute(
+        path: '/spin',
+        builder: (context, state) => const SpinScreen(),
+      ),
+      GoRoute(
+        path: '/vote',
+        builder: (context, state) => const VoteScreen(),
       ),
       GoRoute(
         path: '/transactions/others',

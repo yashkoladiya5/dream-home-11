@@ -12,6 +12,10 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 import { SavedPaymentMethod } from '../payment-methods/entities/saved-payment-method.entity';
 import { Kyc } from '../kyc/entities/kyc.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
+import { Poll } from '../polls/entities/poll.entity';
+import { Post } from '../feed/entities/post.entity';
+import { Like } from '../feed/entities/like.entity';
+import { Comment } from '../feed/entities/comment.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -40,6 +44,14 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly kycRepo: Repository<Kyc>,
     @InjectRepository(Withdrawal)
     private readonly withdrawalRepo: Repository<Withdrawal>,
+    @InjectRepository(Poll)
+    private readonly pollRepo: Repository<Poll>,
+    @InjectRepository(Post)
+    private readonly postRepo: Repository<Post>,
+    @InjectRepository(Like)
+    private readonly likeRepo: Repository<Like>,
+    @InjectRepository(Comment)
+    private readonly commentRepo: Repository<Comment>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -159,6 +171,8 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedKyc();
     await this._seedPaymentMethods();
     await this._seedWithdrawals();
+    await this._seedPolls();
+    await this._seedPosts();
     await this._backfillUserPoints();
   }
 
@@ -887,6 +901,128 @@ export class SeedService implements OnApplicationBootstrap {
 
     await this.withdrawalRepo.save(withdrawals);
     this.logger.log(`Seeded ${withdrawals.length} sample withdrawals with varied statuses`);
+  }
+
+  private async _seedPolls(): Promise<void> {
+    const existing = await this.pollRepo.count();
+    if (existing > 0) {
+      this.logger.log('Polls already seeded — skipping');
+      return;
+    }
+    const now = new Date();
+    const polls: Partial<Poll>[] = [
+      {
+        question: 'Which room is most important in your dream home?',
+        options: ['Living Room', 'Kitchen', 'Master Bedroom', 'Home Office', 'Gym', 'Garden', 'Game Room'],
+        totalVotes: 0,
+        activeFrom: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+        activeTo: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+        isActive: true,
+      },
+      {
+        question: 'What style of home do you prefer?',
+        options: ['Modern', 'Mediterranean', 'Victorian', 'Minimalist', 'Rustic', 'Contemporary'],
+        totalVotes: 0,
+        activeFrom: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+        activeTo: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
+        isActive: true,
+      },
+    ];
+    await this.pollRepo.save(polls);
+    this.logger.log(`Seeded ${polls.length} daily polls`);
+  }
+
+  private async _seedPosts(): Promise<void> {
+    const existing = await this.postRepo.count();
+    if (existing > 0) {
+      this.logger.log('Posts already seeded — skipping');
+      return;
+    }
+
+    const users = await this.userRepository.find({ take: 10 });
+    if (users.length < 2) {
+      this.logger.log('Not enough users to seed posts — skipping');
+      return;
+    }
+
+    const now = new Date();
+    const postContents = [
+      'Just joined the Mega Dream Home Contest! Can\'t wait to win that luxury apartment in Mumbai 🏆',
+      'My streak is at 30 days! Feeling unstoppable. Who else is on a roll? 🔥',
+      'Check out today\'s prize home in the gallery — the sea-facing penthouse in Goa is unreal! 🌊',
+      'Finally reached Platinum tier! The 1.5x multiplier is going to be huge for my points 💪',
+      'Who else is playing the Weekend Villa Clash? Let\'s go!',
+      'Just won 25 points on the Daily Spin! Lucky day today 🍀',
+      'Voted on today\'s poll — kitchen is definitely the most important room in a dream home 🏠',
+      '3 more days until the Luxury Penthouse Showdown ends. Feeling confident!',
+      'Invite code: DREAM11VIP — use it to earn bonus points when you join!',
+      'Just redeemed 2000 points for a reward in the catalog. Love this platform! 🎁',
+    ];
+
+    const posts: Post[] = [];
+    for (let i = 0; i < postContents.length; i++) {
+      const user = users[i % users.length];
+      const post = this.postRepo.create({
+        userId: user.id,
+        content: postContents[i],
+        isActive: true,
+        createdAt: new Date(now.getTime() - (postContents.length - i) * 60 * 60 * 1000),
+      });
+      posts.push(post);
+    }
+    await this.postRepo.save(posts);
+    this.logger.log(`Seeded ${posts.length} posts`);
+
+    const likes: Like[] = [];
+    for (let i = 0; i < posts.length; i++) {
+      const likers = users.filter((_, idx) => idx !== i % users.length);
+      const likeCount = Math.min(likers.length, Math.floor(Math.random() * 4) + 1);
+      for (let j = 0; j < likeCount; j++) {
+        const existingLike = likes.find(
+          (l) => l.postId === posts[i].id && l.userId === likers[j].id,
+        );
+        if (!existingLike) {
+          likes.push(
+            this.likeRepo.create({
+              postId: posts[i].id,
+              userId: likers[j].id,
+            }),
+          );
+        }
+      }
+    }
+    if (likes.length > 0) {
+      await this.likeRepo.save(likes);
+      this.logger.log(`Seeded ${likes.length} likes`);
+    }
+
+    const comments: Comment[] = [];
+    const commentTexts = [
+      'Same here! Good luck! 🍀',
+      'Amazing! Keep it up!',
+      'That penthouse is my dream too!',
+      'Welcome to the club! 🏆',
+      'Count me in!',
+      'Lucky! I got 15 on my spin today',
+      'Agreed! Kitchen is everything!',
+      'You\'ve got this!',
+      'Thanks for the code!',
+      'Nice! Which one did you get?',
+    ];
+    for (let i = 0; i < posts.length && i < commentTexts.length; i++) {
+      const commenter = users[(i + 1) % users.length];
+      comments.push(
+        this.commentRepo.create({
+          postId: posts[i].id,
+          userId: commenter.id,
+          content: commentTexts[i],
+        }),
+      );
+    }
+    if (comments.length > 0) {
+      await this.commentRepo.save(comments);
+      this.logger.log(`Seeded ${comments.length} comments`);
+    }
   }
 
   private async _upsertSeedData(): Promise<void> {

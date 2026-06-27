@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -98,6 +98,18 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async getProfile(@GetUser() user: User) {
     return this.usersService.getProfile(user.id);
+  }
+
+  @Get('search')
+  @UseGuards(JwtAuthGuard)
+  async searchUsers(
+    @Query('q') query: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit || '20', 10) || 20));
+    return this.usersService.searchUsers(query || '', pageNum, limitNum);
   }
 }
 
