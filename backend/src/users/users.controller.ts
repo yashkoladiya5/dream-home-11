@@ -32,6 +32,12 @@ export class UsersController {
     return this.usersService.getMyContests(user.id);
   }
 
+  @Get('contests/home')
+  @UseGuards(JwtAuthGuard)
+  async getMyHomeContests(@GetUser() user: User) {
+    return this.usersService.getMyHomeContests(user.id);
+  }
+
   @Post('deposit')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)

@@ -292,12 +292,98 @@ export class UsersService {
         .where('cm.contestId = :contestId', { contestId: member.contestId })
         .andWhere('cm.pointsEarned > :myPoints', { myPoints })
         .getRawOne();
-      const myRank = (rankResult?.rank || 0) + 1;
+      const myRank = Number(rankResult?.rank || 0) + 1;
 
       return { ...member.contest, myPoints, myRank };
     }));
 
     return { contests };
+  }
+
+  async getMyHomeContests(userId: string): Promise<{ contests: any[] }> {
+    const members = await this.contestMemberRepository.find({
+      where: { userId },
+      relations: { contest: true },
+      order: { joinedAt: 'DESC' },
+    });
+
+    const contests = await Promise.all(members.map(async (member) => {
+      const contest = member.contest;
+      if (!contest) return null;
+
+      const myPoints = member.pointsEarned;
+
+      const rankResult = await this.contestMemberRepository
+        .createQueryBuilder('cm')
+        .select('COUNT(*)', 'rank')
+        .where('cm.contestId = :contestId', { contestId: member.contestId })
+        .andWhere('cm.pointsEarned > :myPoints', { myPoints })
+        .getRawOne();
+      const myRank = Number(rankResult?.rank || 0) + 1;
+
+      // Calculate total members in this contest
+      const totalMembers = await this.contestMemberRepository.count({
+        where: { contestId: member.contestId },
+      });
+
+      // Calculate time-based progress for running contests
+      let progressPercentage = 0;
+      if (contest.status === 'running') {
+        const now = new Date().getTime();
+        const start = new Date(contest.startTime).getTime();
+        const end = new Date(contest.endTime).getTime();
+        const total = end - start;
+        const elapsed = now - start;
+        progressPercentage = total > 0 ? Math.min(100, Math.max(0, Math.round((elapsed / total) * 100))) : 0;
+      } else if (contest.status === 'completed') {
+        progressPercentage = 100;
+      }
+
+      // Calculate points to first place
+      const firstPlace = await this.contestMemberRepository.findOne({
+        where: { contestId: member.contestId },
+        order: { pointsEarned: 'DESC' },
+      });
+      const pointsToFirst = firstPlace && firstPlace.userId !== member.userId
+        ? firstPlace.pointsEarned - myPoints
+        : null;
+
+      return {
+        id: contest.id,
+        title: contest.title,
+        type: contest.type,
+        entryFeeInr: contest.entryFeeInr,
+        pointsToJoin: contest.pointsToJoin,
+        maxSlots: contest.maxSlots,
+        filledSlots: contest.filledSlots,
+        prize: contest.prize,
+        badgeText: contest.badgeText,
+        badgeColor: contest.badgeColor,
+        startTime: contest.startTime,
+        endTime: contest.endTime,
+        status: contest.status,
+        inviteCode: contest.inviteCode,
+        rules: contest.rules,
+        myPoints,
+        myRank,
+        totalMembers,
+        progressPercentage,
+        pointsToFirst,
+      };
+    }));
+
+    // Filter out nulls and sort: running first, upcoming second, then by start time ascending
+    const filtered = contests
+      .filter((c): c is NonNullable<typeof c> => c !== null)
+      .sort((a, b) => {
+        const statusOrder: Record<string, number> = { running: 0, upcoming: 1, completed: 2, cancelled: 3 };
+        const aOrder = statusOrder[a.status] ?? 99;
+        const bOrder = statusOrder[b.status] ?? 99;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+      });
+
+    return { contests: filtered };
   }
 }
 
