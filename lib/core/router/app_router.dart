@@ -43,6 +43,7 @@ import '../../features/wallet/presentation/screens/manage_payment_screen.dart';
 import '../../features/kyc/presentation/screens/kyc_details_screen.dart';
 import '../../features/leaderboard/presentation/screens/leaderboard_screen.dart';
 import '../../features/leaderboard/presentation/screens/series_leaderboard_screen.dart';
+import '../../features/contests/presentation/screens/my_home_contest_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -119,6 +120,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home-contests',
         builder: (context, state) => const HomeContestScreen(),
+      ),
+      GoRoute(
+        path: '/my-contests',
+        builder: (context, state) => const MyHomeContestScreen(),
       ),
       GoRoute(
         path: '/create-contest',

@@ -226,6 +226,15 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _buildInfoTile(
                     context,
+                    label: 'My Contests',
+                    value: 'VIEW',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.sports_esports_rounded,
+                    onTap: () => context.push('/my-contests'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
                     label: 'Points Multiplier',
                     value: 'VIEW',
                     valueColor: AppTheme.primaryRed,

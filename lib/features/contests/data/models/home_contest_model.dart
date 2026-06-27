@@ -1,4 +1,4 @@
-class ContestModel {
+class HomeContestModel {
   final String id;
   final String title;
   final String type;
@@ -9,17 +9,18 @@ class ContestModel {
   final String? prize;
   final String? badgeText;
   final String? badgeColor;
-  final String? rules;
-  final String? inviteCode;
-  final bool? canJoin;
-  final String? cannotJoinReason;
   final DateTime startTime;
   final DateTime endTime;
   final String status;
-  final int? myPoints;
-  final int? myRank;
+  final String? inviteCode;
+  final String? rules;
+  final int myPoints;
+  final int myRank;
+  final int totalMembers;
+  final double progressPercentage;
+  final int? pointsToFirst;
 
-  ContestModel({
+  HomeContestModel({
     required this.id,
     required this.title,
     required this.type,
@@ -30,19 +31,20 @@ class ContestModel {
     this.prize,
     this.badgeText,
     this.badgeColor,
-    this.rules,
-    this.inviteCode,
-    this.canJoin,
-    this.cannotJoinReason,
     required this.startTime,
     required this.endTime,
     required this.status,
-    this.myPoints,
-    this.myRank,
+    this.inviteCode,
+    this.rules,
+    required this.myPoints,
+    required this.myRank,
+    required this.totalMembers,
+    required this.progressPercentage,
+    this.pointsToFirst,
   });
 
-  factory ContestModel.fromJson(Map<String, dynamic> json) {
-    return ContestModel(
+  factory HomeContestModel.fromJson(Map<String, dynamic> json) {
+    return HomeContestModel(
       id: json['id'] as String,
       title: json['title'] as String,
       type: json['type'] as String? ?? 'normal',
@@ -53,18 +55,20 @@ class ContestModel {
       prize: json['prize'] as String?,
       badgeText: json['badgeText'] as String?,
       badgeColor: json['badgeColor'] as String?,
-      rules: json['rules'] as String?,
-      inviteCode: json['inviteCode'] as String?,
-      canJoin: json['canJoin'] as bool?,
-      cannotJoinReason: json['reason'] as String?,
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: DateTime.parse(json['endTime'] as String),
       status: json['status'] as String? ?? 'upcoming',
-      myPoints: json['myPoints'] != null ? int.tryParse(json['myPoints'].toString()) : null,
-      myRank: json['myRank'] != null ? int.tryParse(json['myRank'].toString()) : null,
+      inviteCode: json['inviteCode'] as String?,
+      rules: json['rules'] as String?,
+      myPoints: int.tryParse(json['myPoints']?.toString() ?? '') ?? 0,
+      myRank: int.tryParse(json['myRank']?.toString() ?? '') ?? 0,
+      totalMembers: int.tryParse(json['totalMembers']?.toString() ?? '') ?? 0,
+      progressPercentage: double.tryParse(json['progressPercentage']?.toString() ?? '0') ?? 0.0,
+      pointsToFirst: json['pointsToFirst'] != null ? int.tryParse(json['pointsToFirst'].toString()) : null,
     );
   }
 
   int get spotsLeft => maxSlots - filledSlots;
+
   double get fillPercentage => maxSlots > 0 ? filledSlots / maxSlots : 0;
 }

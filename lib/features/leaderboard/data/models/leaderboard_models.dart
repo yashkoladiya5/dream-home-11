@@ -40,19 +40,21 @@ class LeaderboardEntry {
   String get tierLabel => currentTier ?? 'bronze';
 }
 
-enum LeaderboardCycle { allTime, weekly, monthly }
+enum LeaderboardCycle { allTime, weekly, monthly, custom }
 
 class LeaderboardResponse {
   final List<LeaderboardEntry> entries;
   final LeaderboardEntry? userRank;
   final int totalCount;
   final LeaderboardCycle cycle;
+  final String? contestId;
 
   const LeaderboardResponse({
     required this.entries,
     this.userRank,
     required this.totalCount,
     this.cycle = LeaderboardCycle.allTime,
+    this.contestId,
   });
 
   factory LeaderboardResponse.fromJson(Map<String, dynamic> json) {
@@ -67,6 +69,7 @@ class LeaderboardResponse {
           : null,
       totalCount: (json['totalCount'] as num?)?.toInt() ?? 0,
       cycle: _parseCycle(cycleStr),
+      contestId: json['contestId'] as String?,
     );
   }
 
@@ -76,6 +79,8 @@ class LeaderboardResponse {
         return LeaderboardCycle.weekly;
       case 'monthly':
         return LeaderboardCycle.monthly;
+      case 'custom':
+        return LeaderboardCycle.custom;
       default:
         return LeaderboardCycle.allTime;
     }

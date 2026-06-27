@@ -12,6 +12,8 @@ class LeaderboardRepository {
         return 'weekly';
       case LeaderboardCycle.monthly:
         return 'monthly';
+      case LeaderboardCycle.custom:
+        return 'custom';
       default:
         return 'all_time';
     }
@@ -41,6 +43,18 @@ class LeaderboardRepository {
       'page': page,
       'limit': limit,
       'cycle': _cycleParam(cycle),
+    });
+    return LeaderboardResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<LeaderboardResponse> getSeriesLeaderboard({
+    required String contestId,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final response = await _dio.get('/api/v1/leaderboard/series/$contestId', queryParameters: {
+      'page': page,
+      'limit': limit,
     });
     return LeaderboardResponse.fromJson(response.data as Map<String, dynamic>);
   }
