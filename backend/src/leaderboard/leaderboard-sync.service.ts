@@ -53,6 +53,7 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
         score: u.weeklyPoints,
       }));
     await this.leaderboardRedis.batchSetScores(LeaderboardRedisService.WEEKLY_KEY, weeklyScores);
+    await this.leaderboardRedis.setKeyExpiry(LeaderboardRedisService.WEEKLY_KEY, LeaderboardRedisService.WEEKLY_TTL);
 
     const monthlyScores = users
       .filter(u => u.monthlyPoints > 0)
@@ -61,6 +62,7 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
         score: u.monthlyPoints,
       }));
     await this.leaderboardRedis.batchSetScores(LeaderboardRedisService.MONTHLY_KEY, monthlyScores);
+    await this.leaderboardRedis.setKeyExpiry(LeaderboardRedisService.MONTHLY_KEY, LeaderboardRedisService.MONTHLY_TTL);
 
     this.logger.log(`Synced ${lifetimeScores.length} lifetime, ${weeklyScores.length} weekly, ${monthlyScores.length} monthly users`);
     return lifetimeScores.length;

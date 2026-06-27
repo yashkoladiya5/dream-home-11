@@ -21,6 +21,8 @@ export class LeaderboardRedisService {
   static readonly MONTHLY_KEY = 'leaderboard:global:monthly';
   static readonly CONTEST_PREFIX = 'leaderboard:contest:';
   static readonly LIFETIME_KEY = 'leaderboard:lifetime';
+  static readonly WEEKLY_TTL = 7 * 24 * 60 * 60;
+  static readonly MONTHLY_TTL = 30 * 24 * 60 * 60;
 
   constructor(
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
@@ -113,10 +115,29 @@ export class LeaderboardRedisService {
 
   // --- Cycle Keys ---
 
-  getCycleKey(cycle: string): string {
+  // --- TTL Methods ---
+
+  getTtlForCycle(cycle: string): number | null {
+    switch (cycle) {
+      case 'weekly': return LeaderboardRedisService.WEEKLY_TTL;
+      case 'monthly': return LeaderboardRedisService.MONTHLY_TTL;
+      default: return null;
+    }
+  }
+
+  async setKeyExpiry(leaderboardKey: string, ttl: number | null): Promise<void> {
+    if (ttl !== null) {
+      await this._exec(() => this.redis.expire(leaderboardKey, ttl), undefined);
+    }
+  }
+
+  // --- Cycle Keys ---
+
+  getCycleKey(cycle: string, contestId?: string): string {
     switch (cycle) {
       case 'weekly': return LeaderboardRedisService.WEEKLY_KEY;
       case 'monthly': return LeaderboardRedisService.MONTHLY_KEY;
+      case 'custom': return contestId ? this.getContestKey(contestId) : LeaderboardRedisService.GLOBAL_KEY;
       default: return LeaderboardRedisService.GLOBAL_KEY;
     }
   }
@@ -131,7 +152,7 @@ export class LeaderboardRedisService {
 
   // --- Contest-specific Keys ---
 
-  getContestKey(contestId: string): string {
+  getContestKey(contestId: string, cycle?: string): string {
     return `${LeaderboardRedisService.CONTEST_PREFIX}${contestId}`;
   }
 
