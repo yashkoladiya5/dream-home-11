@@ -6,6 +6,7 @@ import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { LeaderboardRedisService, LeaderboardEntry } from './leaderboard-redis.service';
+import { LeaderboardResetService } from './leaderboard-reset.service';
 import { LeaderboardSyncService } from './leaderboard-sync.service';
 
 @Controller('api/v1/leaderboard')
@@ -14,6 +15,7 @@ export class LeaderboardController {
   constructor(
     private readonly leaderboardRedis: LeaderboardRedisService,
     private readonly leaderboardSync: LeaderboardSyncService,
+    private readonly leaderboardReset: LeaderboardResetService,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     @InjectRepository(ContestMember)
@@ -233,6 +235,31 @@ export class LeaderboardController {
   ) {
     const memberCount = await this.leaderboardSync.syncContestLeaderboard(contestId);
     return { message: `Synced ${memberCount} members for contest ${contestId}`, memberCount };
+  }
+
+  @Post('reset/weekly')
+  async resetWeeklyLeaderboard() {
+    const result = await this.leaderboardReset.freezeAndReset('weekly');
+    return { message: 'Weekly leaderboard reset completed', ...result };
+  }
+
+  @Post('reset/monthly')
+  async resetMonthlyLeaderboard() {
+    const result = await this.leaderboardReset.freezeAndReset('monthly');
+    return { message: 'Monthly leaderboard reset completed', ...result };
+  }
+
+  @Get('archive')
+  async getLeaderboardArchives(
+    @Query('cycle') cycle: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('snapshotDate') snapshotDate?: string,
+  ) {
+    const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10) || 20));
+    const cycleStr = (cycle || 'monthly').toLowerCase();
+    return this.leaderboardReset.getArchives(cycleStr, pageNum, limitNum, snapshotDate);
   }
 
   private async _fallbackContestLeaderboard(user: User, contestId: string, page: number, limit: number) {

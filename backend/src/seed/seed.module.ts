@@ -11,10 +11,14 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 import { SavedPaymentMethod } from '../payment-methods/entities/saved-payment-method.entity';
 import { Kyc } from '../kyc/entities/kyc.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
+import { Poll } from '../polls/entities/poll.entity';
+import { Post } from '../feed/entities/post.entity';
+import { Like } from '../feed/entities/like.entity';
+import { Comment } from '../feed/entities/comment.entity';
 import { SeedService } from './seed.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement, PrizeHome, Transaction, SavedPaymentMethod, Kyc, Withdrawal])],
+  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement, PrizeHome, Transaction, SavedPaymentMethod, Kyc, Withdrawal, Poll, Post, Like, Comment])],
   providers: [SeedService],
 })
 export class SeedModule {}

@@ -21,6 +21,7 @@ class LeaderboardNotifier extends StateNotifier<AsyncValue<LeaderboardResponse>>
   String _searchQuery = '';
   bool _isSearching = false;
   LeaderboardCycle _currentCycle = LeaderboardCycle.allTime;
+  String? _selectedContestId;
 
   LeaderboardNotifier(this._repo) : super(const AsyncValue.loading()) {
     loadPage(1);
@@ -31,6 +32,7 @@ class LeaderboardNotifier extends StateNotifier<AsyncValue<LeaderboardResponse>>
   bool get isSearching => _isSearching;
   String get searchQuery => _searchQuery;
   LeaderboardCycle get currentCycle => _currentCycle;
+  String? get selectedContestId => _selectedContestId;
 
   String get cycleLabel {
     switch (_currentCycle) {
@@ -38,6 +40,8 @@ class LeaderboardNotifier extends StateNotifier<AsyncValue<LeaderboardResponse>>
         return 'This Week';
       case LeaderboardCycle.monthly:
         return 'This Month';
+      case LeaderboardCycle.custom:
+        return 'Events';
       default:
         return 'All Time';
     }
@@ -46,6 +50,35 @@ class LeaderboardNotifier extends StateNotifier<AsyncValue<LeaderboardResponse>>
   Future<void> setCycle(LeaderboardCycle cycle) async {
     if (cycle == _currentCycle) return;
     _currentCycle = cycle;
+    _selectedContestId = null;
+    _currentPage = 1;
+    _allEntries = [];
+    _searchQuery = '';
+    _isSearching = false;
+    if (cycle == LeaderboardCycle.custom) {
+      state = AsyncValue.data(LeaderboardResponse(
+        entries: [],
+        totalCount: 0,
+        cycle: _currentCycle,
+      ));
+    } else {
+      await loadPage(1);
+    }
+  }
+
+  Future<void> setContest(String contestId) async {
+    _selectedContestId = contestId;
+    _currentCycle = LeaderboardCycle.custom;
+    _currentPage = 1;
+    _allEntries = [];
+    _searchQuery = '';
+    _isSearching = false;
+    await loadPage(1);
+  }
+
+  Future<void> clearContest() async {
+    _selectedContestId = null;
+    _currentCycle = LeaderboardCycle.allTime;
     _currentPage = 1;
     _allEntries = [];
     _searchQuery = '';
@@ -62,6 +95,8 @@ class LeaderboardNotifier extends StateNotifier<AsyncValue<LeaderboardResponse>>
       LeaderboardResponse response;
       if (_isSearching && _searchQuery.isNotEmpty) {
         response = await _repo.searchUsers(query: _searchQuery, page: page, cycle: _currentCycle);
+      } else if (_currentCycle == LeaderboardCycle.custom && _selectedContestId != null) {
+        response = await _repo.getSeriesLeaderboard(contestId: _selectedContestId!, page: page);
       } else {
         response = await _repo.getGlobalLeaderboard(page: page, cycle: _currentCycle);
       }
@@ -113,6 +148,7 @@ class LeaderboardNotifier extends StateNotifier<AsyncValue<LeaderboardResponse>>
     _allEntries = [];
     _searchQuery = '';
     _isSearching = false;
+    _selectedContestId = null;
     await loadPage(1);
   }
 }
