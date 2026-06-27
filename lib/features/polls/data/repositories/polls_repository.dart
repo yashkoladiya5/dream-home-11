@@ -6,11 +6,11 @@ class PollsRepository {
 
   PollsRepository(this._dio);
 
-  Future<Poll?> getActivePoll() async {
+  Future<ActivePollResponse?> getActivePoll() async {
     final response = await _dio.get('/api/v1/polls/active');
     final data = response.data as Map<String, dynamic>;
-    if (data.containsKey('id')) {
-      return Poll.fromJson(data);
+    if (data.containsKey('poll')) {
+      return ActivePollResponse.fromJson(data);
     }
     return null;
   }

@@ -114,3 +114,21 @@ class PollResults {
     );
   }
 }
+
+class ActivePollResponse {
+  final Poll poll;
+  final int? userVote;
+
+  ActivePollResponse({required this.poll, this.userVote});
+
+  factory ActivePollResponse.fromJson(Map<String, dynamic> json) {
+    int? userVote;
+    if (json['userVote'] is Map) {
+      userVote = (json['userVote'] as Map)['selectedOption'] as int?;
+    }
+    return ActivePollResponse(
+      poll: Poll.fromJson(json['poll'] as Map<String, dynamic>),
+      userVote: userVote,
+    );
+  }
+}

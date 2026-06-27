@@ -16,9 +16,13 @@ export class PollsController {
   constructor(private readonly pollsService: PollsService) {}
 
   @Get('active')
-  async getActivePoll() {
+  async getActivePoll(@Req() req) {
     const poll = await this.pollsService.getActivePoll();
-    return poll || { message: 'No active poll available' };
+    if (!poll) {
+      return { message: 'No active poll available' };
+    }
+    const userVote = await this.pollsService.getUserVote(req.user.id, poll.id);
+    return { poll, userVote };
   }
 
   @Get(':id/results')

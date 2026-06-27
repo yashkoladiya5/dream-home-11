@@ -68,6 +68,7 @@ export class PollsService {
     userId: string,
     pollId: string,
   ): Promise<{ selectedOption: number } | null> {
+    if (!userId) return null;
     const vote = await this.voteRepo.findOne({
       where: { userId, pollId },
     });
@@ -100,6 +101,11 @@ export class PollsService {
       throw new BadRequestException('Invalid option selected');
     }
 
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     const existingVote = await this.voteRepo.findOne({
       where: { userId, pollId },
     });
@@ -116,11 +122,6 @@ export class PollsService {
 
     poll.totalVotes += 1;
     await this.pollRepo.save(poll);
-
-    const user = await this.usersService.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
 
     const prevPoints = Number(user.pointsBalance);
     const prevLifetime = Number(user.lifetimePoints);
