@@ -4,6 +4,7 @@ import { Repository, ILike, In } from 'typeorm';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { ContestMember } from '../contests/entities/contest-member.entity';
 import { LeaderboardRedisService, LeaderboardEntry } from './leaderboard-redis.service';
 import { LeaderboardSyncService } from './leaderboard-sync.service';
 
@@ -15,6 +16,8 @@ export class LeaderboardController {
     private readonly leaderboardSync: LeaderboardSyncService,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(ContestMember)
+    private readonly contestMemberRepo: Repository<ContestMember>,
   ) {}
 
   @Get()
@@ -133,10 +136,12 @@ export class LeaderboardController {
     @Param('contestId', ParseUUIDPipe) contestId: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('cycle') cycle?: string,
   ) {
     const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10) || 20));
-    const contestKey = this.leaderboardRedis.getContestKey(contestId);
+    const cycleStr = cycle || 'all_time';
+    const contestKey = this.leaderboardRedis.getContestKey(contestId, cycleStr);
 
     const result = await this.leaderboardRedis.getTopWithUserRank(
       contestKey,
@@ -145,12 +150,46 @@ export class LeaderboardController {
       limitNum,
     );
 
-    const enrichedEntries = await this._enrichEntries(result.entries);
-    const enrichedUserRank = result.userRank
-      ? (await this._enrichEntries([result.userRank]))[0]
-      : null;
+    if (result.entries.length > 0) {
+      const enrichedEntries = await this._enrichEntries(result.entries);
+      const enrichedUserRank = result.userRank
+        ? (await this._enrichEntries([result.userRank]))[0]
+        : null;
+      return { entries: enrichedEntries, userRank: enrichedUserRank, totalCount: result.totalCount, cycle: cycleStr };
+    }
 
-    return { entries: enrichedEntries, userRank: enrichedUserRank, totalCount: result.totalCount };
+    const fallback = await this._fallbackContestLeaderboard(user, contestId, pageNum, limitNum);
+    return { ...fallback, cycle: cycleStr };
+  }
+
+  @Get('series/:contestId')
+  async getSeriesLeaderboard(
+    @GetUser() user: User,
+    @Param('contestId', ParseUUIDPipe) contestId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10) || 20));
+    const contestKey = this.leaderboardRedis.getContestKey(contestId, 'custom');
+
+    const result = await this.leaderboardRedis.getTopWithUserRank(
+      contestKey,
+      user.id,
+      pageNum,
+      limitNum,
+    );
+
+    if (result.entries.length > 0) {
+      const enrichedEntries = await this._enrichEntries(result.entries);
+      const enrichedUserRank = result.userRank
+        ? (await this._enrichEntries([result.userRank]))[0]
+        : null;
+      return { entries: enrichedEntries, userRank: enrichedUserRank, totalCount: result.totalCount, cycle: 'custom' };
+    }
+
+    const fallback = await this._fallbackContestLeaderboard(user, contestId, pageNum, limitNum);
+    return { ...fallback, cycle: 'custom' };
   }
 
   @Get('me')
@@ -194,6 +233,30 @@ export class LeaderboardController {
   ) {
     const memberCount = await this.leaderboardSync.syncContestLeaderboard(contestId);
     return { message: `Synced ${memberCount} members for contest ${contestId}`, memberCount };
+  }
+
+  private async _fallbackContestLeaderboard(user: User, contestId: string, page: number, limit: number) {
+    const [members, totalCount] = await this.contestMemberRepo.findAndCount({
+      where: { contestId },
+      relations: { user: true },
+      order: { pointsEarned: 'DESC' },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+
+    const entries: LeaderboardEntry[] = members.map((m, i) => ({
+      userId: m.userId,
+      score: m.pointsEarned,
+      rank: (page - 1) * limit + i + 1,
+      fullName: m.user?.fullName ?? undefined,
+      avatarUrl: m.user?.avatarUrl ?? undefined,
+      currentTier: m.user?.currentTier ?? undefined,
+    }));
+
+    const userMemberIdx = members.findIndex(m => m.userId === user.id);
+    const userRank = userMemberIdx >= 0 ? entries[userMemberIdx] : null;
+
+    return { entries, userRank, totalCount };
   }
 
   private async _enrichEntries(entries: LeaderboardEntry[]): Promise<LeaderboardEntry[]> {
