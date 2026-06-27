@@ -77,7 +77,14 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
       setState(() {
         _isSpinning = false;
       });
-      if (result != null && !result.success && mounted) {
+      if (spinState.hasError && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to spin. Please try again.'),
+            backgroundColor: AppTheme.primaryRed,
+          ),
+        );
+      } else if (result != null && !result.success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.message),

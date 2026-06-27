@@ -283,15 +283,6 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _buildInfoTile(
                     context,
-                    label: 'Daily Spin',
-                    value: 'SPIN',
-                    valueColor: AppTheme.primaryRed,
-                    icon: Icons.casino_rounded,
-                    onTap: () => context.push('/spin'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoTile(
-                    context,
                     label: 'My Wallet',
                     value: 'VIEW',
                     valueColor: AppTheme.primaryRed,
