@@ -40,6 +40,10 @@ import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 import { Withdrawal } from './withdrawals/entities/withdrawal.entity';
 import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
+import { Post } from './feed/entities/post.entity';
+import { Like } from './feed/entities/like.entity';
+import { Comment } from './feed/entities/comment.entity';
+import { FeedModule } from './feed/feed.module';
 
 @Module({
   imports: [
@@ -57,7 +61,7 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
@@ -80,6 +84,7 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
     PaymentMethodsModule,
     WithdrawalsModule,
     LeaderboardModule,
+    FeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
