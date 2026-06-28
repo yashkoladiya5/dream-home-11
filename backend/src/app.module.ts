@@ -48,6 +48,7 @@ import { GamificationModule } from './gamification/gamification.module';
 import { Poll } from './polls/entities/poll.entity';
 import { PollVote } from './polls/entities/poll-vote.entity';
 import { PollsModule } from './polls/polls.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { PollsModule } from './polls/polls.module';
     FeedModule,
     GamificationModule,
     PollsModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
