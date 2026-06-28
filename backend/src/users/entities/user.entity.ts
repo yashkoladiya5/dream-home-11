@@ -91,6 +91,12 @@ export class User {
   @Column({ name: 'upi_id', type: 'varchar', length: 100, nullable: true })
   upiId: string;
 
+  @Column({ name: 'referral_code', type: 'varchar', length: 20, unique: true, nullable: true })
+  referralCode: string;
+
+  @Column({ name: 'referred_by', type: 'uuid', nullable: true })
+  referredBy: string;
+
   @Column({ name: 'device_id', type: 'varchar', length: 255, nullable: false })
   deviceId: string;
 

@@ -6,6 +6,7 @@ import { ContestMember } from '../contests/entities/contest-member.entity';
 import { Contest } from '../contests/entities/contest.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { PointsEngineService } from '../points/points-engine.service';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -40,9 +41,17 @@ export class UsersService {
       return this.userRepository.save(user);
     }
 
+    let referralCode: string;
+    let exists: User | null;
+    do {
+      referralCode = randomBytes(4).toString('hex').toUpperCase();
+      exists = await this.userRepository.findOne({ where: { referralCode } });
+    } while (exists);
+
     user = this.userRepository.create({
       phoneNumber,
       deviceId,
+      referralCode,
       currentTier: UserLevel.BRONZE,
       lifetimePoints: 0,
       pointsBalance: 0,

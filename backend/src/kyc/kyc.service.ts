@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Kyc, KycStatus } from './entities/kyc.entity';
 import { User } from '../users/entities/user.entity';
+import { ReferralService } from '../referral/referral.service';
 import { ensureUploadDir, KYC_UPLOAD_DIR } from './kyc-uploads.config';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, extname } from 'path';
@@ -14,6 +15,7 @@ export class KycService {
     private readonly kycRepository: Repository<Kyc>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly referralService: ReferralService,
   ) {}
 
   async submitKyc(userId: string, aadhaarNumber: string, panNumber: string, fullName: string): Promise<Kyc> {
@@ -26,10 +28,15 @@ export class KycService {
       userId,
       aadhaarNumber,
       panNumber,
-      status: KycStatus.PENDING,
+      status: KycStatus.APPROVED,
+      verifiedAt: new Date(),
     });
 
-    return this.kycRepository.save(kyc);
+    const saved = await this.kycRepository.save(kyc);
+
+    await this.referralService.processKycReferral(userId);
+
+    return saved;
   }
 
   async getKycStatus(userId: string): Promise<{ status: KycStatus; verifiedAt: Date | null }> {

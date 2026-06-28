@@ -364,6 +364,15 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _buildInfoTile(
                     context,
+                    label: 'Invite Friends',
+                    value: 'EARN',
+                    valueColor: AppTheme.emeraldGreen,
+                    icon: Icons.person_add_rounded,
+                    onTap: () => context.push('/invite'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
                     label: 'Share & Earn',
                     value: 'EARN',
                     valueColor: AppTheme.primaryRed,

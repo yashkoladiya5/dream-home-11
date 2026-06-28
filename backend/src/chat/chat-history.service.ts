@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatMessage } from './entities/chat-message.entity';
 import { ChatParticipant } from './entities/chat-participant.entity';
 import { Chat } from './entities/chat.entity';
 import { ChatListResponseDto } from './dto/chat-list-response.dto';
+import { ChatDetailResponseDto } from './dto/chat-detail-response.dto';
 
 @Injectable()
 export class ChatHistoryService {
@@ -105,6 +106,60 @@ export class ChatHistoryService {
     }
 
     return enrichedChats;
+  }
+
+  async getChatDetail(chatId: string, userId: string): Promise<ChatDetailResponseDto> {
+    const chat = await this.chatRepo.findOne({
+      where: { id: chatId },
+    });
+
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    const isParticipant = await this.chatParticipantRepo.findOne({
+      where: { chatId, userId },
+    });
+
+    if (!isParticipant) {
+      throw new ForbiddenException('You are not a participant of this chat');
+    }
+
+    const participants = await this.chatParticipantRepo.find({
+      where: { chatId },
+      relations: { user: true },
+      order: { joinedAt: 'ASC' },
+    });
+
+    const lastMessage = await this.chatMessageRepo.findOne({
+      where: { chatId },
+      order: { createdAt: 'DESC' },
+    });
+
+    const unreadCount = await this.chatMessageRepo.count({
+      where: { chatId, isRead: false },
+    });
+
+    return {
+      id: chat.id,
+      name: chat.name,
+      type: chat.type,
+      participants: participants.map((p) => ({
+        id: p.user.id,
+        fullName: p.user.fullName || 'User',
+        avatarUrl: p.user.avatarUrl,
+        joinedAt: p.joinedAt,
+      })),
+      lastMessage: lastMessage
+        ? {
+            content: lastMessage.content,
+            createdAt: lastMessage.createdAt,
+            senderId: lastMessage.senderId,
+          }
+        : null,
+      unreadCount,
+      createdAt: chat.createdAt,
+    };
   }
 
   async markMessagesRead(chatId: string, userId: string): Promise<void> {

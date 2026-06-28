@@ -19,6 +19,9 @@ import { Comment } from '../feed/entities/comment.entity';
 import { Chat } from '../chat/entities/chat.entity';
 import { ChatMessage } from '../chat/entities/chat-message.entity';
 import { ChatParticipant } from '../chat/entities/chat-participant.entity';
+import { Referral } from '../referral/entities/referral.entity';
+import { ReferralStatus } from '../referral/entities/referral.entity';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -61,6 +64,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly chatMessageRepo: Repository<ChatMessage>,
     @InjectRepository(ChatParticipant)
     private readonly chatParticipantRepo: Repository<ChatParticipant>,
+    @InjectRepository(Referral)
+    private readonly referralRepo: Repository<Referral>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -183,6 +188,8 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedPolls();
     await this._seedChats();
     await this._seedPosts();
+    await this._seedReferralCodes();
+    await this._seedReferrals();
     await this._backfillUserPoints();
   }
 
@@ -812,6 +819,51 @@ export class SeedService implements OnApplicationBootstrap {
       await this.paymentMethodRepo.save(methods);
     }
     this.logger.log(`Seeded payment methods for ${users.length} users`);
+  }
+
+  private async _seedReferralCodes(): Promise<void> {
+    const users = await this.userRepository.find({ where: { referralCode: IsNull() } });
+    if (users.length === 0) {
+      this.logger.log('All users already have referral codes');
+      return;
+    }
+    for (const user of users) {
+      let code: string;
+      let exists: User | null;
+      do {
+        code = randomBytes(4).toString('hex').toUpperCase();
+        exists = await this.userRepository.findOne({ where: { referralCode: code } });
+      } while (exists);
+      user.referralCode = code;
+    }
+    await this.userRepository.save(users);
+    this.logger.log(`Generated referral codes for ${users.length} users`);
+  }
+
+  private async _seedReferrals(): Promise<void> {
+    const count = await this.referralRepo.count();
+    if (count > 0) {
+      this.logger.log('Referrals already seeded — skipping');
+      return;
+    }
+
+    const users = await this.userRepository.find({ order: { createdAt: 'ASC' } });
+    if (users.length < 3) return;
+
+    const referral = this.referralRepo.create({
+      referrerId: users[0].id,
+      refereeId: users[2].id,
+      signupReward: 30,
+      kycReward: 50,
+      status: ReferralStatus.SETTLED,
+      settledAt: new Date(),
+    });
+    await this.referralRepo.save(referral);
+
+    users[2].referredBy = users[0].id;
+    await this.userRepository.save(users[2]);
+
+    this.logger.log('Seeded 1 referral relationship successfully');
   }
 
   private async _backfillUserPoints(): Promise<void> {
