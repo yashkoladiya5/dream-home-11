@@ -48,6 +48,9 @@ import { GamificationModule } from './gamification/gamification.module';
 import { Poll } from './polls/entities/poll.entity';
 import { PollVote } from './polls/entities/poll-vote.entity';
 import { PollsModule } from './polls/polls.module';
+import { Chat } from './chat/entities/chat.entity';
+import { ChatMessage } from './chat/entities/chat-message.entity';
+import { ChatParticipant } from './chat/entities/chat-participant.entity';
 import { ChatModule } from './chat/chat.module';
 
 @Module({
@@ -66,7 +69,7 @@ import { ChatModule } from './chat/chat.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Chat, ChatMessage, ChatParticipant],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),

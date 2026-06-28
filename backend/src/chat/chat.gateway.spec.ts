@@ -2,12 +2,27 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ChatGateway } from './chat.gateway';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { ChatHistoryService } from './chat-history.service';
 import { User, UserLevel } from '../users/entities/user.entity';
 
 describe('ChatGateway', () => {
   let gateway: ChatGateway;
   let jwtService: jest.Mocked<JwtService>;
   let usersService: jest.Mocked<UsersService>;
+
+  const mockChatHistoryService = {
+    saveMessage: jest.fn().mockImplementation(({ chatId, senderId, content, type }) =>
+      Promise.resolve({
+        id: 'msg-1',
+        chatId,
+        senderId,
+        content,
+        type: type || 'text',
+        createdAt: new Date(),
+        isRead: false,
+      }),
+    ),
+  };
 
   const mockClient = {
     handshake: { auth: {}, query: {} },
@@ -60,6 +75,7 @@ describe('ChatGateway', () => {
         ChatGateway,
         { provide: JwtService, useValue: { verify: jest.fn(), sign: jest.fn() } },
         { provide: UsersService, useValue: { findById: jest.fn() } },
+        { provide: ChatHistoryService, useValue: mockChatHistoryService },
       ],
     }).compile();
 
@@ -138,9 +154,9 @@ describe('ChatGateway', () => {
     expect(mockClient.leave).toHaveBeenCalledWith('chat:chat-1');
   });
 
-  it('handleSendMessage', () => {
+  it('handleSendMessage', async () => {
     mockClient.data.userId = 'user-1';
-    gateway.handleSendMessage(mockClient, { chatId: 'chat-1', content: 'Hello', type: 'text' });
+    await gateway.handleSendMessage(mockClient, { chatId: 'chat-1', content: 'Hello', type: 'text' });
 
     expect(mockServer.to).toHaveBeenCalledWith('chat:chat-1');
     expect(mockServer.emit).toHaveBeenCalledWith(
@@ -153,9 +169,9 @@ describe('ChatGateway', () => {
     );
   });
 
-  it('handleSendMessage — no userId', () => {
+  it('handleSendMessage — no userId', async () => {
     mockClient.data = {};
-    gateway.handleSendMessage(mockClient, { chatId: 'chat-1', content: 'Hi' });
+    await gateway.handleSendMessage(mockClient, { chatId: 'chat-1', content: 'Hi' });
 
     expect(mockServer.to).not.toHaveBeenCalled();
     expect(mockServer.emit).not.toHaveBeenCalled();

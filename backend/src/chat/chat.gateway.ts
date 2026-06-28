@@ -9,6 +9,7 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { ChatHistoryService } from './chat-history.service';
 
 interface JwtPayload {
   sub: string;
@@ -47,6 +48,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly chatHistoryService: ChatHistoryService,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -121,21 +123,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('sendMessage')
-  handleSendMessage(client: Socket, payload: ChatMessagePayload) {
+  async handleSendMessage(client: Socket, payload: ChatMessagePayload) {
     const userId = client.data?.userId;
     if (!userId || !payload?.chatId || !payload?.content) return;
 
-    const message = {
-      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      chatId: payload.chatId,
-      senderId: userId,
-      content: payload.content,
-      type: payload.type || 'text',
-      createdAt: new Date(),
-      isRead: false,
-    };
+    try {
+      const savedMessage = await this.chatHistoryService.saveMessage({
+        chatId: payload.chatId,
+        senderId: userId,
+        content: payload.content,
+        type: payload.type || 'text',
+      });
 
-    this.server.to(`chat:${payload.chatId}`).emit('newMessage', message);
+      this.server.to(`chat:${payload.chatId}`).emit('newMessage', {
+        id: savedMessage.id,
+        chatId: savedMessage.chatId,
+        senderId: savedMessage.senderId,
+        content: savedMessage.content,
+        type: savedMessage.type,
+        createdAt: savedMessage.createdAt,
+        isRead: savedMessage.isRead,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to save message: ${error}`);
+    }
   }
 
   @SubscribeMessage('typing')
