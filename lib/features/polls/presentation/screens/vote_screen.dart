@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/poll_models.dart';
 import '../providers/polls_provider.dart';
+import '../../../gamification/presentation/widgets/confetti_painter.dart';
+import '../../../dashboard/presentation/providers/user_profile_provider.dart';
 
 class VoteScreen extends ConsumerStatefulWidget {
   const VoteScreen({super.key});
@@ -13,12 +16,19 @@ class VoteScreen extends ConsumerStatefulWidget {
 
 class _VoteScreenState extends ConsumerState<VoteScreen> {
   int? _selectedOption;
-  bool _voted = false;
+  bool _showBanner = true;
+  bool _bannerTimerStarted = false;
 
   @override
   Widget build(BuildContext context) {
-    final activePoll = ref.watch(activePollProvider);
+    final activePollAsync = ref.watch(activePollProvider);
     final voteState = ref.watch(pollVoteProvider);
+
+    ref.listen<AsyncValue<PollVoteResponse?>>(pollVoteProvider, (prev, next) {
+      if (prev?.isLoading == true && next.hasValue && next.value?.success == true) {
+        ref.invalidate(userProfileProvider);
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppTheme.darkSlate,
@@ -29,12 +39,12 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
         backgroundColor: AppTheme.darkSlate,
       ),
       body: SafeArea(
-        child: activePoll.when(
-          data: (poll) {
-            if (poll == null) {
+        child: activePollAsync.when(
+          data: (activePollResponse) {
+            if (activePollResponse == null) {
               return _buildEmptyState();
             }
-            return _buildPollContent(poll, voteState);
+            return _buildPollContent(activePollResponse.poll, voteState, activePollResponse.userVote);
           },
           loading: () => const Center(
             child: CircularProgressIndicator(color: AppTheme.goldYellow),
@@ -121,8 +131,8 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
     );
   }
 
-  Widget _buildPollContent(Poll poll, AsyncValue<PollVoteResponse?> voteState) {
-    final hasVoted = _voted || voteState.hasValue && voteState.valueOrNull != null;
+  Widget _buildPollContent(Poll poll, AsyncValue<PollVoteResponse?> voteState, int? initialUserVote) {
+    final hasVoted = voteState.hasValue && voteState.valueOrNull != null || initialUserVote != null;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -135,6 +145,13 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
               gradient: AppTheme.darkCardGradient,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: const Color(0x1FFFFFFF)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.goldYellow.withValues(alpha: 0.08),
+                  blurRadius: 20,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,8 +209,10 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
                 child: CircularProgressIndicator(color: AppTheme.goldYellow),
               ),
             )
+          else if (hasVoted && voteState.valueOrNull?.success == true)
+            ConfettiWidget(child: _buildResults(poll, voteState, initialUserVote))
           else if (hasVoted)
-            _buildResults(poll, voteState)
+            _buildResults(poll, voteState, initialUserVote)
           else
             _buildOptions(poll),
         ],
@@ -235,6 +254,12 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
                 ),
                 child: Row(
                   children: [
+                    Icon(
+                      _optionIcon(i),
+                      color: isSelected ? AppTheme.goldYellow : AppTheme.greyMedium,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
                     Container(
                       width: 28,
                       height: 28,
@@ -327,11 +352,18 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
     );
   }
 
-  Widget _buildResults(Poll poll, AsyncValue<PollVoteResponse?> voteState) {
+  Widget _buildResults(Poll poll, AsyncValue<PollVoteResponse?> voteState, int? initialUserVote) {
     final response = voteState.valueOrNull;
     final results = response?.results ?? [];
     final totalVotes = response?.totalVotes ?? poll.totalVotes;
-    final userVoteIdx = response?.userVote ?? _selectedOption ?? -1;
+    final userVoteIdx = response?.userVote ?? initialUserVote ?? -1;
+
+    if (response?.success == true && _showBanner && !_bannerTimerStarted) {
+      _bannerTimerStarted = true;
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _showBanner = false);
+      });
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -351,118 +383,143 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
         ),
         const SizedBox(height: 16),
         if (response?.success == true && response?.pointsAwarded != null && response!.pointsAwarded > 0)
-          Container(
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: AppTheme.emeraldGreen.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.emeraldGreen.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: AppTheme.emeraldGreen, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    response.message,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.emeraldGreen,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
+          AnimatedOpacity(
+            opacity: _showBanner ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 500),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: AppTheme.emeraldGreen.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.emeraldGreen.withValues(alpha: 0.3),
                 ),
-              ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: AppTheme.emeraldGreen, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      response.message,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.emeraldGreen,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ...List.generate(results.length, (i) {
           final isUserVote = i == userVoteIdx;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        results[i].option,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontWeight: isUserVote ? FontWeight.bold : FontWeight.normal,
-                              color: isUserVote ? AppTheme.goldYellow : Colors.white,
-                            ),
-                      ),
-                    ),
-                    if (isUserVote)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.goldYellow.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+          return TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: 1),
+            duration: Duration(milliseconds: 400 + (i * 100)),
+            curve: Curves.easeOutCubic,
+            builder: (context, opacity, child) {
+              return Opacity(
+                opacity: opacity,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - opacity)),
+                  child: child,
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
                         child: Text(
-                          'YOU',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: AppTheme.goldYellow,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 9,
+                          results[i].option,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontWeight: isUserVote ? FontWeight.bold : FontWeight.normal,
+                                color: isUserVote ? AppTheme.goldYellow : Colors.white,
                               ),
                         ),
                       ),
-                    Text(
-                      '${results[i].percentage}%',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Stack(
-                    children: [
-                      Container(
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: const Color(0x1AFFFFFF),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      FractionallySizedBox(
-                        widthFactor: results[i].percentage / 100.0,
-                        child: Container(
-                          height: 12,
+                      if (isUserVote)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          margin: const EdgeInsets.only(right: 8),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            gradient: isUserVote
-                                ? const LinearGradient(
-                                    colors: [AppTheme.goldYellow, Color(0xFFFF6B35)],
-                                  )
-                                : LinearGradient(
-                                    colors: [
-                                      Colors.white.withValues(alpha: 0.4),
-                                      Colors.white.withValues(alpha: 0.2),
-                                    ],
-                                  ),
+                            color: AppTheme.goldYellow.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'YOU',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: AppTheme.goldYellow,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 9,
+                                ),
                           ),
                         ),
+                      Text(
+                        '${results[i].percentage}%',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${results[i].count} vote${results[i].count == 1 ? '' : 's'}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.greyMedium,
-                      ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: const Color(0x1AFFFFFF),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0, end: results[i].percentage / 100.0),
+                          duration: Duration(milliseconds: 800 + (i * 150)),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) {
+                            return FractionallySizedBox(
+                              widthFactor: value,
+                              child: Container(
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  gradient: isUserVote
+                                      ? const LinearGradient(
+                                          colors: [AppTheme.goldYellow, Color(0xFFFF6B35)],
+                                        )
+                                      : LinearGradient(
+                                          colors: [
+                                            Colors.white.withValues(alpha: 0.4),
+                                            Colors.white.withValues(alpha: 0.2),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${results[i].count} vote${results[i].count == 1 ? '' : 's'}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.greyMedium,
+                        ),
+                  ),
+                ],
+              ),
             ),
           );
         }),
@@ -480,11 +537,21 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
   }
 
   void _submitVote(String pollId, int selectedOption) {
+    HapticFeedback.mediumImpact();
     ref.read(pollVoteProvider.notifier).vote(
           pollId: pollId,
           selectedOption: selectedOption,
         );
-    setState(() => _voted = true);
+  }
+
+  IconData _optionIcon(int index) {
+    switch (index) {
+      case 0: return Icons.home_rounded;
+      case 1: return Icons.business_rounded;
+      case 2: return Icons.park_rounded;
+      case 3: return Icons.auto_awesome_rounded;
+      default: return Icons.circle_rounded;
+    }
   }
 
   String _formatDate(DateTime dt) {

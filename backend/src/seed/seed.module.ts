@@ -15,10 +15,13 @@ import { Poll } from '../polls/entities/poll.entity';
 import { Post } from '../feed/entities/post.entity';
 import { Like } from '../feed/entities/like.entity';
 import { Comment } from '../feed/entities/comment.entity';
+import { Chat } from '../chat/entities/chat.entity';
+import { ChatMessage } from '../chat/entities/chat-message.entity';
+import { ChatParticipant } from '../chat/entities/chat-participant.entity';
 import { SeedService } from './seed.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement, PrizeHome, Transaction, SavedPaymentMethod, Kyc, Withdrawal, Poll, Post, Like, Comment])],
+  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement, PrizeHome, Transaction, SavedPaymentMethod, Kyc, Withdrawal, Poll, Post, Like, Comment, Chat, ChatMessage, ChatParticipant])],
   providers: [SeedService],
 })
 export class SeedModule {}

@@ -16,6 +16,9 @@ import { Poll } from '../polls/entities/poll.entity';
 import { Post } from '../feed/entities/post.entity';
 import { Like } from '../feed/entities/like.entity';
 import { Comment } from '../feed/entities/comment.entity';
+import { Chat } from '../chat/entities/chat.entity';
+import { ChatMessage } from '../chat/entities/chat-message.entity';
+import { ChatParticipant } from '../chat/entities/chat-participant.entity';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -52,6 +55,12 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly likeRepo: Repository<Like>,
     @InjectRepository(Comment)
     private readonly commentRepo: Repository<Comment>,
+    @InjectRepository(Chat)
+    private readonly chatRepo: Repository<Chat>,
+    @InjectRepository(ChatMessage)
+    private readonly chatMessageRepo: Repository<ChatMessage>,
+    @InjectRepository(ChatParticipant)
+    private readonly chatParticipantRepo: Repository<ChatParticipant>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -172,6 +181,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedPaymentMethods();
     await this._seedWithdrawals();
     await this._seedPolls();
+    await this._seedChats();
     await this._seedPosts();
     await this._backfillUserPoints();
   }
@@ -930,6 +940,79 @@ export class SeedService implements OnApplicationBootstrap {
     ];
     await this.pollRepo.save(polls);
     this.logger.log(`Seeded ${polls.length} daily polls`);
+  }
+
+  private async _seedChats(): Promise<void> {
+    const existing = await this.chatRepo.count();
+    if (existing > 0) return;
+
+    const users = await this.userRepository.find({ take: 5, order: { createdAt: 'ASC' } });
+    if (users.length < 2) return;
+
+    const user1 = users[0];
+    const user2 = users[1];
+    const user3 = users.length > 2 ? users[2] : users[1];
+    const user4 = users.length > 3 ? users[3] : users[0];
+
+    // Create a direct chat between user1 and user2
+    const directChat = this.chatRepo.create({
+      name: null,
+      type: 'direct',
+    });
+    await this.chatRepo.save(directChat);
+
+    // Create participants for direct chat
+    const directParticipants = [
+      this.chatParticipantRepo.create({ chatId: directChat.id, userId: user1.id }),
+      this.chatParticipantRepo.create({ chatId: directChat.id, userId: user2.id }),
+    ];
+    await this.chatParticipantRepo.save(directParticipants);
+
+    // Create a group chat
+    const groupChat = this.chatRepo.create({
+      name: 'Dream Home Champions',
+      type: 'group',
+    });
+    await this.chatRepo.save(groupChat);
+
+    // Create participants for group chat
+    const groupParticipants = [
+      this.chatParticipantRepo.create({ chatId: groupChat.id, userId: user1.id }),
+      this.chatParticipantRepo.create({ chatId: groupChat.id, userId: user2.id }),
+      this.chatParticipantRepo.create({ chatId: groupChat.id, userId: user3.id }),
+      this.chatParticipantRepo.create({ chatId: groupChat.id, userId: user4.id }),
+    ];
+    await this.chatParticipantRepo.save(groupParticipants);
+
+    // Messages for direct chat (user1 and user2 chatting)
+    const directMessages = [
+      { chatId: directChat.id, senderId: user1.id, content: 'Hey! Ready for the mega contest tonight?', type: 'text' },
+      { chatId: directChat.id, senderId: user2.id, content: 'Absolutely! I have been practicing all week 💪', type: 'text' },
+      { chatId: directChat.id, senderId: user1.id, content: 'Nice! What is your prediction for the first match?', type: 'text' },
+      { chatId: directChat.id, senderId: user2.id, content: 'I think Team A will dominate. Their batting lineup is strong.', type: 'text' },
+      { chatId: directChat.id, senderId: user1.id, content: 'Good point. I am going with Team B though — their bowling is 🔥', type: 'text' },
+      { chatId: directChat.id, senderId: user2.id, content: 'Bold move! May the best team win 🏆', type: 'text' },
+    ];
+    await this.chatMessageRepo.save(
+      directMessages.map((m) => this.chatMessageRepo.create(m)),
+    );
+
+    // Messages for group chat
+    const groupMessages = [
+      { chatId: groupChat.id, senderId: user1.id, content: 'Welcome to Dream Home Champions group! 🏡', type: 'text' },
+      { chatId: groupChat.id, senderId: user2.id, content: 'Thanks! Excited to be here!', type: 'text' },
+      { chatId: groupChat.id, senderId: user3.id, content: 'When is the next contest starting?', type: 'text' },
+      { chatId: groupChat.id, senderId: user1.id, content: 'There is one starting at 8 PM tonight. 50 slots left!', type: 'text' },
+      { chatId: groupChat.id, senderId: user4.id, content: 'Count me in! I am inviting my friends too.', type: 'text' },
+      { chatId: groupChat.id, senderId: user2.id, content: 'The prize pool is looking huge this week 🎯', type: 'text' },
+      { chatId: groupChat.id, senderId: user3.id, content: 'Let us all coordinate our picks in the group before the match.', type: 'text' },
+      { chatId: groupChat.id, senderId: user1.id, content: 'Great idea! I will share my analysis later.', type: 'text' },
+    ];
+    await this.chatMessageRepo.save(
+      groupMessages.map((m) => this.chatMessageRepo.create(m)),
+    );
+
+    this.logger.log(`Seeded ${directMessages.length + groupMessages.length} chat messages in ${existing + 2} chats`);
   }
 
   private async _seedPosts(): Promise<void> {

@@ -8,7 +8,7 @@ final pollsRepositoryProvider = Provider<PollsRepository>((ref) {
   return PollsRepository(dio);
 });
 
-final activePollProvider = FutureProvider<Poll?>((ref) async {
+final activePollProvider = FutureProvider<ActivePollResponse?>((ref) async {
   final repo = ref.watch(pollsRepositoryProvider);
   return repo.getActivePoll();
 });

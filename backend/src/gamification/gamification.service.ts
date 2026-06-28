@@ -1,4 +1,4 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { REDIS_CLIENT } from '../redis/redis.constants';
@@ -39,8 +39,17 @@ export class GamificationService {
   ) {}
 
   async spin(userId: string): Promise<SpinResult> {
-    const canSpin = await this.canSpinToday(userId);
-    if (!canSpin) {
+    // Atomic SET NX prevents concurrent daily-spin race conditions
+    const key = this.DAILY_SPIN_KEY_PREFIX + userId;
+    const ttl = this.getSecondsUntilEndOfDay();
+    let limitExceeded = false;
+    try {
+      const result = await this.redis.set(key, '1', 'EX', ttl, 'NX');
+      limitExceeded = result === null;
+    } catch {
+      // Redis unavailable — let the spin proceed (graceful degradation)
+    }
+    if (limitExceeded) {
       const nextSpin = this.getNextAvailableSpin();
       return {
         success: false,
@@ -55,7 +64,10 @@ export class GamificationService {
 
     const user = await this.usersService.findById(userId);
     if (!user) {
-      throw new BadRequestException('User not found');
+      throw new NotFoundException('User not found');
+    }
+    if (!user.isActive) {
+      throw new BadRequestException('User account is inactive');
     }
 
     const tier = user.currentTier || 'bronze';
@@ -96,8 +108,6 @@ export class GamificationService {
       referenceType: 'spin_wheel',
     });
 
-    await this.markSpinToday(userId);
-
     const nextSpin = this.getNextAvailableSpin();
     return {
       success: true,
@@ -129,16 +139,6 @@ export class GamificationService {
       canSpin,
       nextAvailableSpin: canSpin ? null : this.getNextAvailableSpin(),
     };
-  }
-
-  private async markSpinToday(userId: string): Promise<void> {
-    try {
-      const key = this.DAILY_SPIN_KEY_PREFIX + userId;
-      const ttl = this.getSecondsUntilEndOfDay();
-      await this.redis.set(key, '1', 'EX', ttl);
-    } catch {
-      // Redis unavailable — spin still processed from DB
-    }
   }
 
   private getSecondsUntilEndOfDay(): number {

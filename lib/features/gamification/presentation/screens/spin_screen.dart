@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/spin_models.dart';
 import '../providers/spin_provider.dart';
+import 'package:flutter/services.dart';
 import '../widgets/spin_wheel_painter.dart';
+import '../../../dashboard/presentation/providers/user_profile_provider.dart';
+import '../widgets/confetti_painter.dart';
 
 class SpinScreen extends ConsumerStatefulWidget {
   const SpinScreen({super.key});
@@ -20,6 +23,9 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
   double _currentRotation = 0;
   bool _isSpinning = false;
   bool _hasCheckedStatus = false;
+  late AnimationController _glowController;
+  late Animation<double> _glowAnimation;
+  String? _lastWin;
 
   @override
   void initState() {
@@ -40,6 +46,18 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
       });
     });
 
+    _glowController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    _glowAnimation = Tween<double>(begin: 0.3, end: 0.7).animate(
+      CurvedAnimation(
+        parent: _glowController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _glowController.repeat(reverse: true);
+
     _spinController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         setState(() {
@@ -58,11 +76,14 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
   @override
   void dispose() {
     _spinController.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
   void _doSpin() async {
     if (_isSpinning) return;
+
+    HapticFeedback.mediumImpact();
 
     setState(() {
       _isSpinning = true;
@@ -77,7 +98,14 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
       setState(() {
         _isSpinning = false;
       });
-      if (result != null && !result.success && mounted) {
+      if (spinState.hasError && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to spin. Please try again.'),
+            backgroundColor: AppTheme.primaryRed,
+          ),
+        );
+      } else if (result != null && !result.success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.message),
@@ -107,6 +135,10 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
   }
 
   void _showWinDialog(SpinResult result) {
+    HapticFeedback.heavyImpact();
+    setState(() {
+      _lastWin = '${result.prizePoints} pts';
+    });
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -119,7 +151,8 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
               color: AppTheme.goldYellow.withValues(alpha: 0.4),
             ),
           ),
-          content: SizedBox(
+          content: ConfettiWidget(
+            child: SizedBox(
             width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -195,7 +228,15 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
+                      ref.invalidate(userProfileProvider);
+                      ref.invalidate(spinStatusProvider);
                       Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('+${result.prizePoints} points added to your balance!'),
+                          backgroundColor: AppTheme.emeraldGreen,
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.goldYellow,
@@ -218,6 +259,7 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
               ],
             ),
           ),
+        ),
         );
       },
     );
@@ -283,6 +325,8 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
   }
 
   Widget _buildSpinWheel() {
+    final profileAsync = ref.watch(userProfileProvider);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -307,6 +351,58 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
+                      // Glow behind wheel
+                      AnimatedBuilder(
+                        animation: _glowAnimation,
+                        builder: (context, child) {
+                          return Container(
+                            width: wheelSize * 1.25,
+                            height: wheelSize * 1.25,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  AppTheme.goldYellow.withValues(
+                                    alpha: 0.12 * _glowAnimation.value,
+                                  ),
+                                  AppTheme.goldYellow.withValues(
+                                    alpha: 0.03 * _glowAnimation.value,
+                                  ),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      // Outer ring glow
+                      AnimatedBuilder(
+                        animation: _glowAnimation,
+                        builder: (context, child) {
+                          return Container(
+                            width: wheelSize,
+                            height: wheelSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppTheme.goldYellow.withValues(
+                                  alpha: 0.15 * _glowAnimation.value,
+                                ),
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.goldYellow.withValues(
+                                    alpha: 0.08 * _glowAnimation.value,
+                                  ),
+                                  blurRadius: 15,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                       CustomPaint(
                         size: Size(wheelSize, wheelSize),
                         painter: SpinWheelPainter(
@@ -367,6 +463,17 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
                   color: AppTheme.greyMedium,
                 ),
           ),
+          const SizedBox(height: 16),
+          profileAsync.when(
+            data: (profile) => _buildTierBadge(profile.currentTier),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+          if (_lastWin != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _buildLastWin(),
+            ),
           const SizedBox(height: 40),
         ],
       ),
@@ -442,6 +549,89 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTierBadge(String tier) {
+    String emoji;
+    Color chipColor;
+    switch (tier.toLowerCase()) {
+      case 'platinum':
+        emoji = '🥇';
+        chipColor = const Color(0xFFE5E4E2);
+        break;
+      case 'gold':
+        emoji = '🥇';
+        chipColor = const Color(0xFFFFD700);
+        break;
+      case 'silver':
+        emoji = '🥈';
+        chipColor = const Color(0xFFC0C0C0);
+        break;
+      case 'diamond':
+        emoji = '💎';
+        chipColor = const Color(0xFFB9F2FF);
+        break;
+      default:
+        emoji = '🎯';
+        chipColor = const Color(0xFFCD7F32);
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: chipColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        '$emoji ${tier[0].toUpperCase()}${tier.substring(1)} Tier',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: chipColor,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+      ),
+    );
+  }
+
+  Widget _buildLastWin() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppTheme.emeraldGreen.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.emeraldGreen.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.emoji_events_rounded,
+            color: AppTheme.goldYellow,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Last Win: ',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.greyMedium,
+                ),
+          ),
+          Text(
+            _lastWin!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.emeraldGreen,
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
+        ],
       ),
     );
   }
