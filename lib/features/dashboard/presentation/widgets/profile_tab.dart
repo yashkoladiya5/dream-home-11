@@ -386,7 +386,7 @@ class ProfileTab extends ConsumerWidget {
                     value: 'BETA',
                     valueColor: AppTheme.emeraldGreen,
                     icon: Icons.chat_rounded,
-                    onTap: () => context.push('/chat'),
+                    onTap: () => context.push('/conversations'),
                   ),
                   const SizedBox(height: 32),
                 ],

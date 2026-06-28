@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { ChatMessage } from './entities/chat-message.entity';
 import { ChatParticipant } from './entities/chat-participant.entity';
 import { Chat } from './entities/chat.entity';
+import { ChatListResponseDto } from './dto/chat-list-response.dto';
 
 @Injectable()
 export class ChatHistoryService {
@@ -54,6 +55,56 @@ export class ChatHistoryService {
       order: { joinedAt: 'DESC' },
     });
     return participations.map((p) => p.chat);
+  }
+
+  async getUserChatsWithDetails(userId: string): Promise<ChatListResponseDto[]> {
+    const participations = await this.chatParticipantRepo.find({
+      where: { userId },
+      relations: { chat: true },
+      order: { joinedAt: 'DESC' },
+    });
+
+    const enrichedChats: ChatListResponseDto[] = [];
+
+    for (const participation of participations) {
+      const chat = participation.chat;
+
+      const participants = await this.chatParticipantRepo.find({
+        where: { chatId: chat.id },
+        relations: { user: true },
+      });
+
+      const lastMessage = await this.chatMessageRepo.findOne({
+        where: { chatId: chat.id },
+        order: { createdAt: 'DESC' },
+      });
+
+      const unreadCount = await this.chatMessageRepo.count({
+        where: { chatId: chat.id, isRead: false },
+      });
+
+      enrichedChats.push({
+        id: chat.id,
+        name: chat.name,
+        type: chat.type,
+        participants: participants.map((p) => ({
+          id: p.user.id,
+          fullName: p.user.fullName || 'User',
+          avatarUrl: p.user.avatarUrl,
+        })),
+        lastMessage: lastMessage
+          ? {
+              content: lastMessage.content,
+              createdAt: lastMessage.createdAt,
+              senderId: lastMessage.senderId,
+            }
+          : null,
+        unreadCount,
+        createdAt: chat.createdAt,
+      });
+    }
+
+    return enrichedChats;
   }
 
   async markMessagesRead(chatId: string, userId: string): Promise<void> {

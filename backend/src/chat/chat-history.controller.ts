@@ -3,22 +3,22 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { ChatHistoryService } from './chat-history.service';
 import { QueryMessagesDto } from './dto/query-messages.dto';
+import { User } from '../users/entities/user.entity';
 
-@Controller('chats')
+@Controller('api/v1/chats')
 @UseGuards(JwtAuthGuard)
 export class ChatHistoryController {
   constructor(private readonly chatHistoryService: ChatHistoryService) {}
 
   @Get()
-  async getUserChats(@GetUser('id') userId: string) {
-    return this.chatHistoryService.getUserChats(userId);
+  async getUserChats(@GetUser() user: User) {
+    return this.chatHistoryService.getUserChatsWithDetails(user.id);
   }
 
   @Get(':id/messages')
   async getMessages(
     @Param('id') chatId: string,
     @Query() query: QueryMessagesDto,
-    @GetUser('id') userId: string,
   ) {
     const result = await this.chatHistoryService.getMessages(
       chatId,

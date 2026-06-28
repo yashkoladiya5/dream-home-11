@@ -9,7 +9,7 @@ describe('ChatHistoryController', () => {
   let chatHistoryService: ChatHistoryService;
 
   const mockChatHistoryService = {
-    getUserChats: jest.fn(),
+    getUserChatsWithDetails: jest.fn(),
     getMessages: jest.fn(),
   };
 
@@ -41,11 +41,11 @@ describe('ChatHistoryController', () => {
   describe('GET /chats', () => {
     it('returns user chats', async () => {
       const mockChats = [{ id: 'chat-1', name: 'Test Chat', type: 'group' }];
-      mockChatHistoryService.getUserChats.mockResolvedValue(mockChats);
+      mockChatHistoryService.getUserChatsWithDetails.mockResolvedValue(mockChats);
 
-      const result = await controller.getUserChats('user-1');
+      const result = await controller.getUserChats({ id: 'user-1' } as any);
 
-      expect(mockChatHistoryService.getUserChats).toHaveBeenCalledWith('user-1');
+      expect(mockChatHistoryService.getUserChatsWithDetails).toHaveBeenCalledWith('user-1');
       expect(result).toEqual(mockChats);
     });
   });
@@ -63,7 +63,6 @@ describe('ChatHistoryController', () => {
       const result = await controller.getMessages(
         'chat-1',
         { page: 1, limit: 30 } as QueryMessagesDto,
-        'user-1',
       );
 
       expect(mockChatHistoryService.getMessages).toHaveBeenCalledWith('chat-1', 1, 30);
@@ -84,7 +83,6 @@ describe('ChatHistoryController', () => {
       await controller.getMessages(
         'chat-1',
         { page: 2, limit: 10 } as QueryMessagesDto,
-        'user-1',
       );
 
       expect(mockChatHistoryService.getMessages).toHaveBeenCalledWith('chat-1', 2, 10);
@@ -102,7 +100,6 @@ describe('ChatHistoryController', () => {
       const result = await controller.getMessages(
         'chat-1',
         { page: 1, limit: 10 } as QueryMessagesDto,
-        'user-1',
       );
 
       expect(result.meta.hasMore).toBe(true);
