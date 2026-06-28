@@ -96,7 +96,13 @@ class _ChatListTile extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: GestureDetector(
-        onTap: () => context.push('/chat/${chat.id}'),
+        onTap: () {
+          if (chat.type == 'group') {
+            context.push('/chat/${chat.id}/group');
+          } else {
+            context.push('/chat/${chat.id}');
+          }
+        },
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(

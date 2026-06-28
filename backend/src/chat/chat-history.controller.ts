@@ -15,6 +15,11 @@ export class ChatHistoryController {
     return this.chatHistoryService.getUserChatsWithDetails(user.id);
   }
 
+  @Get(':id')
+  async getChatDetail(@Param('id') chatId: string, @GetUser() user: User) {
+    return this.chatHistoryService.getChatDetail(chatId, user.id);
+  }
+
   @Get(':id/messages')
   async getMessages(
     @Param('id') chatId: string,
