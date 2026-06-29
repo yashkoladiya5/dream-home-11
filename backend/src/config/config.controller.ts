@@ -2,6 +2,9 @@ import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { ConfigService } from './config.service';
 import { UpdateConfigDto } from './dto/update-config.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../users/entities/user.entity';
 
 @Controller('api/v1/config')
 export class ConfigController {
@@ -24,7 +27,8 @@ export class ConfigController {
   }
 
   @Patch()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   async updateConfig(@Body() dto: UpdateConfigDto) {
     return this.configService.updateConfig(dto as any);
   }

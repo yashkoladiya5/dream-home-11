@@ -4,6 +4,7 @@ import { ConfigService } from './config.service';
 import { SystemConfig } from './entities/system-config.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 describe('ConfigController', () => {
   let controller: ConfigController;
@@ -60,6 +61,8 @@ describe('ConfigController', () => {
     })
       .overrideGuard(JwtAuthGuard)
       .useValue(mockJwtAuthGuard)
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
       .compile();
 
     controller = module.get<ConfigController>(ConfigController);

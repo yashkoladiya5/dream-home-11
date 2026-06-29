@@ -56,6 +56,7 @@ import { ChatModule } from './chat/chat.module';
 import { ReferralModule } from './referral/referral.module';
 import { SupportTicket } from './support/entities/support-ticket.entity';
 import { SupportModule } from './support/support.module';
+import { AdminModule } from './admin/admin.module';
 import { AppConfigModule } from './config/config.module';
 import { SystemConfig } from './config/entities/system-config.entity';
 
@@ -104,6 +105,7 @@ import { SystemConfig } from './config/entities/system-config.entity';
     SupportModule,
     ChatModule,
     ReferralModule,
+    AdminModule,
     AppConfigModule,
   ],
   controllers: [AppController],

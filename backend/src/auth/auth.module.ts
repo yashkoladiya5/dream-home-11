@@ -7,6 +7,7 @@ import { FirebaseService } from './firebase.service';
 import { UsersModule } from '../users/users.module';
 import { ReferralModule } from '../referral/referral.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 
 @Global()
 @Module({
@@ -26,8 +27,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
       }),
     }),
   ],
-  providers: [AuthService, FirebaseService, JwtAuthGuard],
+  providers: [AuthService, FirebaseService, JwtAuthGuard, RolesGuard],
   controllers: [AuthController],
-  exports: [AuthService, FirebaseService, JwtAuthGuard, JwtModule],
+  exports: [AuthService, FirebaseService, JwtAuthGuard, RolesGuard, JwtModule],
 })
 export class AuthModule {}

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Contest, ContestType, ContestStatus } from '../contests/entities/contest.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
-import { User, UserLevel } from '../users/entities/user.entity';
+import { User, UserLevel, UserRole } from '../users/entities/user.entity';
 import { Reward } from '../rewards/entities/reward.entity';
 import { Banner } from '../banners/entities/banner.entity';
 import { Achievement } from '../achievements/entities/achievement.entity';
@@ -199,6 +199,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedSupportTickets();
     await this._seedSystemConfig();
     await this._backfillUserPoints();
+    await this._seedAdminUser();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -1235,6 +1236,44 @@ export class SeedService implements OnApplicationBootstrap {
       await this.commentRepo.save(comments);
       this.logger.log(`Seeded ${comments.length} comments`);
     }
+  }
+
+  private async _seedAdminUser(): Promise<void> {
+    // Check if a user with this phone already exists — upgrade to admin
+    let admin = await this.userRepository.findOne({ where: { phoneNumber: '+919999999998' } });
+    if (admin) {
+      if (admin.role !== UserRole.ADMIN) {
+        admin.role = UserRole.ADMIN;
+        await this.userRepository.save(admin);
+        this.logger.log(`Upgraded existing user ${admin.fullName} to admin`);
+      } else {
+        this.logger.log('Admin user already exists — skipping');
+      }
+      return;
+    }
+
+    const existingAdmin = await this.userRepository.findOne({ where: { role: UserRole.ADMIN } });
+    if (existingAdmin) {
+      this.logger.log('Admin user already exists — skipping');
+      return;
+    }
+
+    admin = this.userRepository.create({
+      fullName: 'Admin Dream11',
+      phoneNumber: '+919999999998',
+      email: 'admin@dreamhome11.com',
+      walletBalanceInr: 0,
+      pointsBalance: 0,
+      lifetimePoints: 0,
+      currentTier: UserLevel.PLATINUM,
+      isActive: true,
+      deviceId: 'admin-device-001',
+      role: UserRole.ADMIN,
+      state: 'Maharashtra',
+      referralCode: 'ADMIN001',
+    });
+    await this.userRepository.save(admin);
+    this.logger.log(`Seeded admin user: ${admin.fullName} (${admin.phoneNumber})`);
   }
 
   private async _upsertSeedData(): Promise<void> {
