@@ -32,6 +32,18 @@ export class UsersController {
     return this.usersService.getMyContests(user.id);
   }
 
+  @Get('me/compensations')
+  @UseGuards(JwtAuthGuard)
+  async getMyCompensations(
+    @GetUser() user: User,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10) || 20));
+    return this.usersService.getUserCompensations(user.id, { page: pageNum, limit: limitNum });
+  }
+
   @Get('contests/home')
   @UseGuards(JwtAuthGuard)
   async getMyHomeContests(@GetUser() user: User) {

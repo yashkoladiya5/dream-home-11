@@ -25,6 +25,7 @@ describe('AdminService', () => {
     processCompensation: jest.fn().mockResolvedValue({ processed: 0, totalPoints: 0 }),
     processPendingCompensations: jest.fn().mockResolvedValue({ contestsProcessed: 0, membersCompensated: 0, totalPointsAwarded: 0 }),
     getCompensationLogs: jest.fn().mockResolvedValue({ logs: [], total: 0, page: 1, limit: 20 }),
+    getCompensationStats: jest.fn().mockResolvedValue({ total: 0, pending: 0, totalPoints: 0 }),
   };
 
   const mockQueryBuilder: any = {

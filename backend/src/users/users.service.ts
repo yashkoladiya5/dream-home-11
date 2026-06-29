@@ -5,6 +5,7 @@ import { User, UserLevel } from './entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { Contest } from '../contests/entities/contest.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import { CompensationLog } from '../compensation/entities/compensation.entity';
 import { PointsEngineService } from '../points/points-engine.service';
 import { randomBytes } from 'crypto';
 
@@ -19,6 +20,8 @@ export class UsersService {
     private readonly contestRepository: Repository<Contest>,
     @InjectRepository(Transaction)
     private readonly transactionRepo: Repository<Transaction>,
+    @InjectRepository(CompensationLog)
+    private readonly compensationLogRepo: Repository<CompensationLog>,
     private readonly pointsEngineService: PointsEngineService,
   ) {}
 
@@ -414,6 +417,36 @@ export class UsersService {
     });
 
     return { users, total };
+  }
+
+  async getUserCompensations(userId: string, query: { page?: number; limit?: number }) {
+    const page = query.page || 1;
+    const limit = Math.min(query.limit || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const [logs, total] = await this.compensationLogRepo.findAndCount({
+      where: { userId },
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      relations: { contest: true },
+    });
+
+    return {
+      compensations: logs.map((l) => ({
+        id: l.id,
+        contestId: l.contestId,
+        contestTitle: l.contest?.title || null,
+        entryFeeInr: Number(l.entryFeeInr),
+        compensationPoints: l.compensationPoints,
+        status: l.status,
+        processedAt: l.processedAt,
+        createdAt: l.createdAt,
+      })),
+      total,
+      page,
+      limit,
+    };
   }
 }
 

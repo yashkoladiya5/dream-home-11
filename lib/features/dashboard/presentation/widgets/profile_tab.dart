@@ -422,6 +422,15 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _buildInfoTile(
                     context,
+                    label: 'Compensation History',
+                    value: 'VIEW',
+                    valueColor: AppTheme.goldYellow,
+                    icon: Icons.card_giftcard_rounded,
+                    onTap: () => context.push('/compensation-history'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
                     label: 'Reminders',
                     value: 'SET',
                     valueColor: AppTheme.primaryRed,

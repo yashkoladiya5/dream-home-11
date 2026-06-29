@@ -161,6 +161,8 @@ export class AdminService {
     const pendingKyc = await this.kycRepo.count({ where: { status: 'pending' as any } });
     const openTickets = await this.supportTicketRepo.count({ where: { status: 'open' as any } });
 
+    const compensationStats = await this.compensationService.getCompensationStats();
+
     const recentUsers = await this.userRepo.find({
       order: { createdAt: 'DESC' },
       take: 10,
@@ -185,6 +187,9 @@ export class AdminService {
       totalPointsEarned: Number(pointsAgg?.total || 0),
       pendingKycCount: pendingKyc,
       openSupportTickets: openTickets,
+      totalCompensations: compensationStats.total,
+      pendingCompensations: compensationStats.pending,
+      totalCompensationPoints: compensationStats.totalPoints,
       recentUsers: recentUsers.map((u) => ({
         id: u.id,
         fullName: u.fullName,

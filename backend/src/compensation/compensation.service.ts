@@ -6,6 +6,7 @@ import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User } from '../users/entities/user.entity';
 import { CompensationLog, CompensationStatus as LogStatus } from './entities/compensation.entity';
 import { PointsEngineService } from '../points/points-engine.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const COMPENSATION_TIERS: { maxFee: number; points: number }[] = [
   { maxFee: 49, points: 120 },
@@ -31,6 +32,7 @@ export class CompensationService {
     @InjectRepository(CompensationLog)
     private readonly compensationLogRepo: Repository<CompensationLog>,
     private readonly pointsEngineService: PointsEngineService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   calculateCompensationPoints(entryFeeInr: number): number {
@@ -125,6 +127,8 @@ export class CompensationService {
           await entityManager.save(log);
         });
 
+        this.notificationsService.sendCompensationNotification(user.id, finalPoints);
+
         processed++;
         totalPoints += finalPoints;
       } catch (error) {
@@ -178,6 +182,16 @@ export class CompensationService {
     }
 
     return { contestsProcessed, membersCompensated, totalPointsAwarded };
+  }
+
+  async getCompensationStats(): Promise<{ total: number; pending: number; totalPoints: number }> {
+    const total = await this.compensationLogRepo.count();
+    const pending = await this.compensationLogRepo.count({ where: { status: LogStatus.PENDING } });
+    const pointsAgg = await this.compensationLogRepo
+      .createQueryBuilder('cl')
+      .select('COALESCE(SUM(cl.compensationPoints), 0)', 'total')
+      .getRawOne();
+    return { total, pending, totalPoints: Number(pointsAgg?.total || 0) };
   }
 
   async getCompensationLogs(query: { page?: number; limit?: number; status?: string }) {

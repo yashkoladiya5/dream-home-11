@@ -83,6 +83,32 @@ export class NotificationsService {
     await this.reminderRepo.remove(reminder);
   }
 
+  async sendCompensationNotification(userId: string, points: number): Promise<void> {
+    const tokens = await this.getUserTokens(userId);
+    if (tokens.length === 0) {
+      this.logger.warn(`No FCM tokens found for user ${userId}`);
+      return;
+    }
+
+    for (const fcmToken of tokens) {
+      const message = {
+        notification: {
+          title: 'Points Compensated!',
+          body: `You've received ${points} points as compensation for a cancelled contest.`,
+        },
+        token: fcmToken.token,
+        data: { type: 'compensation', points: points.toString() },
+      };
+
+      try {
+        await getMessaging().send(message);
+        this.logger.log(`Compensation notification sent to device ${fcmToken.id}`);
+      } catch (error: any) {
+        this.logger.error(`Failed to send FCM to token ${fcmToken.id}: ${error.message}`);
+      }
+    }
+  }
+
   async sendReminderNotification(reminder: Reminder): Promise<void> {
     const tokens = await this.getUserTokens(reminder.userId);
     if (tokens.length === 0) {

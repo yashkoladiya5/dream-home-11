@@ -101,6 +101,22 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             _statCard('${stats.totalPointsEarned}', 'Total Points'),
           ],
         ),
+        const SizedBox(height: 16),
+        Text('Compensation', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.6,
+          children: [
+            _statCard('${stats.totalCompensations}', 'Total Compensated'),
+            _statCard('${stats.pendingCompensations}', 'Pending'),
+            _statCard('${stats.totalCompensationPoints}', 'Total Points'),
+          ],
+        ),
       ],
     );
   }

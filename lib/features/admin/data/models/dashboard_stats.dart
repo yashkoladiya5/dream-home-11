@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 class DashboardStats {
   final int totalUsers;
   final int activeUsers;
@@ -10,6 +12,9 @@ class DashboardStats {
   final int totalPointsEarned;
   final int pendingKycCount;
   final int openSupportTickets;
+  final int totalCompensations;
+  final int pendingCompensations;
+  final int totalCompensationPoints;
   final List<RecentUser> recentUsers;
   final List<RecentTransaction> recentTransactions;
 
@@ -25,11 +30,36 @@ class DashboardStats {
     required this.totalPointsEarned,
     required this.pendingKycCount,
     required this.openSupportTickets,
+    required this.totalCompensations,
+    required this.pendingCompensations,
+    required this.totalCompensationPoints,
     required this.recentUsers,
     required this.recentTransactions,
   });
 
   factory DashboardStats.fromJson(Map<String, dynamic> json) {
+    final comps = json['totalCompensations'];
+    final pending = json['pendingCompensations'];
+    final points = json['totalCompensationPoints'];
+
+    debugPrint(
+      '[DashboardStats] totalCompensations raw: $comps (${comps.runtimeType})',
+    );
+    debugPrint(
+      '[DashboardStats] pendingCompensations raw: $pending (${pending.runtimeType})',
+    );
+    debugPrint(
+      '[DashboardStats] totalCompensationPoints raw: $points (${points.runtimeType})',
+    );
+
+    if (json.containsKey('recentUsers')) {
+      debugPrint(
+        '[DashboardStats] recentUsers type: ${json['recentUsers'].runtimeType}',
+      );
+    } else {
+      debugPrint('[DashboardStats] recentUsers key MISSING');
+    }
+
     return DashboardStats(
       totalUsers: json['totalUsers'] as int? ?? 0,
       activeUsers: json['activeUsers'] as int? ?? 0,
@@ -42,13 +72,19 @@ class DashboardStats {
       totalPointsEarned: json['totalPointsEarned'] as int? ?? 0,
       pendingKycCount: json['pendingKycCount'] as int? ?? 0,
       openSupportTickets: json['openSupportTickets'] as int? ?? 0,
-      recentUsers: (json['recentUsers'] as List?)
+      totalCompensations: comps != null ? (comps as num).toInt() : 0,
+      pendingCompensations: pending != null ? (pending as num).toInt() : 0,
+      totalCompensationPoints: points != null ? (points as num).toInt() : 0,
+      recentUsers:
+          (json['recentUsers'] as List?)
               ?.map((e) => RecentUser.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      recentTransactions: (json['recentTransactions'] as List?)
+      recentTransactions:
+          (json['recentTransactions'] as List?)
               ?.map(
-                  (e) => RecentTransaction.fromJson(e as Map<String, dynamic>))
+                (e) => RecentTransaction.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
     );
@@ -108,7 +144,8 @@ class RecentTransaction {
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       status: json['status'] as String? ?? 'pending',
       userPhoneNumber: json['userPhoneNumber'] as String?,
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
     );
   }
