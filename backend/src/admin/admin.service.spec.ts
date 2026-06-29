@@ -8,6 +8,7 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
 import { SupportTicket } from '../support/entities/support-ticket.entity';
+import { CompensationService } from '../compensation/compensation.service';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -18,6 +19,13 @@ describe('AdminService', () => {
   let withdrawalRepo: any;
   let configRepo: any;
   let supportTicketRepo: any;
+
+  const mockCompensationService = {
+    findContestWithMembers: jest.fn(),
+    processCompensation: jest.fn().mockResolvedValue({ processed: 0, totalPoints: 0 }),
+    processPendingCompensations: jest.fn().mockResolvedValue({ contestsProcessed: 0, membersCompensated: 0, totalPointsAwarded: 0 }),
+    getCompensationLogs: jest.fn().mockResolvedValue({ logs: [], total: 0, page: 1, limit: 20 }),
+  };
 
   const mockQueryBuilder: any = {
     select: jest.fn().mockReturnThis(),
@@ -77,6 +85,7 @@ describe('AdminService', () => {
         { provide: getRepositoryToken(Withdrawal), useValue: withdrawalRepo },
         { provide: getRepositoryToken(SystemConfig), useValue: configRepo },
         { provide: getRepositoryToken(SupportTicket), useValue: supportTicketRepo },
+        { provide: CompensationService, useValue: mockCompensationService },
       ],
     }).compile();
 

@@ -28,7 +28,7 @@ class AdminKycState {
     int? limit,
     bool? isLoading,
     String? error,
-    String? statusFilter,
+    Object? statusFilter = const Object(),
   }) {
     return AdminKycState(
       submissions: submissions ?? this.submissions,
@@ -37,7 +37,7 @@ class AdminKycState {
       limit: limit ?? this.limit,
       isLoading: isLoading ?? this.isLoading,
       error: error,
-      statusFilter: statusFilter ?? this.statusFilter,
+      statusFilter: statusFilter is String? ? statusFilter : this.statusFilter,
     );
   }
 }

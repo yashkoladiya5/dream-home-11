@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Patch, Param, Body, Query, UseGuards,
+  Controller, Get, Patch, Post, Param, Body, Query, UseGuards,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -78,5 +78,22 @@ export class AdminController {
     @Query() query: { page?: number; limit?: number; status?: string; category?: string },
   ) {
     return this.adminService.getSupportTickets(query);
+  }
+
+  @Post('contests/:id/compensate')
+  async compensateContest(@Param('id') id: string) {
+    return this.adminService.compensateContest(id);
+  }
+
+  @Post('compensations/process-pending')
+  async processPendingCompensations() {
+    return this.adminService.processPendingCompensations();
+  }
+
+  @Get('compensations')
+  async getCompensationLogs(
+    @Query() query: { page?: number; limit?: number; status?: string },
+  ) {
+    return this.adminService.getCompensationLogs(query);
   }
 }

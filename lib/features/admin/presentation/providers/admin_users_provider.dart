@@ -31,8 +31,8 @@ class AdminUsersState {
     int? limit,
     bool? isLoading,
     String? error,
-    String? search,
-    String? roleFilter,
+    Object? search = const Object(),
+    Object? roleFilter = const Object(),
   }) {
     return AdminUsersState(
       users: users ?? this.users,
@@ -41,8 +41,8 @@ class AdminUsersState {
       limit: limit ?? this.limit,
       isLoading: isLoading ?? this.isLoading,
       error: error,
-      search: search ?? this.search,
-      roleFilter: roleFilter ?? this.roleFilter,
+      search: search is String? ? search : this.search,
+      roleFilter: roleFilter is String? ? roleFilter : this.roleFilter,
     );
   }
 }

@@ -56,9 +56,11 @@ import { ChatModule } from './chat/chat.module';
 import { ReferralModule } from './referral/referral.module';
 import { SupportTicket } from './support/entities/support-ticket.entity';
 import { SupportModule } from './support/support.module';
+import { CompensationLog } from './compensation/entities/compensation.entity';
 import { AdminModule } from './admin/admin.module';
 import { AppConfigModule } from './config/config.module';
 import { SystemConfig } from './config/entities/system-config.entity';
+import { CompensationModule } from './compensation/compensation.module';
 
 @Module({
   imports: [
@@ -76,7 +78,7 @@ import { SystemConfig } from './config/entities/system-config.entity';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig, CompensationLog],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
@@ -107,6 +109,7 @@ import { SystemConfig } from './config/entities/system-config.entity';
     ReferralModule,
     AdminModule,
     AppConfigModule,
+    CompensationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -11,12 +11,14 @@ import { SupportTicket } from '../support/entities/support-ticket.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
+import { CompensationModule } from '../compensation/compensation.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Kyc, Contest, Transaction, Withdrawal, SupportTicket, SystemConfig]),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
+    CompensationModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

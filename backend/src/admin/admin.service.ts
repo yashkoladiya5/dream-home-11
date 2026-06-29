@@ -8,6 +8,7 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
 import { SupportTicket } from '../support/entities/support-ticket.entity';
+import { CompensationService } from '../compensation/compensation.service';
 
 @Injectable()
 export class AdminService {
@@ -28,6 +29,7 @@ export class AdminService {
     private readonly configRepo: Repository<SystemConfig>,
     @InjectRepository(SupportTicket)
     private readonly supportTicketRepo: Repository<SupportTicket>,
+    private readonly compensationService: CompensationService,
   ) {}
 
   async getUsers(query: {
@@ -324,5 +326,24 @@ export class AdminService {
     });
 
     return { tickets, total, page, limit };
+  }
+
+  async compensateContest(contestId: string) {
+    const contest = await this.compensationService.findContestWithMembers(contestId);
+    if (!contest) throw new NotFoundException('Contest not found');
+
+    if (contest.compensationStatus !== ('none' as any)) {
+      throw new Error(`Contest already has compensation status: ${contest.compensationStatus}`);
+    }
+
+    return this.compensationService.processCompensation(contest);
+  }
+
+  async processPendingCompensations() {
+    return this.compensationService.processPendingCompensations();
+  }
+
+  async getCompensationLogs(query: { page?: number; limit?: number; status?: string }) {
+    return this.compensationService.getCompensationLogs(query);
   }
 }

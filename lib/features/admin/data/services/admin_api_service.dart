@@ -123,4 +123,29 @@ class AdminApiService {
         queryParameters: params);
     return response.data as Map<String, dynamic>;
   }
+
+  Future<Map<String, dynamic>> compensateContest(String contestId) async {
+    final response = await _dio.post('/api/v1/admin/contests/$contestId/compensate');
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> processPendingCompensations() async {
+    final response = await _dio.post('/api/v1/admin/compensations/process-pending');
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getCompensationLogs({
+    int page = 1,
+    int limit = 20,
+    String? status,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+      if (status != null) 'status': status,
+    };
+    final response = await _dio.get('/api/v1/admin/compensations',
+        queryParameters: params);
+    return response.data as Map<String, dynamic>;
+  }
 }
