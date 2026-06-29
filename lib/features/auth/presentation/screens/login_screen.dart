@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -17,11 +18,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
   bool _isAgeAccepted = false;
   bool _isPhoneValid = false;
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
 
   @override
   void initState() {
     super.initState();
     _phoneController.addListener(_validatePhone);
+    _termsRecognizer = TapGestureRecognizer()..onTap = () => context.push('/terms-of-service');
+    _privacyRecognizer = TapGestureRecognizer()..onTap = () => context.push('/privacy-policy');
   }
 
   void _validatePhone() {
@@ -36,6 +41,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -351,6 +358,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 13,
                                                 ),
+                                            recognizer: _termsRecognizer,
                                           ),
                                           const TextSpan(text: ' and '),
                                           TextSpan(
@@ -360,6 +368,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 13,
                                                 ),
+                                            recognizer: _privacyRecognizer,
                                           ),
                                         ],
                                       ),

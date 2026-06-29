@@ -62,6 +62,9 @@ import '../../features/legal/presentation/screens/responsible_gaming_screen.dart
 import '../../features/legal/presentation/screens/about_screen.dart';
 import '../../features/legal/presentation/screens/version_screen.dart';
 import '../../features/legal/presentation/screens/contact_screen.dart';
+import '../../features/legal/presentation/screens/legality_screen.dart';
+import '../../features/legal/presentation/screens/jobs_screen.dart';
+import '../../features/legal/presentation/screens/more_screen.dart';
 import '../../features/referral/presentation/screens/invite_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
@@ -346,6 +349,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ResponsibleGamingScreen(),
       ),
       GoRoute(
+        path: '/legality',
+        builder: (context, state) => const LegalityScreen(),
+      ),
+      GoRoute(
         path: '/about',
         builder: (context, state) => const AboutScreen(),
       ),
@@ -360,6 +367,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/transactions/others',
         builder: (context, state) => const OtherTransactionsScreen(),
+      ),
+      GoRoute(
+        path: '/jobs',
+        builder: (context, state) => const JobsScreen(),
+      ),
+      GoRoute(
+        path: '/more',
+        builder: (context, state) => const MoreScreen(),
       ),
       GoRoute(
         path: '/invite',
