@@ -36,6 +36,7 @@ export class AuthController {
       verifyOtpDto.idToken,
       verifyOtpDto.deviceId,
       verifyOtpDto.otpCode,
+      verifyOtpDto.referralCode,
     );
   }
 }

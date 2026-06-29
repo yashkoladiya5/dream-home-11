@@ -26,10 +26,22 @@ describe('AuthController', () => {
     createdAt: new Date(),
     currentTier: UserLevel.BRONZE,
     lifetimePoints: 0,
+    weeklyPoints: 0,
+    monthlyPoints: 0,
     walletBalanceInr: 0,
     pointsBalance: 0,
     isActive: true,
     deviceId: 'device-id-12345',
+    referralCode: null,
+    referredBy: null,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastStreakDate: null,
+    state: null,
+    bankAccountNumber: null,
+    bankIfsc: null,
+    bankName: null,
+    upiId: null,
     kyc: null as any,
   };
 
@@ -38,7 +50,7 @@ describe('AuthController', () => {
       success: true,
       message: 'OTP requested successfully',
     }),
-    verifyOtp: jest.fn().mockImplementation((idToken: string) => {
+    verifyOtp: jest.fn().mockImplementation((idToken: string, _deviceId?: string, _otpCode?: string, _referralCode?: string) => {
       if (idToken.startsWith('mock-token-')) {
         return Promise.resolve({
           token: 'mock-jwt-token-xyz',
@@ -101,6 +113,7 @@ describe('AuthController', () => {
         dto.idToken,
         dto.deviceId,
         dto.otpCode,
+        undefined,
       );
     });
   });

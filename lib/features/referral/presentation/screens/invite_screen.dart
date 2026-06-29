@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:dio/dio.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/network/api_client.dart';
 import '../providers/referral_provider.dart';
 import '../../data/models/referral_stats.dart';
 import '../../../dashboard/presentation/widgets/shimmer_widget.dart';
@@ -16,11 +18,57 @@ class InviteScreen extends ConsumerStatefulWidget {
 }
 
 class _InviteScreenState extends ConsumerState<InviteScreen> {
+  final TextEditingController _referralCodeController = TextEditingController();
+  bool _isApplyingReferral = false;
+  bool _isEnterCodeExpanded = false;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() => ref.invalidate(referralStatsProvider));
     Future.microtask(() => ref.invalidate(referralHistoryProvider));
+  }
+
+  Future<void> _applyReferralCode() async {
+    final code = _referralCodeController.text.trim();
+    if (code.isEmpty) return;
+
+    setState(() => _isApplyingReferral = true);
+
+    try {
+      final dio = ref.read(apiClientProvider);
+      final res = await dio.post('/api/v1/referral/apply', data: {'code': code});
+      final points = res.data is Map ? (res.data as Map)['pointsAwarded'] ?? 0 : 0;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Referral code applied! You earned $points points'),
+            backgroundColor: AppTheme.emeraldGreen,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        _referralCodeController.clear();
+        setState(() => _isEnterCodeExpanded = false);
+        ref.invalidate(referralStatsProvider);
+        ref.invalidate(referralHistoryProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        final msg = e is DioException && e.response?.data is Map
+            ? (e.response!.data as Map)['message']?.toString() ?? 'Failed to apply referral code'
+            : 'Failed to apply referral code';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: AppTheme.primaryRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isApplyingReferral = false);
+    }
   }
 
   Future<void> _shareReferral(String code, String channel) async {
@@ -46,7 +94,12 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri);
           } else {
-            await Share.share(shareText, subject: 'Dream Home 11');
+            final webUri = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(shareText)}');
+            if (await canLaunchUrl(webUri)) {
+              await launchUrl(webUri);
+            } else {
+              await Share.share(shareText, subject: 'Dream Home 11');
+            }
           }
           break;
         case 'telegram':
@@ -54,7 +107,12 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri);
           } else {
-            await Share.share(shareText, subject: 'Dream Home 11');
+            final webUri = Uri.parse('https://t.me/share/url?url=&text=${Uri.encodeComponent(shareText)}');
+            if (await canLaunchUrl(webUri)) {
+              await launchUrl(webUri);
+            } else {
+              await Share.share(shareText, subject: 'Dream Home 11');
+            }
           }
           break;
         case 'sms':
@@ -71,6 +129,12 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     } catch (_) {
       await Share.share(shareText, subject: 'Dream Home 11');
     }
+  }
+
+  @override
+  void dispose() {
+    _referralCodeController.dispose();
+    super.dispose();
   }
 
   @override
@@ -96,6 +160,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildEnterReferralCode(),
               statsAsync.when(
                 data: (stats) => _buildReferralCodeCard(context, stats),
                 loading: () => const ShimmerCard(height: 120, borderRadius: 16),
@@ -117,6 +182,8 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
               _buildSectionTitle('Share Via'),
               const SizedBox(height: 12),
               _buildShareOptions(context, statsAsync.whenOrNull(data: (s) => s.referralCode) ?? '------'),
+              const SizedBox(height: 20),
+              _buildRewardsBanner(),
               const SizedBox(height: 24),
               _buildSectionTitle('Referral History'),
               const SizedBox(height: 12),
@@ -197,6 +264,125 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
               color: AppTheme.greyMedium,
             ),
             textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnterReferralCode() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        gradient: AppTheme.darkCardGradient,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x1FFFFFFF)),
+      ),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: () => setState(() => _isEnterCodeExpanded = !_isEnterCodeExpanded),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(Icons.discount_rounded, color: AppTheme.goldYellow, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Have a referral code?',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    _isEnterCodeExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                    color: AppTheme.greyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _referralCodeController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Enter referral code',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppTheme.greyDark),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isApplyingReferral ? null : _applyReferralCode,
+                      child: _isApplyingReferral
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('Apply'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            crossFadeState: _isEnterCodeExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRewardsBanner() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: AppTheme.goldGradient,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.star_rounded, color: Colors.white, size: 32),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Earn 30 points for every friend who signs up',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Earn 50 bonus points when they complete KYC',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

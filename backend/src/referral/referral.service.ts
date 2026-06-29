@@ -89,7 +89,7 @@ export class ReferralService {
 
       await queryRunner.manager.save(referrerLock);
 
-      const referral = this.referralRepo.create({
+      const referral = queryRunner.manager.create(Referral, {
         referrerId: referrer.id,
         refereeId: currentUser.id,
         signupReward: pointsAwarded,
@@ -97,8 +97,16 @@ export class ReferralService {
       });
       await queryRunner.manager.save(referral);
 
-      currentUser.referredBy = referrer.id;
-      await queryRunner.manager.save(currentUser);
+      const refereeLock = await queryRunner.manager
+        .createQueryBuilder(User, 'u')
+        .setLock('pessimistic_write')
+        .where('u.id = :id', { id: currentUser.id })
+        .getOne();
+
+      if (refereeLock) {
+        refereeLock.referredBy = referrer.id;
+        await queryRunner.manager.save(refereeLock);
+      }
 
       await queryRunner.manager.save(
         queryRunner.manager.create(Transaction, {
@@ -192,7 +200,7 @@ export class ReferralService {
 
       if (!referrerLock) {
         await queryRunner.rollbackTransaction();
-        return;
+        throw new NotFoundException('Referrer not found for KYC bonus');
       }
 
       referrerLock.pointsBalance = Number(referrerLock.pointsBalance) + kycReward;

@@ -12,6 +12,7 @@ import { FirebaseService } from './firebase.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { User, UserLevel } from '../users/entities/user.entity';
+import { ReferralService } from '../referral/referral.service';
 import { UnauthorizedException } from '@nestjs/common';
 
 describe('AuthService', () => {
@@ -29,10 +30,22 @@ describe('AuthService', () => {
     createdAt: new Date(),
     currentTier: UserLevel.BRONZE,
     lifetimePoints: 0,
+    weeklyPoints: 0,
+    monthlyPoints: 0,
     walletBalanceInr: 0,
     pointsBalance: 0,
     isActive: true,
     deviceId: 'device-id-12345',
+    referralCode: 'TESTCODE',
+    referredBy: null,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastStreakDate: null,
+    state: null,
+    bankAccountNumber: null,
+    bankIfsc: null,
+    bankName: null,
+    upiId: null,
     kyc: null as any,
   };
 
@@ -45,10 +58,20 @@ describe('AuthService', () => {
 
   const mockUsersService = {
     upsertUser: jest.fn().mockResolvedValue(mockUser),
+    findByPhoneNumber: jest.fn().mockResolvedValue(null),
   };
 
   const mockJwtService = {
     sign: jest.fn().mockReturnValue('mock-jwt-token-xyz'),
+  };
+
+  const mockReferralService = {
+    applyReferral: jest.fn().mockResolvedValue({ success: true, message: 'Referral applied', pointsAwarded: 30 }),
+    getReferralStats: jest.fn().mockResolvedValue({ referralCode: 'TESTCODE', totalReferred: 0, totalRewardsEarned: 0, totalKycCompleted: 0 }),
+    getReferralHistory: jest.fn().mockResolvedValue([]),
+    processKycReferral: jest.fn().mockResolvedValue(undefined),
+    ensureReferralCode: jest.fn().mockResolvedValue('TESTCODE'),
+    generateReferralCode: jest.fn().mockReturnValue('TESTCODE'),
   };
 
   beforeEach(async () => {
@@ -58,6 +81,7 @@ describe('AuthService', () => {
         { provide: FirebaseService, useValue: mockFirebaseService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
+        { provide: ReferralService, useValue: mockReferralService },
       ],
     }).compile();
 
