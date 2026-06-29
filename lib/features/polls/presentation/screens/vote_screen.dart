@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/poll_models.dart';
 import '../providers/polls_provider.dart';
+import '../../../config/presentation/providers/config_provider.dart';
 import '../../../gamification/presentation/widgets/confetti_painter.dart';
 import '../../../dashboard/presentation/providers/user_profile_provider.dart';
 
@@ -21,6 +22,13 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final configAsync = ref.watch(configNotifierProvider);
+    final isPollsEnabled = configAsync.valueOrNull?.pollsEnabled ?? true;
+
+    if (!isPollsEnabled) {
+      return _buildFeatureDisabled();
+    }
+
     final activePollAsync = ref.watch(activePollProvider);
     final voteState = ref.watch(pollVoteProvider);
 
@@ -65,6 +73,59 @@ class _VoteScreenState extends ConsumerState<VoteScreen> {
                 ElevatedButton(
                   onPressed: () => ref.refresh(activePollProvider),
                   child: const Text('RETRY'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureDisabled() {
+    return Scaffold(
+      backgroundColor: AppTheme.darkSlate,
+      appBar: AppBar(
+        title: const Text('Daily Poll'),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: AppTheme.darkSlate,
+      ),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.greyMedium.withValues(alpha: 0.1),
+                  ),
+                  child: const Icon(
+                    Icons.block_rounded,
+                    color: AppTheme.greyMedium,
+                    size: 40,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Not Available',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Polls are currently disabled. Check back later!',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.greyMedium,
+                      ),
                 ),
               ],
             ),

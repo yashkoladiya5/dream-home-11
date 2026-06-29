@@ -14,6 +14,12 @@ export enum UserLevel {
   PLATINUM = 'platinum',
 }
 
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+  MODERATOR = 'moderator',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -99,6 +105,14 @@ export class User {
 
   @Column({ name: 'device_id', type: 'varchar', length: 255, nullable: false })
   deviceId: string;
+
+  @Column({
+    name: 'role',
+    type: 'varchar',
+    length: 20,
+    default: UserRole.USER,
+  })
+  role: UserRole;
 
   @Column({ name: 'current_streak', type: 'integer', default: 0 })
   currentStreak: number;

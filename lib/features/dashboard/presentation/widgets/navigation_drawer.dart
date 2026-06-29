@@ -11,6 +11,7 @@ class NavigationDrawerWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(userProfileProvider);
+    final authState = ref.watch(authProvider);
 
     return Drawer(
       backgroundColor: AppTheme.darkSlate,
@@ -212,6 +213,45 @@ class NavigationDrawerWidget extends ConsumerWidget {
                     title: 'Terms & Conditions',
                     onTap: () {},
                   ),
+                  if (authState.role?.name == 'admin')
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.admin_panel_settings_rounded,
+                      title: 'Admin Panel',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/admin');
+                      },
+                    ),
+                  if (authState.role?.name == 'admin') ...[
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.sports_esports_rounded,
+                      title: 'Contests',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/admin/contests');
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.settings_rounded,
+                      title: 'System Config',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/admin/config');
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.support_agent_rounded,
+                      title: 'Support Tickets',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/admin/support-tickets');
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),

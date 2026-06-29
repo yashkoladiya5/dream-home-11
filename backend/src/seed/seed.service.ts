@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Contest, ContestType, ContestStatus } from '../contests/entities/contest.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
-import { User, UserLevel } from '../users/entities/user.entity';
+import { User, UserLevel, UserRole } from '../users/entities/user.entity';
 import { Reward } from '../rewards/entities/reward.entity';
 import { Banner } from '../banners/entities/banner.entity';
 import { Achievement } from '../achievements/entities/achievement.entity';
@@ -22,6 +22,7 @@ import { ChatParticipant } from '../chat/entities/chat-participant.entity';
 import { Referral } from '../referral/entities/referral.entity';
 import { ReferralStatus } from '../referral/entities/referral.entity';
 import { SupportTicket } from '../support/entities/support-ticket.entity';
+import { SystemConfig } from '../config/entities/system-config.entity';
 import { randomBytes } from 'crypto';
 
 @Injectable()
@@ -69,6 +70,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly referralRepo: Repository<Referral>,
     @InjectRepository(SupportTicket)
     private readonly supportTicketRepo: Repository<SupportTicket>,
+    @InjectRepository(SystemConfig)
+    private readonly systemConfigRepo: Repository<SystemConfig>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -194,7 +197,9 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedReferralCodes();
     await this._seedReferrals();
     await this._seedSupportTickets();
+    await this._seedSystemConfig();
     await this._backfillUserPoints();
+    await this._seedAdminUser();
   }
 
   private async _ensureCompletedContest(): Promise<void> {
@@ -911,6 +916,34 @@ export class SeedService implements OnApplicationBootstrap {
     this.logger.log(`Seeded ${tickets.length} support tickets successfully`);
   }
 
+  private async _seedSystemConfig(): Promise<void> {
+    const existing = await this.systemConfigRepo.find();
+    if (existing.length > 0) return;
+
+    const config = this.systemConfigRepo.create({
+      appName: 'Dream Home 11',
+      appVersion: '1.0.0',
+      apiVersion: 'v1',
+      environment: process.env.NODE_ENV || 'development',
+      maintenanceMode: false,
+      minAppVersionAndroid: '1.0.0',
+      minAppVersionIos: '1.0.0',
+      maxWithdrawalAmount: 50000,
+      minWithdrawalAmount: 100,
+      dailySpinEnabled: true,
+      pollsEnabled: true,
+      feedEnabled: true,
+      chatEnabled: true,
+      referralEnabled: true,
+      maxDailyPosts: 5,
+      maxDailySpins: 1,
+      supportEmail: 'support@dreamhome11.com',
+      restrictedStates: ['Assam', 'Odisha', 'Telangana'],
+    });
+    await this.systemConfigRepo.save(config);
+    this.logger.log('Seeded system config');
+  }
+
   private async _backfillUserPoints(): Promise<void> {
     const users = await this.userRepository.find({ where: { weeklyPoints: IsNull() } });
     if (users.length === 0) {
@@ -1203,6 +1236,44 @@ export class SeedService implements OnApplicationBootstrap {
       await this.commentRepo.save(comments);
       this.logger.log(`Seeded ${comments.length} comments`);
     }
+  }
+
+  private async _seedAdminUser(): Promise<void> {
+    // Check if a user with this phone already exists — upgrade to admin
+    let admin = await this.userRepository.findOne({ where: { phoneNumber: '+919999999998' } });
+    if (admin) {
+      if (admin.role !== UserRole.ADMIN) {
+        admin.role = UserRole.ADMIN;
+        await this.userRepository.save(admin);
+        this.logger.log(`Upgraded existing user ${admin.fullName} to admin`);
+      } else {
+        this.logger.log('Admin user already exists — skipping');
+      }
+      return;
+    }
+
+    const existingAdmin = await this.userRepository.findOne({ where: { role: UserRole.ADMIN } });
+    if (existingAdmin) {
+      this.logger.log('Admin user already exists — skipping');
+      return;
+    }
+
+    admin = this.userRepository.create({
+      fullName: 'Admin Dream11',
+      phoneNumber: '+919999999998',
+      email: 'admin@dreamhome11.com',
+      walletBalanceInr: 0,
+      pointsBalance: 0,
+      lifetimePoints: 0,
+      currentTier: UserLevel.PLATINUM,
+      isActive: true,
+      deviceId: 'admin-device-001',
+      role: UserRole.ADMIN,
+      state: 'Maharashtra',
+      referralCode: 'ADMIN001',
+    });
+    await this.userRepository.save(admin);
+    this.logger.log(`Seeded admin user: ${admin.fullName} (${admin.phoneNumber})`);
   }
 
   private async _upsertSeedData(): Promise<void> {
