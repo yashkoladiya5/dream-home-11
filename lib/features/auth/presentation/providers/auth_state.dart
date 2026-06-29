@@ -1,3 +1,5 @@
+import '../../data/models/user_role.dart';
+
 enum AuthStatus {
   initial,
   loading,
@@ -13,6 +15,7 @@ class AuthState {
   final String? verificationId;
   final String? idToken;
   final String? sessionToken;
+  final UserRole? role;
 
   AuthState({
     this.phoneNumber = '',
@@ -21,6 +24,7 @@ class AuthState {
     this.verificationId,
     this.idToken,
     this.sessionToken,
+    this.role,
   });
 
   AuthState copyWith({
@@ -30,6 +34,7 @@ class AuthState {
     String? verificationId,
     String? idToken,
     String? sessionToken,
+    UserRole? role,
   }) {
     return AuthState(
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -38,6 +43,7 @@ class AuthState {
       verificationId: verificationId ?? this.verificationId,
       idToken: idToken ?? this.idToken,
       sessionToken: sessionToken ?? this.sessionToken,
+      role: role ?? this.role,
     );
   }
 }

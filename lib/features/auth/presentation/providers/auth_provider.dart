@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../main.dart';
+import '../../data/models/user_role.dart';
 import 'auth_state.dart';
 
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
@@ -134,9 +135,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final token = response.data['token'] as String?;
         if (token != null) {
           await _storage.write(key: 'session_token', value: token);
+          UserRole? userRole;
+          final userData = response.data['user'] as Map<String, dynamic>?;
+          if (userData != null && userData['role'] != null) {
+            userRole = UserRole.fromString(userData['role'] as String);
+          }
           state = state.copyWith(
             status: AuthStatus.verified,
             sessionToken: token,
+            role: userRole,
           );
         } else {
           state = state.copyWith(
@@ -215,9 +222,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final token = response.data['token'] as String?;
       if (token != null) {
         await _storage.write(key: 'session_token', value: token);
+        UserRole? userRole;
+        final userData = response.data['user'] as Map<String, dynamic>?;
+        if (userData != null && userData['role'] != null) {
+          userRole = UserRole.fromString(userData['role'] as String);
+        }
         state = state.copyWith(
           status: AuthStatus.verified,
           sessionToken: token,
+          role: userRole,
         );
       } else {
         state = state.copyWith(
@@ -255,6 +268,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         status: AuthStatus.verified,
         sessionToken: token,
       );
+      try {
+        final response = await _dio.get('/api/v1/users/me');
+        final userData = response.data as Map<String, dynamic>?;
+        if (userData != null && userData['role'] != null) {
+          final userRole = UserRole.fromString(userData['role'] as String);
+          state = state.copyWith(role: userRole);
+        }
+      } catch (_) {}
       return true;
     }
     return false;

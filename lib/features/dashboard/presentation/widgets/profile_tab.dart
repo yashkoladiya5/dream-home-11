@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/shimmer_widget.dart';
 import '../screens/edit_profile_screen.dart';
@@ -55,6 +56,7 @@ class ProfileTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(userProfileProvider);
+    final authState = ref.watch(authProvider);
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 350),
@@ -168,6 +170,17 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 24),
 
                   // Details list
+                  if (authState.role?.name == 'admin')
+                    const SizedBox(height: 12),
+                  if (authState.role?.name == 'admin')
+                    _buildInfoTile(
+                      context,
+                      label: 'Admin Panel',
+                      value: 'MANAGE',
+                      valueColor: AppTheme.primaryRed,
+                      icon: Icons.admin_panel_settings_rounded,
+                      onTap: () => context.push('/admin'),
+                    ),
                   _buildInfoTile(
                     context,
                     label: 'KYC Verification',
