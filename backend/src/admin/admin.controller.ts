@@ -96,4 +96,14 @@ export class AdminController {
   ) {
     return this.adminService.getCompensationLogs(query);
   }
+
+  @Get('compensations/stats')
+  async getCompensationStats() {
+    return this.adminService.getDetailedCompensationStats();
+  }
+
+  @Get('compensations/export')
+  async exportCompensations(@Query() query: { status?: string }) {
+    return this.adminService.exportCompensations(query);
+  }
 }

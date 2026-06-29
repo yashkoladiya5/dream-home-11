@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { CompensationLog, CompensationStatus as LogStatus } from './entities/compensation.entity';
 import { PointsEngineService } from '../points/points-engine.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { SmsService } from '../sms/sms.service';
 
 const COMPENSATION_TIERS: { maxFee: number; points: number }[] = [
   { maxFee: 49, points: 120 },
@@ -33,6 +34,7 @@ export class CompensationService {
     private readonly compensationLogRepo: Repository<CompensationLog>,
     private readonly pointsEngineService: PointsEngineService,
     private readonly notificationsService: NotificationsService,
+    private readonly smsService: SmsService,
   ) {}
 
   calculateCompensationPoints(entryFeeInr: number): number {
@@ -128,6 +130,10 @@ export class CompensationService {
         });
 
         this.notificationsService.sendCompensationNotification(user.id, finalPoints);
+
+        if (user.phoneNumber) {
+          this.smsService.sendCompensationSms(user.phoneNumber, finalPoints, contest.title || 'Unknown Contest');
+        }
 
         processed++;
         totalPoints += finalPoints;

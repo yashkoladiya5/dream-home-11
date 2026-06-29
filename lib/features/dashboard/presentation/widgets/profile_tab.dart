@@ -440,6 +440,15 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _buildInfoTile(
                     context,
+                    label: 'Notification Preferences',
+                    value: 'SET',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.notifications_rounded,
+                    onTap: () => context.push('/notification-preferences'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
                     label: 'Chat',
                     value: 'BETA',
                     valueColor: AppTheme.emeraldGreen,

@@ -148,4 +148,16 @@ class AdminApiService {
         queryParameters: params);
     return response.data as Map<String, dynamic>;
   }
+
+  Future<Map<String, dynamic>> getCompensationStatsDetailed() async {
+    final response = await _dio.get('/api/v1/admin/compensations/stats');
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> exportCompensations({String? status}) async {
+    final params = <String, dynamic>{};
+    if (status != null) params['status'] = status;
+    final response = await _dio.get('/api/v1/admin/compensations/export', queryParameters: params);
+    return response.data as Map<String, dynamic>;
+  }
 }

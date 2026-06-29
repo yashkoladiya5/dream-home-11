@@ -351,4 +351,55 @@ export class AdminService {
   async getCompensationLogs(query: { page?: number; limit?: number; status?: string }) {
     return this.compensationService.getCompensationLogs(query);
   }
+
+  async getDetailedCompensationStats() {
+    const total = await this.compensationService.getCompensationStats();
+
+    const dailyAgg = await this.compensationService['compensationLogRepo']
+      .createQueryBuilder('cl')
+      .select("DATE(cl.created_at)", "date")
+      .addSelect('COUNT(*)', 'count')
+      .addSelect('COALESCE(SUM(cl.compensation_points), 0)', 'points')
+      .groupBy('DATE(cl.created_at)')
+      .orderBy('DATE(cl.created_at)', 'DESC')
+      .limit(30)
+      .getRawMany();
+
+    return {
+      ...total,
+      dailyBreakdown: dailyAgg.map((d: any) => ({
+        date: d.date,
+        count: Number(d.count),
+        points: Number(d.points),
+      })),
+    };
+  }
+
+  async exportCompensations(query: { status?: string }) {
+    const where: any = {};
+    if (query.status) where.status = query.status;
+
+    const logs = await this.compensationService['compensationLogRepo'].find({
+      where,
+      order: { createdAt: 'DESC' },
+      relations: { contest: true, user: true },
+    });
+
+    return {
+      data: logs.map((l) => ({
+        id: l.id,
+        contestId: l.contestId,
+        contestTitle: l.contest?.title || '',
+        userId: l.userId,
+        userName: l.user?.fullName || l.user?.phoneNumber || '',
+        userPhone: l.user?.phoneNumber || '',
+        entryFeeInr: Number(l.entryFeeInr),
+        compensationPoints: l.compensationPoints,
+        status: l.status,
+        processedAt: l.processedAt?.toISOString() || '',
+        createdAt: l.createdAt.toISOString(),
+      })),
+      total: logs.length,
+    };
+  }
 }

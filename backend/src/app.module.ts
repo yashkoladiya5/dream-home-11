@@ -61,6 +61,7 @@ import { AdminModule } from './admin/admin.module';
 import { AppConfigModule } from './config/config.module';
 import { SystemConfig } from './config/entities/system-config.entity';
 import { CompensationModule } from './compensation/compensation.module';
+import { SmsModule } from './sms/sms.module';
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { CompensationModule } from './compensation/compensation.module';
     AdminModule,
     AppConfigModule,
     CompensationModule,
+    SmsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

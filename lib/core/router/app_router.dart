@@ -21,6 +21,7 @@ import '../../features/points/presentation/screens/earn_points_screen.dart';
 import '../../features/points/presentation/screens/streak_screen.dart';
 import '../../features/notifications/presentation/screens/reminders_screen.dart';
 import '../../features/notifications/presentation/screens/create_reminder_screen.dart';
+import '../../features/notifications/presentation/screens/notification_preferences_screen.dart';
 import '../../features/share_tracker/presentation/screens/share_tracker_screen.dart';
 import '../../features/rewards/presentation/screens/rewards_catalog_screen.dart';
 import '../../features/rewards/presentation/screens/reward_detail_screen.dart';
@@ -74,6 +75,7 @@ import '../../features/admin/presentation/screens/admin_contests_screen.dart';
 import '../../features/admin/presentation/screens/admin_contest_detail_screen.dart';
 import '../../features/admin/presentation/screens/admin_config_screen.dart';
 import '../../features/admin/presentation/screens/admin_support_tickets_screen.dart';
+import '../../features/admin/presentation/screens/admin_compensations_screen.dart';
 import '../../features/compensations/presentation/screens/compensation_history_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
@@ -436,8 +438,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AdminSupportTicketsScreen(),
       ),
       GoRoute(
+        path: '/admin/compensations',
+        builder: (context, state) => const AdminCompensationsScreen(),
+      ),
+      GoRoute(
         path: '/compensation-history',
         builder: (context, state) => const CompensationHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/notification-preferences',
+        builder: (context, state) => const NotificationPreferencesScreen(),
       ),
     ],
   );

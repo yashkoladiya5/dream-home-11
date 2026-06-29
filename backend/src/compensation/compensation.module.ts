@@ -8,10 +8,12 @@ import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User } from '../users/entities/user.entity';
 import { PointsModule } from '../points/points.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { SmsModule } from '../sms/sms.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([CompensationLog, Contest, ContestMember, User]),
+    SmsModule,
     PointsModule,
     NotificationsModule,
   ],
