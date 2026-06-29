@@ -69,6 +69,11 @@ import '../../features/referral/presentation/screens/invite_screen.dart';
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/admin/presentation/screens/admin_users_screen.dart';
 import '../../features/admin/presentation/screens/admin_kyc_screen.dart';
+import '../../features/admin/presentation/screens/admin_user_detail_screen.dart';
+import '../../features/admin/presentation/screens/admin_contests_screen.dart';
+import '../../features/admin/presentation/screens/admin_contest_detail_screen.dart';
+import '../../features/admin/presentation/screens/admin_config_screen.dart';
+import '../../features/admin/presentation/screens/admin_support_tickets_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
@@ -402,6 +407,32 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/kyc',
         builder: (context, state) => const AdminKycScreen(),
+      ),
+      GoRoute(
+        path: '/admin/users/:id',
+        builder: (context, state) {
+          final userId = state.pathParameters['id']!;
+          return AdminUserDetailScreen(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/admin/contests',
+        builder: (context, state) => const AdminContestsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/contests/:id',
+        builder: (context, state) {
+          final contestId = state.pathParameters['id']!;
+          return AdminContestDetailScreen(contestId: contestId);
+        },
+      ),
+      GoRoute(
+        path: '/admin/config',
+        builder: (context, state) => const AdminConfigScreen(),
+      ),
+      GoRoute(
+        path: '/admin/support-tickets',
+        builder: (context, state) => const AdminSupportTicketsScreen(),
       ),
     ],
   );

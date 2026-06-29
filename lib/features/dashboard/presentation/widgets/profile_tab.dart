@@ -181,6 +181,33 @@ class ProfileTab extends ConsumerWidget {
                       icon: Icons.admin_panel_settings_rounded,
                       onTap: () => context.push('/admin'),
                     ),
+                  if (authState.role?.name == 'admin')
+                    _buildInfoTile(
+                      context,
+                      label: 'Manage Contests',
+                      value: 'VIEW',
+                      valueColor: AppTheme.primaryRed,
+                      icon: Icons.sports_esports_rounded,
+                      onTap: () => context.push('/admin/contests'),
+                    ),
+                  if (authState.role?.name == 'admin')
+                    _buildInfoTile(
+                      context,
+                      label: 'System Config',
+                      value: 'MANAGE',
+                      valueColor: AppTheme.primaryRed,
+                      icon: Icons.settings_rounded,
+                      onTap: () => context.push('/admin/config'),
+                    ),
+                  if (authState.role?.name == 'admin')
+                    _buildInfoTile(
+                      context,
+                      label: 'Support Tickets',
+                      value: 'VIEW',
+                      valueColor: AppTheme.primaryRed,
+                      icon: Icons.support_agent_rounded,
+                      onTap: () => context.push('/admin/support-tickets'),
+                    ),
                   _buildInfoTile(
                     context,
                     label: 'KYC Verification',

@@ -1,21 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'admin_dashboard_provider.dart';
+import 'package:dio/dio.dart';
+import '../../../../core/network/api_client.dart';
 import '../../data/services/admin_api_service.dart';
+import 'admin_dashboard_provider.dart';
 
-final adminConfigProvider = StateNotifierProvider<AdminConfigNotifier, AsyncValue<Map<String, dynamic>>>((ref) {
-  final service = ref.watch(adminApiServiceProvider);
-  return AdminConfigNotifier(service);
-});
+final adminConfigProvider =
+    StateNotifierProvider<
+      AdminConfigNotifier,
+      AsyncValue<Map<String, dynamic>>
+    >((ref) {
+      final dio = ref.watch(apiClientProvider);
+      final service = ref.watch(adminApiServiceProvider);
+      return AdminConfigNotifier(dio, service);
+    });
 
-class AdminConfigNotifier extends StateNotifier<AsyncValue<Map<String, dynamic>>> {
+class AdminConfigNotifier
+    extends StateNotifier<AsyncValue<Map<String, dynamic>>> {
+  final Dio _dio;
   final AdminApiService _service;
 
-  AdminConfigNotifier(this._service) : super(const AsyncValue.loading());
+  AdminConfigNotifier(this._dio, this._service)
+    : super(const AsyncValue.loading());
 
   Future<void> loadConfig() async {
     state = const AsyncValue.loading();
     try {
-      state = AsyncValue.data({});
+      final response = await _dio.get('/api/v1/config');
+      state = AsyncValue.data(Map<String, dynamic>.from(response.data as Map));
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
