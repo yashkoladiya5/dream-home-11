@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/config/presentation/widgets/config_gate.dart';
 import 'features/notifications/services/notification_handler.dart';
+import 'features/config/presentation/providers/config_provider.dart';
 
 bool isFirebaseInitialized = false;
 
@@ -40,6 +42,7 @@ class _AppStartupState extends ConsumerState<_AppStartup> with WidgetsBindingObs
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    ref.read(configNotifierProvider.notifier).startPolling();
   }
 
   @override
@@ -52,12 +55,15 @@ class _AppStartupState extends ConsumerState<_AppStartup> with WidgetsBindingObs
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ref.read(notificationHandlerProvider).initialize();
+      ref.read(configNotifierProvider.notifier).refresh();
+    } else if (state == AppLifecycleState.paused) {
+      ref.read(configNotifierProvider.notifier).stopPolling();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.child;
+    return ConfigGate(child: widget.child);
   }
 }
 
