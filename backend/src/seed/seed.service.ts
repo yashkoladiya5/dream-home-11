@@ -21,6 +21,7 @@ import { ChatMessage } from '../chat/entities/chat-message.entity';
 import { ChatParticipant } from '../chat/entities/chat-participant.entity';
 import { Referral } from '../referral/entities/referral.entity';
 import { ReferralStatus } from '../referral/entities/referral.entity';
+import { SupportTicket } from '../support/entities/support-ticket.entity';
 import { randomBytes } from 'crypto';
 
 @Injectable()
@@ -66,6 +67,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly chatParticipantRepo: Repository<ChatParticipant>,
     @InjectRepository(Referral)
     private readonly referralRepo: Repository<Referral>,
+    @InjectRepository(SupportTicket)
+    private readonly supportTicketRepo: Repository<SupportTicket>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -190,6 +193,7 @@ export class SeedService implements OnApplicationBootstrap {
     await this._seedPosts();
     await this._seedReferralCodes();
     await this._seedReferrals();
+    await this._seedSupportTickets();
     await this._backfillUserPoints();
   }
 
@@ -864,6 +868,47 @@ export class SeedService implements OnApplicationBootstrap {
     await this.userRepository.save(users[2]);
 
     this.logger.log('Seeded 1 referral relationship successfully');
+  }
+
+  private async _seedSupportTickets(): Promise<void> {
+    const count = await this.supportTicketRepo.count();
+    if (count > 0) {
+      this.logger.log('Support tickets already seeded — skipping');
+      return;
+    }
+
+    const users = await this.userRepository.find();
+    if (users.length === 0) return;
+
+    const tickets: Partial<SupportTicket>[] = [
+      {
+        userId: users[0].id,
+        subject: 'How do I withdraw my winnings?',
+        message: 'I have won a contest but cannot find the withdraw option. Can you help me with the steps to withdraw my cash winnings?',
+        category: 'payment',
+        status: 'resolved',
+      },
+      {
+        userId: users[0].id,
+        subject: 'KYC documents not uploading',
+        message: 'I am trying to upload my Aadhaar card but the upload keeps failing. I have tried multiple times with different images.',
+        category: 'kyc',
+        status: 'in_progress',
+      },
+    ];
+
+    if (users.length > 1) {
+      tickets.push({
+        userId: users[1].id,
+        subject: 'App crashing on startup',
+        message: 'The app crashes immediately after the splash screen. I have reinstalled but the issue persists.',
+        category: 'technical',
+        status: 'open',
+      });
+    }
+
+    await this.supportTicketRepo.save(tickets);
+    this.logger.log(`Seeded ${tickets.length} support tickets successfully`);
   }
 
   private async _backfillUserPoints(): Promise<void> {

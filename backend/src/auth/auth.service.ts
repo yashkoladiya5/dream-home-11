@@ -1,12 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { FirebaseService } from './firebase.service';
 import { UsersService } from '../users/users.service';
+import { ReferralService } from '../referral/referral.service';
 import { User } from '../users/entities/user.entity';
 import { exec } from 'child_process';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   // In-memory cache for OTP codes. Key: phone number, Value: OTP, expiration date, and attempts.
   private otpStore = new Map<string, { code: string; expiresAt: Date; attempts: number }>();
 
@@ -14,6 +16,7 @@ export class AuthService {
     private readonly firebaseService: FirebaseService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly referralService: ReferralService,
   ) {}
 
   requestOtp(phoneNumber: string): { success: boolean; message: string } {
@@ -55,6 +58,7 @@ export class AuthService {
     idToken: string,
     deviceId: string,
     otpCode?: string,
+    referralCode?: string,
   ): Promise<{ token: string; user: User }> {
     const { phoneNumber } = await this.firebaseService.verifyIdToken(idToken);
 
@@ -83,7 +87,18 @@ export class AuthService {
       this.otpStore.delete(phoneNumber);
     }
 
+    const existingUser = await this.usersService.findByPhoneNumber(phoneNumber);
+    const isNewUser = !existingUser;
+
     const user = await this.usersService.upsertUser(phoneNumber, deviceId);
+
+    if (isNewUser && referralCode) {
+      try {
+        await this.referralService.applyReferral(user, referralCode);
+      } catch (err) {
+        this.logger.warn(`Referral code application failed for user ${user.id}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
+    }
 
     const payload = { sub: user.id, phoneNumber: user.phoneNumber };
     const token = this.jwtService.sign(payload);

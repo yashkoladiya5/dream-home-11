@@ -19,10 +19,11 @@ import { Chat } from '../chat/entities/chat.entity';
 import { ChatMessage } from '../chat/entities/chat-message.entity';
 import { ChatParticipant } from '../chat/entities/chat-participant.entity';
 import { Referral } from '../referral/entities/referral.entity';
+import { SupportTicket } from '../support/entities/support-ticket.entity';
 import { SeedService } from './seed.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement, PrizeHome, Transaction, SavedPaymentMethod, Kyc, Withdrawal, Poll, Post, Like, Comment, Chat, ChatMessage, ChatParticipant, Referral])],
+  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement, PrizeHome, Transaction, SavedPaymentMethod, Kyc, Withdrawal, Poll, Post, Like, Comment, Chat, ChatMessage, ChatParticipant, Referral, SupportTicket])],
   providers: [SeedService],
 })
 export class SeedModule {}

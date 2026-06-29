@@ -5,12 +5,14 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { FirebaseService } from './firebase.service';
 import { UsersModule } from '../users/users.module';
+import { ReferralModule } from '../referral/referral.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Global()
 @Module({
   imports: [
     UsersModule,
+    ReferralModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -52,6 +52,16 @@ import '../../features/chat/presentation/screens/chat_debug_screen.dart';
 import '../../features/chat/presentation/screens/chat_list_screen.dart';
 import '../../features/chat/presentation/screens/direct_chat_screen.dart';
 import '../../features/chat/presentation/screens/group_chat_screen.dart';
+import '../../features/help/presentation/screens/faq_screen.dart';
+import '../../features/help/presentation/screens/support_screen.dart';
+import '../../features/help/presentation/screens/how_to_play_screen.dart';
+import '../../features/help/presentation/screens/community_guidelines_screen.dart';
+import '../../features/legal/presentation/screens/terms_of_service_screen.dart';
+import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
+import '../../features/legal/presentation/screens/responsible_gaming_screen.dart';
+import '../../features/legal/presentation/screens/about_screen.dart';
+import '../../features/legal/presentation/screens/version_screen.dart';
+import '../../features/legal/presentation/screens/contact_screen.dart';
 import '../../features/referral/presentation/screens/invite_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
@@ -306,6 +316,46 @@ final routerProvider = Provider<GoRouter>((ref) {
           final chatId = state.pathParameters['chatId']!;
           return GroupChatScreen(chatId: chatId);
         },
+      ),
+      GoRoute(
+        path: '/faq',
+        builder: (context, state) => const FaqScreen(),
+      ),
+      GoRoute(
+        path: '/support',
+        builder: (context, state) => const SupportScreen(),
+      ),
+      GoRoute(
+        path: '/how-to-play',
+        builder: (context, state) => const HowToPlayScreen(),
+      ),
+      GoRoute(
+        path: '/community-guidelines',
+        builder: (context, state) => const CommunityGuidelinesScreen(),
+      ),
+      GoRoute(
+        path: '/terms-of-service',
+        builder: (context, state) => const TermsOfServiceScreen(),
+      ),
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
+      ),
+      GoRoute(
+        path: '/responsible-gaming',
+        builder: (context, state) => const ResponsibleGamingScreen(),
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AboutScreen(),
+      ),
+      GoRoute(
+        path: '/app-info',
+        builder: (context, state) => const VersionScreen(),
+      ),
+      GoRoute(
+        path: '/contact',
+        builder: (context, state) => const ContactScreen(),
       ),
       GoRoute(
         path: '/transactions/others',
