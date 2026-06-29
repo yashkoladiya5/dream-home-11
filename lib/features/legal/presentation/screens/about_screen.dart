@@ -11,42 +11,37 @@ class AboutSection {
 const List<AboutSection> aboutData = [
   AboutSection(
     title: 'About Dream Home 11',
-    content: 'Dream Home 11 is India\'s premier gamified loyalty platform that combines the thrill of contests with the dream of winning real homes. We provide a secure, transparent, and entertaining environment where users can compete, earn points, and win amazing prizes including fully furnished dream homes.',
+    content: 'Dream Home 11 is India\'s premier gamified loyalty platform that combines the thrill of competitive contests with the dream of winning real homes. Founded with a vision to transform the loyalty rewards landscape, we provide a secure, transparent, and entertaining ecosystem where every interaction earns value. Users can participate in multiple contest formats, accumulate points through daily engagements, and win life-changing prizes including fully furnished dream homes, cash rewards, and exclusive merchandise. Our platform is designed to make every user feel like a winner, with rewards that go beyond the ordinary.',
     icon: Icons.home_rounded,
   ),
   AboutSection(
-    title: 'Our Mission',
-    content: 'To revolutionize the loyalty rewards experience by creating a gamified ecosystem where every interaction adds value. We are committed to providing a fair, transparent, and exciting platform that rewards skill, consistency, and community participation.',
+    title: 'Our Mission & Vision',
+    content: 'Mission: To revolutionize the loyalty rewards experience by creating a gamified ecosystem where every interaction adds genuine value. We are committed to providing a fair, transparent, and exciting platform that rewards skill, consistency, and community participation. Vision: To become the most loved loyalty and rewards platform in India, recognized for our innovation, integrity, and life-changing rewards. We envision a vibrant community where millions of users engage, compete, and achieve their dreams together, fostering a culture of healthy competition and shared success.',
     icon: Icons.rocket_launch_rounded,
   ),
   AboutSection(
-    title: 'Our Vision',
-    content: 'To become the most loved loyalty and rewards platform in India, known for innovation, integrity, and life-changing rewards. We envision a community where millions of users engage, compete, and achieve their dreams together.',
-    icon: Icons.visibility_rounded,
-  ),
-  AboutSection(
-    title: 'Key Features',
-    content: 'Dream Home 11 offers: Multiple contest formats (Mega, Normal, Home, Private), Real-time scoring and leaderboards, Daily points-earning activities, Spin wheel rewards, Community feed and chat, KYC-verified withdrawals, Prize homes as rewards, Referral bonuses, and 24/7 customer support.',
+    title: 'Key Features of the Platform',
+    content: 'Dream Home 11 offers a rich set of features designed for an engaging user experience. Multiple contest formats including Mega, Normal, Home, and Private contests cater to different play styles. Real-time scoring and dynamic leaderboards keep the competition alive. Daily points-earning activities, spin wheel rewards, and streak bonuses provide continuous engagement. The community feed and chat features enable social interaction among users. KYC-verified withdrawals, a comprehensive wallet system, and 24/7 customer support ensure a seamless and trustworthy experience. Referral bonuses and tier-based multipliers further enhance the earning potential for every user.',
     icon: Icons.star_rounded,
   ),
   AboutSection(
     title: 'Security & Trust',
-    content: 'We prioritize the security and trust of our users. The platform employs industry-standard encryption, secure payment processing, and strict KYC verification. All contests are conducted transparently with clear rules and fair play policies enforced by automated systems.',
+    content: 'We prioritize the security and trust of our users above everything else. The platform employs industry-standard AES-256 encryption for data protection, secure payment gateways for all financial transactions, and strict KYC verification protocols to prevent fraud. All contests are conducted transparently with clearly published rules, real-time score updates, and automated result declarations. Our infrastructure is regularly audited by third-party security firms, and we maintain comprehensive data privacy practices in compliance with applicable laws. User funds are held in segregated accounts with complete audit trails.',
     icon: Icons.shield_rounded,
   ),
   AboutSection(
     title: 'Fair Play Commitment',
-    content: 'Dream Home 11 is committed to fair play. We use automated systems to detect and prevent fraud, collusion, and abuse. Our algorithms ensure that all participants have an equal opportunity to succeed based on their skill and engagement.',
+    content: 'Dream Home 11 is unwavering in its commitment to fair play. We employ sophisticated automated systems to detect and prevent fraud, collusion, multi-accounting, and any form of platform abuse. Our proprietary algorithms ensure that all participants have an equal and fair opportunity to succeed based on their skill, consistency, and genuine engagement. Real-time monitoring flags suspicious activity instantly, and our dedicated trust and safety team reviews all flagged cases. We maintain a zero-tolerance policy toward any violation of our fair play standards, ensuring a level playing field for every user.',
     icon: Icons.scale_rounded,
   ),
   AboutSection(
     title: 'Regulatory Compliance',
-    content: 'Dream Home 11 operates in full compliance with applicable Indian laws and regulations. We adhere to data protection laws, gaming regulations, and financial compliance requirements. Users from restricted states (Assam, Odisha, Telangana) cannot participate in withdrawal activities.',
+    content: 'Dream Home 11 operates in full compliance with applicable Indian laws and regulations governing online platforms, data protection, and financial transactions. We adhere strictly to the Information Technology Act, data privacy guidelines, and all relevant state-specific regulations. Users from restricted states including Assam, Odisha, and Telangana are currently restricted from participating in withdrawal activities due to local regulatory frameworks. We maintain transparent terms of service, privacy policies, and responsible gaming guidelines. Our legal team continuously monitors regulatory developments to ensure ongoing compliance.',
     icon: Icons.gavel_rounded,
   ),
   AboutSection(
     title: 'Continuous Improvement',
-    content: 'We are constantly working to improve the platform based on user feedback and technological advancements. New features, contests, and rewards are added regularly. We welcome your suggestions and feedback through the Support page.',
+    content: 'We are constantly evolving the platform based on user feedback, technological advancements, and industry best practices. New features, contest formats, and reward categories are added regularly to keep the experience fresh and exciting. Our product and engineering teams follow agile development methodologies with regular update cycles. User suggestions submitted through the Support page directly influence our roadmap and feature prioritization. We are committed to delivering a world-class experience that grows and improves with our community, ensuring Dream Home 11 remains at the forefront of gamified loyalty platforms in India.',
     icon: Icons.trending_up_rounded,
   ),
 ];
