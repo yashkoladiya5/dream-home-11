@@ -3,9 +3,9 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager } from 'typeorm';
 import { ContestsService } from './contests.service';
-import { Contest, ContestStatus, ContestType } from './entities/contest.entity';
+import { Contest, ContestStatus, ContestType, CompensationStatus } from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
-import { User, UserLevel } from '../users/entities/user.entity';
+import { User, UserLevel, UserRole } from '../users/entities/user.entity';
 import { PointsEngineService } from '../points/points-engine.service';
 
 describe('ContestsService', () => {
@@ -18,9 +18,9 @@ describe('ContestsService', () => {
   const mockUser: User = {
     id: 'user-1',
     phoneNumber: '+919999999999',
-    email: null,
+    email: null as any,
     fullName: 'Test User',
-    avatarUrl: null,
+    avatarUrl: null as any,
     createdAt: new Date(),
     currentTier: UserLevel.BRONZE,
     lifetimePoints: 0,
@@ -28,7 +28,20 @@ describe('ContestsService', () => {
     pointsBalance: 0,
     isActive: true,
     deviceId: 'device-1',
-    kyc: null,
+    weeklyPoints: 0,
+    monthlyPoints: 0,
+    referralCode: null as any,
+    referredBy: null as any,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastStreakDate: null as any,
+    state: null as any,
+    bankAccountNumber: null as any,
+    bankIfsc: null as any,
+    bankName: null as any,
+    upiId: null as any,
+    role: UserRole.USER,
+    kyc: null as any,
   };
 
   const mockContest: Contest = {
@@ -45,6 +58,9 @@ describe('ContestsService', () => {
     startTime: new Date(Date.now() - 86400000),
     endTime: new Date(Date.now() + 86400000 * 30),
     status: ContestStatus.RUNNING,
+    rules: null as any,
+    inviteCode: null as any,
+    compensationStatus: CompensationStatus.NONE,
     createdAt: new Date(),
     members: [],
   };

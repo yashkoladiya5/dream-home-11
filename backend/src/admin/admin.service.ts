@@ -9,6 +9,8 @@ import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
 import { SupportTicket } from '../support/entities/support-ticket.entity';
 import { CompensationService } from '../compensation/compensation.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { SmsService } from '../sms/sms.service';
 
 @Injectable()
 export class AdminService {
@@ -30,6 +32,8 @@ export class AdminService {
     @InjectRepository(SupportTicket)
     private readonly supportTicketRepo: Repository<SupportTicket>,
     private readonly compensationService: CompensationService,
+    private readonly notificationsService: NotificationsService,
+    private readonly smsService: SmsService,
   ) {}
 
   async getUsers(query: {
@@ -355,7 +359,7 @@ export class AdminService {
   async getDetailedCompensationStats() {
     const total = await this.compensationService.getCompensationStats();
 
-    const dailyAgg = await this.compensationService['compensationLogRepo']
+    const dailyAgg = await this.compensationService.getCompensationLogRepo()
       .createQueryBuilder('cl')
       .select("DATE(cl.created_at)", "date")
       .addSelect('COUNT(*)', 'count')
@@ -375,11 +379,45 @@ export class AdminService {
     };
   }
 
+  async broadcastPush(title: string, message: string, tier?: string) {
+    let sentCount: number;
+
+    if (tier) {
+      sentCount = await this.notificationsService.broadcastToUsersByTier(tier, title, message);
+    } else {
+      sentCount = await this.notificationsService.broadcastToAllUsers(title, message);
+    }
+
+    return { sent: sentCount, title, message, tier: tier || 'all' };
+  }
+
+  async broadcastSms(message: string, tier?: string) {
+    const where: any = { isActive: true };
+    if (tier) where.currentTier = tier;
+
+    const users = await this.userRepo.find({ where, select: { id: true, phoneNumber: true } });
+    let sentCount = 0;
+
+    for (const user of users) {
+      if (user.phoneNumber) {
+        try {
+          await this.smsService.sendSms(user.phoneNumber, message);
+          sentCount++;
+        } catch (error) {
+          this.logger.error(`Failed to send SMS to user ${user.id}: ${(error as Error).message}`);
+        }
+      }
+    }
+
+    this.logger.log(`Broadcast SMS sent to ${sentCount}/${users.length} users`);
+    return { sent: sentCount, total: users.length, message, tier: tier || 'all' };
+  }
+
   async exportCompensations(query: { status?: string }) {
     const where: any = {};
     if (query.status) where.status = query.status;
 
-    const logs = await this.compensationService['compensationLogRepo'].find({
+    const logs = await this.compensationService.getCompensationLogRepo().find({
       where,
       order: { createdAt: 'DESC' },
       relations: { contest: true, user: true },

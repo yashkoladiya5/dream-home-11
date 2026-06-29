@@ -59,7 +59,7 @@ describe('ReferralService', () => {
     walletBalanceInr: 0,
     isActive: true,
     createdAt: now,
-  } as User;
+  } as unknown as User;
 
   const mockReferrerUser: User = {
     id: 'referrer-1',
@@ -73,7 +73,7 @@ describe('ReferralService', () => {
     walletBalanceInr: 0,
     isActive: true,
     createdAt: now,
-  } as User;
+  } as unknown as User;
 
   function resetMocks(): void {
     mockReferralRepo.findOne.mockReset();
@@ -142,7 +142,7 @@ describe('ReferralService', () => {
     });
 
     it('should generate and save a new code if user does not have one', async () => {
-      const user = { ...mockUser, referralCode: null };
+      const user = { ...mockUser, referralCode: null as any };
       mockUserRepo.findOne.mockResolvedValue(null);
       mockUserRepo.save.mockResolvedValue(user);
 

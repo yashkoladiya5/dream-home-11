@@ -303,7 +303,7 @@ class _AdminUserDetailScreenState extends ConsumerState<AdminUserDetailScreen> {
                     Text('Edit User', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 24),
                     DropdownButtonFormField<String>(
-                      value: selectedRole,
+                      initialValue: selectedRole,
                       decoration: InputDecoration(labelText: 'Role',
                         labelStyle: GoogleFonts.outfit(color: AppTheme.greyMedium)),
                       dropdownColor: AppTheme.secondarySlate,
@@ -313,7 +313,7 @@ class _AdminUserDetailScreenState extends ConsumerState<AdminUserDetailScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: selectedTier,
+                      initialValue: selectedTier,
                       decoration: InputDecoration(labelText: 'Tier',
                         labelStyle: GoogleFonts.outfit(color: AppTheme.greyMedium)),
                       dropdownColor: AppTheme.secondarySlate,
@@ -326,7 +326,7 @@ class _AdminUserDetailScreenState extends ConsumerState<AdminUserDetailScreen> {
                       contentPadding: EdgeInsets.zero,
                       title: Text('Active', style: GoogleFonts.outfit(color: Colors.white)),
                       value: isActive,
-                      activeColor: AppTheme.emeraldGreen,
+                      activeThumbColor: AppTheme.emeraldGreen,
                       onChanged: (v) => setSheetState(() => isActive = v),
                     ),
                     const SizedBox(height: 24),

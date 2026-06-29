@@ -59,7 +59,7 @@ describe('LeaderboardResetService', () => {
 
   describe('freezeAndReset', () => {
     it('should archive monthly rankings and reset monthlyPoints to 0', async () => {
-      userRepo.find!.mockResolvedValue(mockUsers);
+      (userRepo.find as jest.Mock).mockResolvedValue(mockUsers);
 
       const result = await service.freezeAndReset('monthly');
 
@@ -82,7 +82,7 @@ describe('LeaderboardResetService', () => {
     });
 
     it('should archive weekly rankings and reset weeklyPoints to 0', async () => {
-      userRepo.find!.mockResolvedValue(mockUsers);
+      (userRepo.find as jest.Mock).mockResolvedValue(mockUsers);
 
       const result = await service.freezeAndReset('weekly');
 
@@ -104,7 +104,7 @@ describe('LeaderboardResetService', () => {
         { ...mockUsers[0], weeklyPoints: 0, monthlyPoints: 0 },
         { ...mockUsers[1], weeklyPoints: 0, monthlyPoints: 0 },
       ];
-      userRepo.find!.mockResolvedValue(zeroPointUsers);
+      (userRepo.find as jest.Mock).mockResolvedValue(zeroPointUsers);
 
       const result = await service.freezeAndReset('weekly');
 
@@ -113,7 +113,7 @@ describe('LeaderboardResetService', () => {
     });
 
     it('should handle no active users gracefully', async () => {
-      userRepo.find!.mockResolvedValue([]);
+      (userRepo.find as jest.Mock).mockResolvedValue([]);
 
       const result = await service.freezeAndReset('monthly');
 
@@ -124,7 +124,7 @@ describe('LeaderboardResetService', () => {
     });
 
     it('should capture previous tier in archive', async () => {
-      userRepo.find!.mockResolvedValue([mockUsers[0]]);
+      (userRepo.find as jest.Mock).mockResolvedValue([mockUsers[0]]);
 
       await service.freezeAndReset('monthly');
 
@@ -141,7 +141,7 @@ describe('LeaderboardResetService', () => {
       const mockArchives = [
         { id: 'a1', cycle: 'monthly', userId: 'user-1', points: 800, rank: 1, snapshotDate: new Date(), createdAt: new Date() } as LeaderboardArchive,
       ];
-      archiveRepo.findAndCount!.mockResolvedValue([mockArchives, 1]);
+      (archiveRepo.findAndCount as jest.Mock).mockResolvedValue([mockArchives, 1]);
 
       const result = await service.getArchives('monthly', 1, 20);
 
@@ -155,7 +155,7 @@ describe('LeaderboardResetService', () => {
     });
 
     it('should filter by snapshotDate when provided', async () => {
-      archiveRepo.findAndCount!.mockResolvedValue([[], 0]);
+      (archiveRepo.findAndCount as jest.Mock).mockResolvedValue([[], 0]);
 
       await service.getArchives('weekly', 1, 20, '2026-06-27');
 

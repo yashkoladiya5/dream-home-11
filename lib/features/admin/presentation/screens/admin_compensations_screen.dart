@@ -160,7 +160,7 @@ class _AdminCompensationsScreenState extends ConsumerState<AdminCompensationsScr
       ),
       child: statsAsync.when(
         loading: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-        error: (_, __) => const SizedBox.shrink(),
+        error: (_, _) => const SizedBox.shrink(),
         data: (stats) {
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,

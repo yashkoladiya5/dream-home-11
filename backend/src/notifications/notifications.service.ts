@@ -109,6 +109,56 @@ export class NotificationsService {
     }
   }
 
+  async broadcastToAllUsers(title: string, body: string, data?: Record<string, string>): Promise<number> {
+    const tokens = await this.fcmTokenRepo.find();
+    let sentCount = 0;
+
+    for (const fcmToken of tokens) {
+      const message = {
+        notification: { title, body },
+        token: fcmToken.token,
+        data: { ...data, type: data?.type ?? 'broadcast' },
+      };
+
+      try {
+        await getMessaging().send(message);
+        sentCount++;
+      } catch (error: any) {
+        this.logger.error(`Failed to send broadcast to token ${fcmToken.id}: ${error.message}`);
+      }
+    }
+
+    this.logger.log(`Broadcast sent to ${sentCount}/${tokens.length} devices`);
+    return sentCount;
+  }
+
+  async broadcastToUsersByTier(tier: string, title: string, body: string, data?: Record<string, string>): Promise<number> {
+    const tokens = await this.fcmTokenRepo
+      .createQueryBuilder('ft')
+      .innerJoin('ft.user', 'u')
+      .where('u.currentTier = :tier', { tier })
+      .getMany();
+
+    let sentCount = 0;
+    for (const fcmToken of tokens) {
+      const message = {
+        notification: { title, body },
+        token: fcmToken.token,
+        data: { ...data, type: data?.type ?? 'broadcast' },
+      };
+
+      try {
+        await getMessaging().send(message);
+        sentCount++;
+      } catch (error: any) {
+        this.logger.error(`Failed to send broadcast to token ${fcmToken.id}: ${error.message}`);
+      }
+    }
+
+    this.logger.log(`Broadcast to tier ${tier} sent to ${sentCount}/${tokens.length} devices`);
+    return sentCount;
+  }
+
   async sendReminderNotification(reminder: Reminder): Promise<void> {
     const tokens = await this.getUserTokens(reminder.userId);
     if (tokens.length === 0) {

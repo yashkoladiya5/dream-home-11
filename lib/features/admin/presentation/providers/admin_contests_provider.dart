@@ -76,7 +76,7 @@ class AdminContestsNotifier extends StateNotifier<AdminContestsState> {
         page: result['page'] as int? ?? 1,
         isLoading: false,
       );
-    } catch (e, stack) {
+    } catch (e, _) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }

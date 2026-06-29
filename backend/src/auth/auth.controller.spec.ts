@@ -11,7 +11,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
-import { User, UserLevel } from '../users/entities/user.entity';
+import { User, UserLevel, UserRole } from '../users/entities/user.entity';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -20,9 +20,9 @@ describe('AuthController', () => {
   const mockUser: User = {
     id: 'user-uuid-12345',
     phoneNumber: '+919999999999',
-    email: null,
-    fullName: null,
-    avatarUrl: null,
+    email: null as any,
+    fullName: null as any,
+    avatarUrl: null as any,
     createdAt: new Date(),
     currentTier: UserLevel.BRONZE,
     lifetimePoints: 0,
@@ -32,16 +32,17 @@ describe('AuthController', () => {
     pointsBalance: 0,
     isActive: true,
     deviceId: 'device-id-12345',
-    referralCode: null,
-    referredBy: null,
+    referralCode: null as any,
+    referredBy: null as any,
     currentStreak: 0,
     longestStreak: 0,
     lastStreakDate: null,
-    state: null,
-    bankAccountNumber: null,
-    bankIfsc: null,
-    bankName: null,
-    upiId: null,
+    state: null as any,
+    bankAccountNumber: null as any,
+    bankIfsc: null as any,
+    bankName: null as any,
+    upiId: null as any,
+    role: UserRole.USER,
     kyc: null as any,
   };
 

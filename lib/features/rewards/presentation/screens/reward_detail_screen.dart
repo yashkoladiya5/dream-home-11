@@ -71,7 +71,7 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${e.toString().replaceFirst('Exception: ', '')}'),
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
           backgroundColor: AppTheme.primaryRed,
           behavior: SnackBarBehavior.floating,
         ),

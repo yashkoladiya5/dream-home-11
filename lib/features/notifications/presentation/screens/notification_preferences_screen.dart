@@ -119,7 +119,7 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.primaryRed,
+            activeThumbColor: AppTheme.primaryRed,
             inactiveThumbColor: AppTheme.greyMedium,
             inactiveTrackColor: const Color(0x2FFFFFFF),
           ),

@@ -45,7 +45,7 @@ class _CreateContestScreenState extends ConsumerState<CreateContestScreen> {
         'pointsToJoin: ${_pointsController.text.trim()}, '
         'maxSlots: ${_maxSlotsController.text.trim()}, '
         'prize: "${_prizeController.text.trim()}", '
-        'rules: "${rulesValue}"');
+        'rules: "$rulesValue"');
 
     final result = await ref.read(contestListProvider.notifier).createPrivateContest(
       title: _titleController.text.trim(),

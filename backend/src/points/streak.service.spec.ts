@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StreakService } from './streak.service';
-import { User, UserLevel } from '../users/entities/user.entity';
+import { User, UserLevel, UserRole } from '../users/entities/user.entity';
 
 describe('StreakService', () => {
   let service: StreakService;
@@ -11,9 +11,9 @@ describe('StreakService', () => {
   const mockUser: User = {
     id: 'user-1',
     phoneNumber: '+919999999999',
-    email: null,
+    email: null as any,
     fullName: 'Test User',
-    avatarUrl: null,
+    avatarUrl: null as any,
     createdAt: new Date(),
     currentTier: UserLevel.BRONZE,
     lifetimePoints: 500,
@@ -24,7 +24,17 @@ describe('StreakService', () => {
     currentStreak: 0,
     longestStreak: 0,
     lastStreakDate: null,
-    kyc: null,
+    weeklyPoints: 0,
+    monthlyPoints: 0,
+    referralCode: null as any,
+    referredBy: null as any,
+    state: null as any,
+    bankAccountNumber: null as any,
+    bankIfsc: null as any,
+    bankName: null as any,
+    upiId: null as any,
+    role: UserRole.USER,
+    kyc: null as any,
   };
 
   beforeEach(async () => {

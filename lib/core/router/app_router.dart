@@ -76,6 +76,8 @@ import '../../features/admin/presentation/screens/admin_contest_detail_screen.da
 import '../../features/admin/presentation/screens/admin_config_screen.dart';
 import '../../features/admin/presentation/screens/admin_support_tickets_screen.dart';
 import '../../features/admin/presentation/screens/admin_compensations_screen.dart';
+import '../../features/admin/presentation/screens/admin_broadcast_screen.dart';
+import '../../features/admin/presentation/screens/admin_audit_logs_screen.dart';
 import '../../features/compensations/presentation/screens/compensation_history_screen.dart';
 
 class GoRouterRefreshListenable extends ChangeNotifier {
@@ -440,6 +442,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/compensations',
         builder: (context, state) => const AdminCompensationsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/broadcast',
+        builder: (context, state) => const AdminBroadcastScreen(),
+      ),
+      GoRoute(
+        path: '/admin/audit-logs',
+        builder: (context, state) => const AdminAuditLogsScreen(),
       ),
       GoRoute(
         path: '/compensation-history',

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager, LessThan } from 'typeorm';
+import { Repository, EntityManager, LessThan, Brackets } from 'typeorm';
 import { Contest, ContestStatus, CompensationStatus as ContestCompensationStatus } from '../contests/entities/contest.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User } from '../users/entities/user.entity';
@@ -51,14 +51,20 @@ export class CompensationService {
   }
 
   async findUncompensatedContests(): Promise<Contest[]> {
-    return this.contestRepo.find({
-      where: {
-        status: ContestStatus.COMPLETED,
-        endTime: LessThan(new Date()),
-        compensationStatus: ContestCompensationStatus.NONE,
-      },
-      relations: { members: { user: true } },
-    });
+    return this.contestRepo
+      .createQueryBuilder('contest')
+      .leftJoinAndSelect('contest.members', 'members')
+      .leftJoinAndSelect('members.user', 'user')
+      .where('contest.compensationStatus = :status', { status: ContestCompensationStatus.NONE })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('contest.status = :completed', { completed: ContestStatus.COMPLETED })
+            .andWhere('contest.endTime < :now', { now: new Date() })
+            .andWhere('contest.filledSlots < contest.maxSlots')
+            .orWhere('contest.status = :cancelled', { cancelled: ContestStatus.CANCELLED });
+        }),
+      )
+      .getMany();
   }
 
   async findContestWithMembers(contestId: string): Promise<Contest | null> {
@@ -75,8 +81,19 @@ export class CompensationService {
       return { processed: 0, totalPoints: 0 };
     }
 
-    contest.compensationStatus = ContestCompensationStatus.PENDING;
-    await this.contestRepo.save(contest);
+    // Atomic idempotency guard: claim this contest atomically to prevent double processing
+    const claimResult = await this.contestRepo
+      .createQueryBuilder()
+      .update(Contest)
+      .set({ compensationStatus: ContestCompensationStatus.PENDING })
+      .where('id = :id', { id: contest.id })
+      .andWhere('compensationStatus = :status', { status: ContestCompensationStatus.NONE })
+      .execute();
+
+    if (claimResult.affected === 0) {
+      this.logger.warn(`Contest ${contest.id} already claimed for compensation by another process`);
+      return { processed: 0, totalPoints: 0 };
+    }
 
     let processed = 0;
     let totalPoints = 0;
@@ -188,6 +205,10 @@ export class CompensationService {
     }
 
     return { contestsProcessed, membersCompensated, totalPointsAwarded };
+  }
+
+  getCompensationLogRepo(): Repository<CompensationLog> {
+    return this.compensationLogRepo;
   }
 
   async getCompensationStats(): Promise<{ total: number; pending: number; totalPoints: number }> {

@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -62,6 +64,8 @@ import { AppConfigModule } from './config/config.module';
 import { SystemConfig } from './config/entities/system-config.entity';
 import { CompensationModule } from './compensation/compensation.module';
 import { SmsModule } from './sms/sms.module';
+import { AuditLog } from './audit/entities/audit-log.entity';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -79,9 +83,17 @@ import { SmsModule } from './sms/sms.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig, CompensationLog],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig, CompensationLog, AuditLog],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 100,
+        },
+      ],
     }),
     ScheduleModule.forRoot(),
     UsersModule,
@@ -111,9 +123,16 @@ import { SmsModule } from './sms/sms.module';
     AdminModule,
     AppConfigModule,
     CompensationModule,
+    AuditModule,
     SmsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

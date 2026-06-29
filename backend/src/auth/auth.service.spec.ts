@@ -11,7 +11,7 @@ import { AuthService } from './auth.service';
 import { FirebaseService } from './firebase.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserLevel } from '../users/entities/user.entity';
+import { User, UserLevel, UserRole } from '../users/entities/user.entity';
 import { ReferralService } from '../referral/referral.service';
 import { UnauthorizedException } from '@nestjs/common';
 
@@ -24,9 +24,9 @@ describe('AuthService', () => {
   const mockUser: User = {
     id: 'user-uuid-12345',
     phoneNumber: '+919999999999',
-    email: null,
-    fullName: null,
-    avatarUrl: null,
+    email: null as any,
+    fullName: null as any,
+    avatarUrl: null as any,
     createdAt: new Date(),
     currentTier: UserLevel.BRONZE,
     lifetimePoints: 0,
@@ -37,15 +37,16 @@ describe('AuthService', () => {
     isActive: true,
     deviceId: 'device-id-12345',
     referralCode: 'TESTCODE',
-    referredBy: null,
+    referredBy: null as any,
     currentStreak: 0,
     longestStreak: 0,
     lastStreakDate: null,
-    state: null,
-    bankAccountNumber: null,
-    bankIfsc: null,
-    bankName: null,
-    upiId: null,
+    state: null as any,
+    bankAccountNumber: null as any,
+    bankIfsc: null as any,
+    bankName: null as any,
+    upiId: null as any,
+    role: UserRole.USER,
     kyc: null as any,
   };
 

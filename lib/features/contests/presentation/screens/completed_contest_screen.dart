@@ -416,9 +416,9 @@ class _CompletedContestScreenState extends ConsumerState<CompletedContestScreen>
             if (members.length >= 2)
               Expanded(child: _buildPodiumCard(members[1], 2)),
             if (members.length >= 2) const SizedBox(width: 8),
-            if (members.length >= 1)
+            if (members.isNotEmpty)
               Expanded(child: _buildPodiumCard(members[0], 1)),
-            if (members.length >= 1) const SizedBox(width: 8),
+            if (members.isNotEmpty) const SizedBox(width: 8),
             if (members.length >= 3)
               Expanded(child: _buildPodiumCard(members[2], 3)),
           ],
