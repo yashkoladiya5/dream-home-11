@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class QueryContestsDto {
@@ -6,12 +6,14 @@ export class QueryContestsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   page?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   limit?: number;
 
   @IsOptional()

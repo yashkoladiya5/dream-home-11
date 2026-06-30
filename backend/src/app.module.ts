@@ -68,6 +68,7 @@ import { CompensationModule } from './compensation/compensation.module';
 import { SmsModule } from './sms/sms.module';
 import { AuditLog } from './audit/entities/audit-log.entity';
 import { AuditModule } from './audit/audit.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -132,6 +133,7 @@ import { AuditModule } from './audit/audit.module';
     CompensationModule,
     AuditModule,
     SmsModule,
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [

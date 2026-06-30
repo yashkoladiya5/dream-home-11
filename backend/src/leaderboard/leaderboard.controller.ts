@@ -4,8 +4,10 @@ import { Repository, ILike, In } from 'typeorm';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from '../redis/redis.constants';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { LeaderboardRedisService, LeaderboardEntry } from './leaderboard-redis.service';
 import { LeaderboardResetService } from './leaderboard-reset.service';
@@ -227,12 +229,16 @@ export class LeaderboardController {
   }
 
   @Post('sync')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   async triggerSync() {
     const result = await this.leaderboardSync.syncAll();
     return { message: 'Leaderboard sync triggered successfully', ...result };
   }
 
   @Post('sync/contest/:contestId')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   async triggerContestSync(
     @Param('contestId', ParseUUIDPipe) contestId: string,
   ) {
@@ -241,12 +247,16 @@ export class LeaderboardController {
   }
 
   @Post('reset/weekly')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   async resetWeeklyLeaderboard() {
     const result = await this.leaderboardReset.freezeAndReset('weekly');
     return { message: 'Weekly leaderboard reset completed', ...result };
   }
 
   @Post('reset/monthly')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   async resetMonthlyLeaderboard() {
     const result = await this.leaderboardReset.freezeAndReset('monthly');
     return { message: 'Monthly leaderboard reset completed', ...result };

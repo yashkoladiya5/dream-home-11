@@ -26,6 +26,7 @@ export class WithdrawalsController {
       bankName,
       upiId,
     });
+    await this.withdrawalsService.logWithdrawalRequest(user.id, withdrawal.id, parsedAmount);
     return {
       id: withdrawal.id,
       amount: Number(withdrawal.amount),

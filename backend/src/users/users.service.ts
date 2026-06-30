@@ -362,7 +362,6 @@ export class UsersService {
     const [users, total] = await this.userRepository.findAndCount({
       where: [
         { fullName: ILike(`%${query.trim()}%`) },
-        { phoneNumber: ILike(`%${query.trim()}%`) },
       ],
       select: {
         id: true,

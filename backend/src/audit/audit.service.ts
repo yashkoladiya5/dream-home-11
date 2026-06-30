@@ -11,7 +11,8 @@ export class AuditService {
   ) {}
 
   async log(params: {
-    adminId: string;
+    adminId?: string;
+    userId?: string;
     action: AuditAction;
     targetId?: string;
     targetType?: string;
@@ -19,17 +20,18 @@ export class AuditService {
     ipAddress?: string;
   }): Promise<AuditLog> {
     const log = this.auditLogRepo.create({
-      adminId: params.adminId,
+      adminId: params.adminId as any,
+      userId: params.userId as any,
       action: params.action,
-      targetId: params.targetId,
-      targetType: params.targetType,
-      metadata: params.metadata,
-      ipAddress: params.ipAddress,
+      targetId: params.targetId as any,
+      targetType: params.targetType as any,
+      metadata: params.metadata as any,
+      ipAddress: params.ipAddress as any,
     });
-    return this.auditLogRepo.save(log);
+    return this.auditLogRepo.save(log) as Promise<AuditLog>;
   }
 
-  async getLogs(query: { page?: number; limit?: number; action?: string; adminId?: string }) {
+  async getLogs(query: { page?: number; limit?: number; action?: string; adminId?: string; userId?: string }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;
@@ -37,6 +39,7 @@ export class AuditService {
     const where: any = {};
     if (query.action) where.action = query.action;
     if (query.adminId) where.adminId = query.adminId;
+    if (query.userId) where.userId = query.userId;
 
     const [logs, total] = await this.auditLogRepo.findAndCount({
       where,
@@ -49,6 +52,7 @@ export class AuditService {
     return {
       logs: logs.map((l) => ({
         id: l.id,
+        userId: l.userId,
         adminId: l.adminId,
         adminName: l.admin?.fullName || l.admin?.phoneNumber || null,
         action: l.action,

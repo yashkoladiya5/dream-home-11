@@ -5,6 +5,8 @@ import { Withdrawal, WithdrawalStatus } from './entities/withdrawal.entity';
 import { User } from '../users/entities/user.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { Kyc } from '../kyc/entities/kyc.entity';
+import { AuditService } from '../audit/audit.service';
+import { AuditAction } from '../audit/entities/audit-log.entity';
 
 const RESTRICTED_STATES = ['Assam', 'Odisha', 'Telangana'];
 
@@ -18,6 +20,7 @@ export class WithdrawalsService {
     @InjectRepository(Transaction)
     private readonly transactionRepo: Repository<Transaction>,
     private readonly dataSource: DataSource,
+    private readonly auditService: AuditService,
   ) {}
 
   async requestWithdrawal(
@@ -97,6 +100,19 @@ export class WithdrawalsService {
 
       return savedWithdrawal;
     });
+  }
+
+  async logWithdrawalRequest(userId: string, withdrawalId: string, amount: number): Promise<void> {
+    try {
+      await this.auditService.log({
+        userId,
+        action: AuditAction.WITHDRAWAL_REQUEST,
+        targetId: withdrawalId,
+        targetType: 'withdrawal',
+        metadata: { amount },
+      });
+    } catch {
+    }
   }
 
   async getWithdrawalHistory(

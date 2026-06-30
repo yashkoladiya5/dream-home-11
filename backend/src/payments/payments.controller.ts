@@ -7,6 +7,7 @@ import { UsersService } from '../users/users.service';
 import { TransactionsService } from '../transactions/transactions.service';
 
 @Controller('api/v1/payments')
+@UseGuards(JwtAuthGuard)
 export class PaymentsController {
   constructor(
     private readonly paymentsService: PaymentsService,
@@ -15,7 +16,6 @@ export class PaymentsController {
   ) {}
 
   @Post('order')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async createOrder(
     @GetUser() user: User,
@@ -31,7 +31,6 @@ export class PaymentsController {
   }
 
   @Post('verify')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async verifyPayment(
     @GetUser() user: User,
@@ -69,7 +68,6 @@ export class PaymentsController {
   }
 
   @Get('history')
-  @UseGuards(JwtAuthGuard)
   async getPaymentHistory(@GetUser() user: User) {
     return this.paymentsService.getUserPayments(user.id);
   }

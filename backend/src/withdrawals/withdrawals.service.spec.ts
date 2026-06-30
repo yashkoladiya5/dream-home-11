@@ -6,6 +6,7 @@ import { Withdrawal } from './entities/withdrawal.entity';
 import { User } from '../users/entities/user.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 
 describe('WithdrawalsService', () => {
   let service: WithdrawalsService;
@@ -42,6 +43,10 @@ describe('WithdrawalsService', () => {
     save: jest.fn(),
   };
 
+  const mockAuditService = {
+    log: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -72,6 +77,7 @@ describe('WithdrawalsService', () => {
           useValue: mockTransactionRepo,
         },
         { provide: DataSource, useValue: dataSource },
+        { provide: AuditService, useValue: mockAuditService },
       ],
     }).compile();
 

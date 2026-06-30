@@ -9,6 +9,11 @@ export enum AuditAction {
   APPROVE_KYC = 'approve_kyc',
   REJECT_KYC = 'reject_kyc',
   BROADCAST_NOTIFICATION = 'broadcast_notification',
+  SUBMIT_KYC = 'submit_kyc',
+  WITHDRAWAL_REQUEST = 'withdrawal_request',
+  PAYMENT_VERIFIED = 'payment_verified',
+  POINTS_EARNED = 'points_earned',
+  PROFILE_UPDATED = 'profile_updated',
 }
 
 @Entity('audit_logs')
@@ -16,7 +21,10 @@ export class AuditLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'admin_id', type: 'uuid', nullable: false })
+  @Column({ name: 'user_id', type: 'uuid', nullable: true })
+  userId: string;
+
+  @Column({ name: 'admin_id', type: 'uuid', nullable: true })
   adminId: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })

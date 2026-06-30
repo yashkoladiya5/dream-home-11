@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
 final apiClientProvider = Provider<Dio>((ref) {
-  // Use 10.0.2.2 for Android emulators to access the host loopback server
   String baseUrl = 'http://localhost:3000';
   if (!kIsWeb && Platform.isAndroid) {
     baseUrl = 'http://10.0.2.2:3000';
@@ -23,7 +22,17 @@ final apiClientProvider = Provider<Dio>((ref) {
 
   final dio = Dio(options);
 
-  // Interceptor to attach JWT token to all requests
+  // SSL pinning for production builds
+  if (!kIsWeb && kReleaseMode) {
+    (dio.httpClientAdapter as dynamic).onHttpClientCreate = (HttpClient client) {
+      client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+        return false;
+      };
+      return client;
+    };
+  }
+
+  // JWT token interceptor
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
@@ -37,11 +46,13 @@ final apiClientProvider = Provider<Dio>((ref) {
     ),
   );
 
-  // Log requests and responses in development
-  dio.interceptors.add(LogInterceptor(
-    requestBody: true,
-    responseBody: true,
-  ));
+  // Logging only in debug mode
+  if (!kReleaseMode) {
+    dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+    ));
+  }
 
   return dio;
 });

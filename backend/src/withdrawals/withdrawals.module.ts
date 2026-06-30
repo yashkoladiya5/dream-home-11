@@ -4,9 +4,10 @@ import { Withdrawal } from './entities/withdrawal.entity';
 import { WithdrawalsService } from './withdrawals.service';
 import { WithdrawalsController } from './withdrawals.controller';
 import { UsersModule } from '../users/users.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Withdrawal]), UsersModule],
+  imports: [TypeOrmModule.forFeature([Withdrawal]), UsersModule, AuditModule],
   controllers: [WithdrawalsController],
   providers: [WithdrawalsService],
   exports: [WithdrawalsService],
