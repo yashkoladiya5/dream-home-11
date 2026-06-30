@@ -7,6 +7,21 @@ import { AppModule } from './app.module';
 import { SanitizePipe } from './common/pipes/sanitize.pipe';
 
 async function bootstrap() {
+  const criticalVars = ['JWT_SECRET', 'DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE'];
+  const nonCriticalVars = ['PORT', 'NODE_ENV'];
+
+  const missingCritical = criticalVars.filter(v => !process.env[v]);
+  const missingNonCritical = nonCriticalVars.filter(v => !process.env[v]);
+
+  if (missingNonCritical.length > 0) {
+    console.warn(`[ENV] Warning: Missing non-critical env vars: ${missingNonCritical.join(', ')}`);
+  }
+
+  if (missingCritical.length > 0) {
+    console.error(`[ENV] Fatal: Missing critical env vars: ${missingCritical.join(', ')}`);
+    process.exit(1);
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Security headers

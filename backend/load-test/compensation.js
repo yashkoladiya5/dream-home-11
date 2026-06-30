@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { BASE_URL, API_PREFIX, getAuthToken } from './config.js';
+import { BASE_URL, API_PREFIX, getAdminAuthToken } from './config.js';
 
 export const options = {
   stages: [
@@ -17,13 +17,20 @@ export const options = {
 };
 
 export default function () {
-  const token = getAuthToken();
+  const token = getAdminAuthToken();
   if (!token) return;
 
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-  const res = http.get(`${BASE_URL}${API_PREFIX}/admin/compensations/stats`, { headers });
-  check(res, { 'compensation stats 200': (r) => r.status === 200 });
+  const endpoints = [
+    `${BASE_URL}${API_PREFIX}/admin/compensations/stats`,
+    `${BASE_URL}${API_PREFIX}/admin/compensations/requests?page=1&limit=10`,
+  ];
+
+  for (const url of endpoints) {
+    const res = http.get(url, { headers });
+    check(res, { 'compensation admin endpoint 200': (r) => r.status === 200 });
+  }
 
   sleep(2);
 }

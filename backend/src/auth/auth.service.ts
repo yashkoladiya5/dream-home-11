@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { FirebaseService } from './firebase.service';
 import { UsersService } from '../users/users.service';
 import { ReferralService } from '../referral/referral.service';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { exec } from 'child_process';
 
 @Injectable()
@@ -104,5 +104,23 @@ export class AuthService {
     const token = this.jwtService.sign(payload);
 
     return { token, user };
+  }
+
+  async createMockToken(phoneNumber: string, role?: UserRole): Promise<{ accessToken: string; user: User }> {
+    if (process.env.NODE_ENV === 'production') {
+      throw new UnauthorizedException('Not available in production');
+    }
+
+    const user = await this.usersService.upsertUser(phoneNumber, 'mock-device');
+
+    if (role) {
+      user.role = role;
+      await this.usersService.updateUser(user);
+    }
+
+    const payload = { sub: user.id, phoneNumber: user.phoneNumber };
+    const accessToken = this.jwtService.sign(payload);
+
+    return { accessToken, user };
   }
 }

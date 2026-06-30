@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Patch, Body, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -53,6 +54,7 @@ export class UsersController {
 
 
   @Patch('profile')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async updateProfile(

@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { WithdrawalsService } from './withdrawals.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -10,6 +11,7 @@ export class WithdrawalsController {
   constructor(private readonly withdrawalsService: WithdrawalsService) {}
 
   @Post('withdraw')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   async requestWithdrawal(
     @GetUser() user: User,

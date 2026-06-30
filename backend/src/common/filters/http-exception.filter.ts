@@ -21,6 +21,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : (exceptionResponse as any).message || exceptionResponse;
     }
 
+    if (status === HttpStatus.TOO_MANY_REQUESTS) {
+      this.logger.warn(`Rate limit exceeded: ${request.ip} - ${request.method} ${request.url}`);
+    }
+
     this.logger.error(`${request.method} ${request.url} - ${status}`);
 
     response.status(status).json({

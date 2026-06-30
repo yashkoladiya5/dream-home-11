@@ -1,0 +1,13 @@
+{
+  "name": "dream-home-11-load-tests",
+  "private": true,
+  "description": "k6 load test scripts for Dream Home 11",
+  "scripts": {
+    "smoke": "k6 run smoke.js",
+    "leaderboard": "k6 run leaderboard.js",
+    "contests": "k6 run contests.js",
+    "wallet": "k6 run wallet.js",
+    "compensation": "k6 run compensation.js",
+    "all": "k6 run smoke.js && k6 run leaderboard.js && k6 run contests.js && k6 run wallet.js && k6 run compensation.js"
+  }
+}

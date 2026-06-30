@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Body, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -16,6 +17,7 @@ export class PaymentsController {
   ) {}
 
   @Post('order')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   async createOrder(
     @GetUser() user: User,
@@ -31,6 +33,7 @@ export class PaymentsController {
   }
 
   @Post('verify')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   async verifyPayment(
     @GetUser() user: User,

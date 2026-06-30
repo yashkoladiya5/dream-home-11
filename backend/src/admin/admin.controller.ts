@@ -1,6 +1,7 @@
 import {
   Controller, Get, Patch, Post, Param, Body, Query, UseGuards, Req,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -74,6 +75,7 @@ export class AdminController {
   }
 
   @Patch('kyc/:id/approve')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async approveKyc(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.approveKyc(id);
     await this.auditService.log({
@@ -87,6 +89,7 @@ export class AdminController {
   }
 
   @Patch('kyc/:id/reject')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async rejectKyc(@Param('id') id: string, @Body() dto: RejectKycDto, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.rejectKyc(id, dto.reason);
     await this.auditService.log({
@@ -101,6 +104,7 @@ export class AdminController {
   }
 
   @Patch('config')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async updateConfig(@Body() dto: Record<string, any>, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.updateSystemConfig(dto);
     await this.auditService.log({
@@ -120,6 +124,7 @@ export class AdminController {
   }
 
   @Post('contests/:id/compensate')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   async compensateContest(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.compensateContest(id);
     await this.auditService.log({
@@ -134,6 +139,7 @@ export class AdminController {
   }
 
   @Post('compensations/process-pending')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   async processPendingCompensations(@GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.processPendingCompensations();
     await this.auditService.log({
@@ -163,6 +169,7 @@ export class AdminController {
   }
 
   @Post('notifications/broadcast')
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
   async broadcastNotification(
     @Body() dto: { title: string; message: string; tier?: string },
     @GetUser() admin: User,
@@ -180,6 +187,7 @@ export class AdminController {
   }
 
   @Post('notifications/broadcast-sms')
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
   async broadcastSms(
     @Body() dto: { message: string; tier?: string },
     @GetUser() admin: User,

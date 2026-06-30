@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Param, Query, UseGuards, ParseUUIDPipe, Inject } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, In } from 'typeorm';
 import Redis from 'ioredis';
@@ -15,6 +16,7 @@ import { LeaderboardSyncService } from './leaderboard-sync.service';
 
 @Controller('api/v1/leaderboard')
 @UseGuards(JwtAuthGuard)
+@Throttle({ default: { ttl: 60000, limit: 60 } })
 export class LeaderboardController {
   constructor(
     private readonly leaderboardRedis: LeaderboardRedisService,
