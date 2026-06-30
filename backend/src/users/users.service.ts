@@ -5,6 +5,7 @@ import { User, UserLevel } from './entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { Contest } from '../contests/entities/contest.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import { CompensationLog } from '../compensation/entities/compensation.entity';
 import { PointsEngineService } from '../points/points-engine.service';
 import { randomBytes } from 'crypto';
 
@@ -19,6 +20,8 @@ export class UsersService {
     private readonly contestRepository: Repository<Contest>,
     @InjectRepository(Transaction)
     private readonly transactionRepo: Repository<Transaction>,
+    @InjectRepository(CompensationLog)
+    private readonly compensationLogRepo: Repository<CompensationLog>,
     private readonly pointsEngineService: PointsEngineService,
   ) {}
 
@@ -84,47 +87,7 @@ export class UsersService {
     return saved;
   }
 
-  async joinContest(userId: string, entryFee: number, pointsEarned: number): Promise<User> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (Number(user.walletBalanceInr) < entryFee) {
-      throw new BadRequestException('Insufficient wallet balance');
-    }
-    const multiplier = this.pointsEngineService.getMultiplier(user.currentTier);
-    const finalPoints = this.pointsEngineService.calculatePoints(pointsEarned, user.currentTier);
-    user.walletBalanceInr = Number(user.walletBalanceInr) - entryFee;
-    user.pointsBalance = Number(user.pointsBalance) + finalPoints;
-    user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
 
-    // Update tier rank based on lifetime points
-    if (user.lifetimePoints >= 5000) {
-      user.currentTier = UserLevel.PLATINUM;
-    } else if (user.lifetimePoints >= 2000) {
-      user.currentTier = UserLevel.GOLD;
-    } else if (user.lifetimePoints >= 1000) {
-      user.currentTier = UserLevel.SILVER;
-    }
-
-    await this.userRepository.save(user);
-
-    await this.pointsEngineService.logPointAction(userId, 'contest_join', pointsEarned, multiplier, finalPoints);
-
-    return user;
-  }
-
-  async redeemReward(userId: string, pointsCost: number): Promise<User> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (Number(user.pointsBalance) < pointsCost) {
-      throw new BadRequestException('Insufficient points balance');
-    }
-    user.pointsBalance = Number(user.pointsBalance) - pointsCost;
-    return this.userRepository.save(user);
-  }
 
   async awardPoints(userId: string, points: number): Promise<User> {
     const user = await this.findById(userId);
@@ -399,7 +362,6 @@ export class UsersService {
     const [users, total] = await this.userRepository.findAndCount({
       where: [
         { fullName: ILike(`%${query.trim()}%`) },
-        { phoneNumber: ILike(`%${query.trim()}%`) },
       ],
       select: {
         id: true,
@@ -414,6 +376,36 @@ export class UsersService {
     });
 
     return { users, total };
+  }
+
+  async getUserCompensations(userId: string, query: { page?: number; limit?: number }) {
+    const page = query.page || 1;
+    const limit = Math.min(query.limit || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const [logs, total] = await this.compensationLogRepo.findAndCount({
+      where: { userId },
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      relations: { contest: true },
+    });
+
+    return {
+      compensations: logs.map((l) => ({
+        id: l.id,
+        contestId: l.contestId,
+        contestTitle: l.contest?.title || null,
+        entryFeeInr: Number(l.entryFeeInr),
+        compensationPoints: l.compensationPoints,
+        status: l.status,
+        processedAt: l.processedAt,
+        createdAt: l.createdAt,
+      })),
+      total,
+      page,
+      limit,
+    };
   }
 }
 

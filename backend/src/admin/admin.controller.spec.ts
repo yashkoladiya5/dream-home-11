@@ -3,10 +3,18 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { AuditService } from '../audit/audit.service';
 
 describe('AdminController', () => {
   let controller: AdminController;
   let adminService: AdminService;
+
+  const mockAdmin = { id: 'admin-1', role: 'admin', fullName: 'Admin' } as any;
+  const mockReq = { ip: '127.0.0.1' } as any;
+
+  const mockAuditService = {
+    log: jest.fn().mockResolvedValue(undefined),
+  };
 
   const mockAdminService = {
     getDashboardStats: jest.fn().mockResolvedValue({ totalUsers: 100 }),
@@ -27,6 +35,7 @@ describe('AdminController', () => {
       controllers: [AdminController],
       providers: [
         { provide: AdminService, useValue: mockAdminService },
+        { provide: AuditService, useValue: mockAuditService },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -66,7 +75,7 @@ describe('AdminController', () => {
 
   describe('PATCH /api/v1/admin/users/:id', () => {
     it('should update user', async () => {
-      const result = await controller.updateUser('1', { fullName: 'Updated' });
+      const result = await controller.updateUser('1', { fullName: 'Updated' }, mockAdmin, mockReq);
       expect(result.fullName).toBe('Updated');
     });
   });
@@ -94,22 +103,22 @@ describe('AdminController', () => {
 
   describe('PATCH /api/v1/admin/kyc/:id/approve', () => {
     it('should approve KYC', async () => {
-      const result = await controller.approveKyc('k1');
+      const result = await controller.approveKyc('k1', mockAdmin, mockReq);
       expect(result.status).toBe('approved');
     });
   });
 
   describe('PATCH /api/v1/admin/kyc/:id/reject', () => {
     it('should reject KYC', async () => {
-      const result = await controller.rejectKyc('k1', { reason: 'Invalid' });
+      const result = await controller.rejectKyc('k1', { reason: 'Invalid' }, mockAdmin, mockReq);
       expect(result.status).toBe('rejected');
     });
   });
 
   describe('PATCH /api/v1/admin/config', () => {
     it('should update system config', async () => {
-      const result = await controller.updateConfig({ maintenanceMode: true });
-      expect(result.maintenanceMode).toBe(true);
+      const result = await controller.updateConfig({ maintenanceMode: true }, mockAdmin, mockReq);
+      expect(result!.maintenanceMode).toBe(true);
     });
   });
 

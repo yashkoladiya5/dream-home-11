@@ -422,11 +422,38 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _buildInfoTile(
                     context,
+                    label: 'Compensation History',
+                    value: 'VIEW',
+                    valueColor: AppTheme.goldYellow,
+                    icon: Icons.card_giftcard_rounded,
+                    onTap: () => context.push('/compensation-history'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
+                    label: 'Notification Inbox',
+                    value: 'VIEW',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.inbox_rounded,
+                    onTap: () => context.push('/notifications'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
                     label: 'Reminders',
                     value: 'SET',
                     valueColor: AppTheme.primaryRed,
                     icon: Icons.notifications_active_rounded,
                     onTap: () => context.push('/reminders'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoTile(
+                    context,
+                    label: 'Notification Preferences',
+                    value: 'SET',
+                    valueColor: AppTheme.primaryRed,
+                    icon: Icons.notifications_rounded,
+                    onTap: () => context.push('/notification-preferences'),
                   ),
                   const SizedBox(height: 12),
                   _buildInfoTile(
@@ -698,13 +725,17 @@ class ProfileTab extends ConsumerWidget {
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              const Spacer(),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: valueColor ?? AppTheme.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: valueColor ?? AppTheme.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
               ),
               if (onTap != null) ...[
                 const SizedBox(width: 8),

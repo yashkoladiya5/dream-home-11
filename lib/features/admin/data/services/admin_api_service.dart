@@ -123,4 +123,81 @@ class AdminApiService {
         queryParameters: params);
     return response.data as Map<String, dynamic>;
   }
+
+  Future<Map<String, dynamic>> compensateContest(String contestId) async {
+    final response = await _dio.post('/api/v1/admin/contests/$contestId/compensate');
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> processPendingCompensations() async {
+    final response = await _dio.post('/api/v1/admin/compensations/process-pending');
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getCompensationLogs({
+    int page = 1,
+    int limit = 20,
+    String? status,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+      if (status != null) 'status': status,
+    };
+    final response = await _dio.get('/api/v1/admin/compensations',
+        queryParameters: params);
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getCompensationStatsDetailed() async {
+    final response = await _dio.get('/api/v1/admin/compensations/stats');
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> exportCompensations({String? status}) async {
+    final params = <String, dynamic>{};
+    if (status != null) params['status'] = status;
+    final response = await _dio.get('/api/v1/admin/compensations/export', queryParameters: params);
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> broadcastNotification({
+    required String title,
+    required String message,
+    String? tier,
+  }) async {
+    final data = <String, dynamic>{
+      'title': title,
+      'message': message,
+      if (tier != null) 'tier': tier,
+    };
+    final response = await _dio.post('/api/v1/admin/notifications/broadcast', data: data);
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> broadcastSms({
+    required String message,
+    String? tier,
+  }) async {
+    final data = <String, dynamic>{
+      'message': message,
+      if (tier != null) 'tier': tier,
+    };
+    final response = await _dio.post('/api/v1/admin/notifications/broadcast-sms', data: data);
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getAuditLogs({
+    int page = 1,
+    int limit = 20,
+    String? action,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+      if (action != null) 'action': action,
+    };
+    final response = await _dio.get('/api/v1/admin/audit-logs', queryParameters: params);
+    return response.data as Map<String, dynamic>;
+  }
 }

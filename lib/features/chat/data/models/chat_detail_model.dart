@@ -1,5 +1,3 @@
-import 'chat_user.dart';
-
 class ChatDetail {
   final String id;
   final String? name;

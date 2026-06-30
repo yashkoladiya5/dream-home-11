@@ -72,7 +72,7 @@ class HomeSpecDetailScreen extends ConsumerWidget {
               home.area != null;
           final hasDescription = home.description != null;
 
-          print("HAS IMAGE ::: ${home.imageUrl}");
+          debugPrint("HAS IMAGE ::: ${home.imageUrl}");
 
           return CustomScrollView(
             slivers: [

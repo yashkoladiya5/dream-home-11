@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Body, Param, Req, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Patch, Body, Param, Req, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -36,6 +36,32 @@ export class NotificationsController {
   @Delete('reminders/:id')
   async deleteReminder(@Req() req, @Param('id') id: string) {
     await this.notificationsService.deleteReminder(req.user.id, id);
+    return { success: true };
+  }
+
+  @Get()
+  async getNotifications(@Req() req, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const pageNum = parseInt(page || '1', 10);
+    const limitNum = parseInt(limit || '20', 10);
+    return this.notificationsService.getUserNotifications(req.user.id, { page: pageNum, limit: limitNum });
+  }
+
+  @Get('unread-count')
+  async getUnreadCount(@Req() req) {
+    const count = await this.notificationsService.getUnreadCount(req.user.id);
+    return { unreadCount: count };
+  }
+
+  @Patch(':id/read')
+  async markAsRead(@Req() req, @Param('id') id: string) {
+    if (!UUID_REGEX.test(id)) throw new BadRequestException('Invalid notification ID format');
+    const notification = await this.notificationsService.markAsRead(req.user.id, id);
+    return { success: true, notification };
+  }
+
+  @Post('read-all')
+  async readAllNotifications(@Req() req) {
+    await this.notificationsService.markAllAsRead(req.user.id);
     return { success: true };
   }
 }

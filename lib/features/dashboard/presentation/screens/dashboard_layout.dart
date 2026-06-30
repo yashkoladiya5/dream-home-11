@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/user_profile_provider.dart';
@@ -9,6 +10,7 @@ import '../widgets/wallet_tab.dart';
 import '../widgets/rewards_tab.dart';
 import '../widgets/profile_tab.dart';
 import 'home_screen.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 
 class DashboardLayout extends ConsumerStatefulWidget {
   const DashboardLayout({super.key});
@@ -63,6 +65,7 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(userProfileProvider);
+    final unreadCountAsync = ref.watch(unreadNotificationCountProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
@@ -126,7 +129,7 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
           // Elegant points counter pill in AppBar for quick summary
           profileState.maybeWhen(
             data: (profile) => Padding(
-              padding: const EdgeInsets.only(right: 16.0),
+              padding: const EdgeInsets.only(right: 8.0),
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -164,6 +167,50 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
             ),
             orElse: () => const SizedBox.shrink(),
           ),
+          // Elegant Notification Bell Icon with Red Badge
+          unreadCountAsync.maybeWhen(
+            data: (count) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_rounded, color: Colors.white),
+                    onPressed: () => context.push('/notifications'),
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.primaryRed,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 14,
+                          minHeight: 14,
+                        ),
+                        child: Text(
+                          '$count',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+            orElse: () => IconButton(
+              icon: const Icon(Icons.notifications_rounded, color: Colors.white),
+              onPressed: () => context.push('/notifications'),
+            ),
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: PageView(

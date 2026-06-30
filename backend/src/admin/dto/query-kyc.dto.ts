@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class QueryKycDto {
@@ -6,12 +6,14 @@ export class QueryKycDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   page?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   limit?: number;
 
   @IsOptional()
@@ -19,6 +21,6 @@ export class QueryKycDto {
   status?: string;
 
   @IsOptional()
-  @IsString()
+  @IsUUID()
   userId?: string;
 }

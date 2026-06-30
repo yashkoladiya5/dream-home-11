@@ -1,4 +1,5 @@
 import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ConfigService } from './config.service';
 import { UpdateConfigDto } from './dto/update-config.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,6 +22,7 @@ export class ConfigController {
   }
 
   @Get('feature/:key')
+  @SkipThrottle()
   async getFeature(@Param('key') key: string) {
     const enabled = await this.configService.isFeatureEnabled(key);
     return { feature: key, enabled };

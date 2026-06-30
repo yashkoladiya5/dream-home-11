@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Kyc, KycStatus } from './entities/kyc.entity';
@@ -7,6 +7,8 @@ import { ReferralService } from '../referral/referral.service';
 import { ensureUploadDir, KYC_UPLOAD_DIR } from './kyc-uploads.config';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, extname } from 'path';
+import { AuditService } from '../audit/audit.service';
+import { AuditAction } from '../audit/entities/audit-log.entity';
 
 @Injectable()
 export class KycService {
@@ -16,6 +18,7 @@ export class KycService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly referralService: ReferralService,
+    private readonly auditService: AuditService,
   ) {}
 
   async submitKyc(userId: string, aadhaarNumber: string, panNumber: string, fullName: string): Promise<Kyc> {
@@ -28,11 +31,18 @@ export class KycService {
       userId,
       aadhaarNumber,
       panNumber,
-      status: KycStatus.APPROVED,
-      verifiedAt: new Date(),
+      status: KycStatus.PENDING,
     });
 
     const saved = await this.kycRepository.save(kyc);
+
+    await this.auditService.log({
+      userId,
+      action: AuditAction.SUBMIT_KYC,
+      targetId: saved.id,
+      targetType: 'kyc',
+      metadata: { status: saved.status },
+    });
 
     await this.referralService.processKycReferral(userId);
 
@@ -47,12 +57,28 @@ export class KycService {
     return { status: kyc.status, verifiedAt: kyc.verifiedAt };
   }
 
-  async getKycDetails(userId: string): Promise<Kyc> {
+  async getKycDetails(userId: string): Promise<Partial<Kyc>> {
     const kyc = await this.kycRepository.findOne({ where: { userId } });
     if (!kyc) {
       throw new NotFoundException('KYC not found');
     }
-    return kyc;
+    return {
+      id: kyc.id,
+      userId: kyc.userId,
+      status: kyc.status,
+      verifiedAt: kyc.verifiedAt,
+      rejectionReason: kyc.rejectionReason,
+      aadhaarNumber: kyc.aadhaarNumber
+        ? `xxxx${kyc.aadhaarNumber.slice(-4)}`
+        : undefined,
+      panNumber: kyc.panNumber
+        ? kyc.panNumber.slice(0, 2) + 'xxxx' + kyc.panNumber.slice(-2)
+        : undefined,
+      aadhaarFrontUrl: kyc.aadhaarFrontUrl,
+      aadhaarBackUrl: kyc.aadhaarBackUrl,
+      panCardUrl: kyc.panCardUrl,
+      selfieUrl: kyc.selfieUrl,
+    };
   }
 
   private getColumnForDocumentType(documentType: string): keyof Kyc {

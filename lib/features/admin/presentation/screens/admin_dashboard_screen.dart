@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../dashboard/presentation/widgets/shimmer_widget.dart';
 import '../providers/admin_dashboard_provider.dart';
@@ -70,9 +71,76 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       children: [
         _buildStatsGrid(stats),
         const SizedBox(height: 24),
+        _buildQuickActions(context),
+        const SizedBox(height: 24),
         _buildRecentUsers(stats.recentUsers),
         const SizedBox(height: 24),
         _buildRecentTransactions(stats.recentTransactions),
+      ],
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context) {
+    final actions = [
+      (label: 'Manage Users', icon: Icons.people_alt_rounded, route: '/admin/users', color: Colors.blue),
+      (label: 'KYC Requests', icon: Icons.verified_user_rounded, route: '/admin/kyc', color: AppTheme.emeraldGreen),
+      (label: 'Contests', icon: Icons.sports_esports_rounded, route: '/admin/contests', color: AppTheme.goldYellow),
+      (label: 'Compensation', icon: Icons.card_giftcard_rounded, route: '/admin/compensations', color: Colors.orange),
+      (label: 'Broadcasts', icon: Icons.campaign_rounded, route: '/admin/broadcast', color: Colors.purple),
+      (label: 'Audit Logs', icon: Icons.history_rounded, route: '/admin/audit-logs', color: AppTheme.primaryRed),
+      (label: 'Support Tickets', icon: Icons.support_agent_rounded, route: '/admin/support-tickets', color: Colors.teal),
+      (label: 'System Config', icon: Icons.settings_rounded, route: '/admin/config', color: Colors.grey),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Quick Actions', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 0.85,
+          ),
+          itemCount: actions.length,
+          itemBuilder: (context, index) {
+            final action = actions[index];
+            return InkWell(
+              onTap: () => context.push(action.route),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.darkCardGradient,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0x1FFFFFFF)),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: action.color.withValues(alpha: 0.15),
+                      child: Icon(action.icon, color: action.color, size: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      action.label,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -99,6 +167,22 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             _statCard('${stats.openSupportTickets}', 'Open Tickets'),
             _statCard('₹${stats.totalDeposits.toStringAsFixed(0)}', 'Total Deposits'),
             _statCard('${stats.totalPointsEarned}', 'Total Points'),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text('Compensation', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.6,
+          children: [
+            _statCard('${stats.totalCompensations}', 'Total Compensated'),
+            _statCard('${stats.pendingCompensations}', 'Pending'),
+            _statCard('${stats.totalCompensationPoints}', 'Total Points'),
           ],
         ),
       ],

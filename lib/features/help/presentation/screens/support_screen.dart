@@ -159,7 +159,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: InputDecoration(
                 labelText: 'Category',
                 filled: true,
@@ -274,7 +274,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: tickets.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) => _buildTicketCard(tickets[index]),
             );
           },

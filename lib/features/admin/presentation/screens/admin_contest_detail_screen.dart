@@ -22,6 +22,39 @@ class AdminContestDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminContestDetailScreenState extends ConsumerState<AdminContestDetailScreen> {
+  bool _compensating = false;
+
+  Future<void> _compensateContest(String contestId) async {
+    setState(() => _compensating = true);
+    try {
+      final service = ref.read(adminApiServiceProvider);
+      final result = await service.compensateContest(contestId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Compensation complete: ${result['processed']} members, ${result['totalPoints']} points'),
+            backgroundColor: AppTheme.emeraldGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+        ref.invalidate(_contestDetailProvider(widget.contestId));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Compensation failed: $e'),
+            backgroundColor: AppTheme.primaryRed,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _compensating = false);
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final contestAsync = ref.watch(_contestDetailProvider(widget.contestId));
@@ -108,6 +141,10 @@ class _AdminContestDetailScreenState extends ConsumerState<AdminContestDetailScr
         if (contest.rules != null && contest.rules!.isNotEmpty) ...[
           const SizedBox(height: 16),
           _rulesCard(contest.rules!),
+        ],
+        if (contest.status.toLowerCase() == 'completed') ...[
+          const SizedBox(height: 16),
+          _compensationCard(contest),
         ],
       ],
     );
@@ -337,6 +374,84 @@ class _AdminContestDetailScreenState extends ConsumerState<AdminContestDetailScr
               ],
             ),
           )),
+        ],
+      ),
+    );
+  }
+
+  Widget _compensationCard(AdminContestDetail contest) {
+    final bool isFilled = contest.filledSlots >= contest.totalSlots;
+    final bool isNone = contest.compensationStatus == 'none';
+    final bool isPending = contest.compensationStatus == 'pending';
+    final bool isProcessed = contest.compensationStatus == 'processed';
+
+    Color statusColor;
+    String statusLabel;
+    if (isFilled) {
+      statusColor = AppTheme.emeraldGreen;
+      statusLabel = 'Fully filled — no compensation needed';
+    } else if (isProcessed) {
+      statusColor = AppTheme.emeraldGreen;
+      statusLabel = 'Compensation processed';
+    } else if (isPending) {
+      statusColor = AppTheme.goldYellow;
+      statusLabel = 'Compensation in progress...';
+    } else {
+      statusColor = AppTheme.goldYellow;
+      statusLabel = 'Not compensated — eligible for point conversion';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: AppTheme.darkCardGradient,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x1FFFFFFF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.currency_exchange_rounded, size: 20, color: statusColor),
+              const SizedBox(width: 8),
+              Text('Point Compensation', style: GoogleFonts.outfit(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(statusLabel, style: GoogleFonts.outfit(color: AppTheme.greyLight, fontSize: 13)),
+              ),
+            ],
+          ),
+          if (isNone && !isFilled) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton.icon(
+                onPressed: _compensating ? null : () => _compensateContest(contest.id),
+                icon: _compensating
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.autorenew_rounded, size: 18),
+                label: Text(_compensating ? 'Processing...' : 'Compensate Members with Points'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.goldYellow,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, UseGuards, HttpCode, HttpStatus, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { KycService } from './kyc.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -11,6 +12,7 @@ export class KycController {
   constructor(private readonly kycService: KycService) {}
 
   @Post('submit')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   async submitKyc(
     @GetUser() user: User,
@@ -37,6 +39,7 @@ export class KycController {
   }
 
   @Post('upload-document')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
   async uploadDocument(

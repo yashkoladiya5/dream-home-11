@@ -49,6 +49,7 @@ class AdminContestDetail {
   final int totalSlots;
   final int filledSlots;
   final String? rules;
+  final String compensationStatus;
 
   AdminContestDetail({
     required this.id,
@@ -64,6 +65,7 @@ class AdminContestDetail {
     required this.totalSlots,
     required this.filledSlots,
     this.rules,
+    this.compensationStatus = 'none',
   });
 
   factory AdminContestDetail.fromJson(Map<String, dynamic> json) {
@@ -83,6 +85,7 @@ class AdminContestDetail {
       totalSlots: (json['maxSlots'] as num?)?.toInt() ?? 0,
       filledSlots: (json['filledSlots'] as num?)?.toInt() ?? 0,
       rules: json['rules'] as String?,
+      compensationStatus: json['compensationStatus'] as String? ?? 'none',
     );
   }
 }

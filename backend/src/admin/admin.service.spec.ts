@@ -8,6 +8,9 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
 import { SupportTicket } from '../support/entities/support-ticket.entity';
+import { CompensationService } from '../compensation/compensation.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { SmsService } from '../sms/sms.service';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -18,6 +21,25 @@ describe('AdminService', () => {
   let withdrawalRepo: any;
   let configRepo: any;
   let supportTicketRepo: any;
+
+  const mockCompensationService = {
+    findContestWithMembers: jest.fn(),
+    processCompensation: jest.fn().mockResolvedValue({ processed: 0, totalPoints: 0 }),
+    processPendingCompensations: jest.fn().mockResolvedValue({ contestsProcessed: 0, membersCompensated: 0, totalPointsAwarded: 0 }),
+    getCompensationLogs: jest.fn().mockResolvedValue({ logs: [], total: 0, page: 1, limit: 20 }),
+    getCompensationStats: jest.fn().mockResolvedValue({ total: 0, pending: 0, totalPoints: 0 }),
+  };
+
+  const mockNotificationsService = {
+    broadcastToAllUsers: jest.fn().mockResolvedValue(0),
+    broadcastToUsersByTier: jest.fn().mockResolvedValue(0),
+    sendCompensationNotification: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const mockSmsService = {
+    sendSms: jest.fn().mockResolvedValue(undefined),
+    sendCompensationSms: jest.fn().mockResolvedValue(undefined),
+  };
 
   const mockQueryBuilder: any = {
     select: jest.fn().mockReturnThis(),
@@ -77,6 +99,9 @@ describe('AdminService', () => {
         { provide: getRepositoryToken(Withdrawal), useValue: withdrawalRepo },
         { provide: getRepositoryToken(SystemConfig), useValue: configRepo },
         { provide: getRepositoryToken(SupportTicket), useValue: supportTicketRepo },
+        { provide: CompensationService, useValue: mockCompensationService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: SmsService, useValue: mockSmsService },
       ],
     }).compile();
 
@@ -90,7 +115,7 @@ describe('AdminService', () => {
   describe('getUsers', () => {
     it('should return paginated users', async () => {
       const mockUsers = [
-        { id: '1', fullName: 'John Doe', phoneNumber: '+911234567890', role: 'user', isActive: true, createdAt: new Date(), kyc: null, email: null, currentTier: 'bronze', state: null, walletBalanceInr: 0, pointsBalance: 0 },
+        { id: '1', fullName: 'John Doe', phoneNumber: '+911234567890', role: UserRole.USER, isActive: true, createdAt: new Date(), kyc: null, email: null, currentTier: 'bronze', state: null, walletBalanceInr: 0, pointsBalance: 0 },
       ];
       userRepo.findAndCount.mockResolvedValue([mockUsers, 1]);
 
@@ -114,10 +139,10 @@ describe('AdminService', () => {
     });
 
     it('should filter by role', async () => {
-      await service.getUsers({ role: 'admin' });
+      await service.getUsers({ role: UserRole.ADMIN });
       expect(userRepo.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ role: 'admin' }),
+          where: expect.objectContaining({ role: UserRole.ADMIN }),
         }),
       );
     });
@@ -141,12 +166,12 @@ describe('AdminService', () => {
 
   describe('updateUser', () => {
     it('should update allowed fields', async () => {
-      const user = { id: '1', fullName: 'Old Name', role: 'user', isActive: true };
+      const user = { id: '1', fullName: 'Old Name', role: UserRole.USER, isActive: true };
       userRepo.findOne.mockResolvedValue(user);
 
-      const result = await service.updateUser('1', { fullName: 'New Name', role: 'admin' });
+      const result = await service.updateUser('1', { fullName: 'New Name', role: UserRole.ADMIN });
       expect(result.fullName).toBe('New Name');
-      expect(result.role).toBe('admin');
+      expect(result.role).toBe(UserRole.ADMIN);
     });
 
     it('should throw NotFoundException for missing user', async () => {
@@ -226,7 +251,7 @@ describe('AdminService', () => {
       configRepo.findOne.mockResolvedValue({ id: 'cfg-1', maintenanceMode: true });
 
       const result = await service.updateSystemConfig({ maintenanceMode: true });
-      expect(result.maintenanceMode).toBe(true);
+      expect(result!.maintenanceMode).toBe(true);
     });
 
     it('should create config if none exists', async () => {

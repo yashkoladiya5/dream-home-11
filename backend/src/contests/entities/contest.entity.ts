@@ -21,6 +21,12 @@ export enum ContestStatus {
   CANCELLED = 'cancelled',
 }
 
+export enum CompensationStatus {
+  NONE = 'none',
+  PENDING = 'pending',
+  PROCESSED = 'processed',
+}
+
 @Entity('contests')
 export class Contest {
   @PrimaryGeneratedColumn('uuid')
@@ -82,6 +88,14 @@ export class Contest {
     default: () => 'CURRENT_TIMESTAMP',
   })
   createdAt: Date;
+
+  @Column({
+    name: 'compensation_status',
+    type: 'enum',
+    enum: CompensationStatus,
+    default: CompensationStatus.NONE,
+  })
+  compensationStatus: CompensationStatus;
 
   @OneToMany(() => ContestMember, (cm) => cm.contest)
   members: ContestMember[];

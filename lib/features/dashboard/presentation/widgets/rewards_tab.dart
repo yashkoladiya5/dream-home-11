@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/shimmer_widget.dart';
+import '../../../rewards/presentation/providers/reward_provider.dart';
 
 class RewardsTab extends ConsumerWidget {
   const RewardsTab({super.key});
 
-  Future<void> _redeem(BuildContext context, WidgetRef ref, String title, int cost) async {
+  Future<void> _redeem(BuildContext context, WidgetRef ref, String rewardId, String title, int cost) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -39,9 +40,12 @@ class RewardsTab extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      final success = await ref.read(userProfileProvider.notifier).redeemReward(cost);
-      if (context.mounted) {
-        if (success) {
+      try {
+        await ref.read(redemptionHistoryProvider.notifier).redeemReward(rewardId);
+        // Refresh profile to update points balance
+        await ref.read(userProfileProvider.notifier).fetchProfile();
+
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               backgroundColor: AppTheme.emeraldGreen,
@@ -53,15 +57,17 @@ class RewardsTab extends ConsumerWidget {
               ),
             ),
           );
-        } else {
+        }
+      } catch (e) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               backgroundColor: AppTheme.primaryRed,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              content: const Text(
-                'Redemption failed: Insufficient points.',
-                style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
+              content: Text(
+                e.toString().replaceAll('Exception: ', ''),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
               ),
             ),
           );
@@ -73,6 +79,7 @@ class RewardsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(userProfileProvider);
+    final catalogAsync = ref.watch(rewardCatalogProvider);
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 350),
@@ -144,55 +151,64 @@ class RewardsTab extends ConsumerWidget {
                   const SizedBox(height: 28),
 
                   // Rewards Grid
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.78,
-                    children: [
-                      _buildRewardItem(
-                        context,
-                        title: 'Free Contest Ticket',
-                        points: '1,000 PTS',
-                        cost: 1000,
-                        desc: '1x entry for any ₹49 contest',
-                        icon: Icons.confirmation_number_rounded,
-                        color: AppTheme.primaryRed,
-                        onTap: () => _redeem(context, ref, 'Free Contest Ticket', 1000),
+                  catalogAsync.when(
+                    data: (rewards) {
+                      if (rewards.isEmpty) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 32),
+                            child: Text('No rewards available in catalog'),
+                          ),
+                        );
+                      }
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.76,
+                        ),
+                        itemCount: rewards.length,
+                        itemBuilder: (context, index) {
+                          final reward = rewards[index];
+                          return _buildRewardItem(
+                            context,
+                            title: reward.title,
+                            points: '${reward.pointsRequired} PTS',
+                            cost: reward.pointsRequired,
+                            desc: reward.description ?? '',
+                            icon: _getCategoryIcon(reward.category),
+                            color: _getCategoryColor(reward.category),
+                            onTap: () => _redeem(context, ref, reward.id, reward.title, reward.pointsRequired),
+                          );
+                        },
+                      );
+                    },
+                    loading: () => GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.78,
+                      children: const [
+                        ShimmerCard(height: 160, borderRadius: 24),
+                        ShimmerCard(height: 160, borderRadius: 24),
+                        ShimmerCard(height: 160, borderRadius: 24),
+                        ShimmerCard(height: 160, borderRadius: 24),
+                      ],
+                    ),
+                    error: (err, stack) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Text(
+                          'Failed to load rewards catalog',
+                          style: TextStyle(color: AppTheme.primaryRed.withValues(alpha: 0.8)),
+                        ),
                       ),
-                      _buildRewardItem(
-                        context,
-                        title: 'Double Points Boost',
-                        points: '2,500 PTS',
-                        cost: 2500,
-                        desc: 'Get 2x points for 24 hours',
-                        icon: Icons.bolt_rounded,
-                        color: AppTheme.goldYellow,
-                        onTap: () => _redeem(context, ref, 'Double Points Boost', 2500),
-                      ),
-                      _buildRewardItem(
-                        context,
-                        title: 'Premium Smart TV',
-                        points: '85,000 PTS',
-                        cost: 85000,
-                        desc: '55" 4K Smart OLED Television',
-                        icon: Icons.tv_rounded,
-                        color: Colors.blue,
-                        onTap: () => _redeem(context, ref, 'Premium Smart TV', 85000),
-                      ),
-                      _buildRewardItem(
-                        context,
-                        title: 'Apple iPad Air',
-                        points: '150,000 PTS',
-                        cost: 150000,
-                        desc: 'M1 Chip, 10.9" Liquid Retina',
-                        icon: Icons.tablet_mac_rounded,
-                        color: Colors.purple,
-                        onTap: () => _redeem(context, ref, 'Apple iPad Air', 150000),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -255,6 +271,31 @@ class RewardsTab extends ConsumerWidget {
     );
   }
 
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'gift_card':
+        return Icons.card_membership_rounded;
+      case 'merchandise':
+        return Icons.checkroom_rounded;
+      case 'subscription':
+        return Icons.workspace_premium_rounded;
+      default:
+        return Icons.card_giftcard_rounded;
+    }
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'gift_card':
+        return AppTheme.goldYellow;
+      case 'merchandise':
+        return AppTheme.primaryRed;
+      case 'subscription':
+        return Colors.purple;
+      default:
+        return Colors.blue;
+    }
+  }
 
   Widget _buildRewardItem(
     BuildContext context, {
@@ -277,7 +318,6 @@ class RewardsTab extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Reward Icon Circle
             Align(
               alignment: Alignment.topLeft,
               child: Container(
@@ -290,7 +330,6 @@ class RewardsTab extends ConsumerWidget {
               ),
             ),
             const Spacer(),
-            // Title
             Text(
               title,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -300,7 +339,6 @@ class RewardsTab extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            // Description
             Text(
               desc,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -311,7 +349,6 @@ class RewardsTab extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const Divider(height: 20, color: Color(0x12FFFFFF)),
-            // Redeem Cost Button
             InkWell(
               onTap: onTap,
               borderRadius: BorderRadius.circular(12),

@@ -3,11 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { User, UserRole } from '../users/entities/user.entity';
 import { Kyc } from '../kyc/entities/kyc.entity';
-import { Contest, ContestStatus } from '../contests/entities/contest.entity';
+import { Contest, ContestStatus, CompensationStatus as ContestCompensationStatus } from '../contests/entities/contest.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
 import { SupportTicket } from '../support/entities/support-ticket.entity';
+import { CompensationService } from '../compensation/compensation.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { SmsService } from '../sms/sms.service';
 
 @Injectable()
 export class AdminService {
@@ -28,6 +31,9 @@ export class AdminService {
     private readonly configRepo: Repository<SystemConfig>,
     @InjectRepository(SupportTicket)
     private readonly supportTicketRepo: Repository<SupportTicket>,
+    private readonly compensationService: CompensationService,
+    private readonly notificationsService: NotificationsService,
+    private readonly smsService: SmsService,
   ) {}
 
   async getUsers(query: {
@@ -159,6 +165,8 @@ export class AdminService {
     const pendingKyc = await this.kycRepo.count({ where: { status: 'pending' as any } });
     const openTickets = await this.supportTicketRepo.count({ where: { status: 'open' as any } });
 
+    const compensationStats = await this.compensationService.getCompensationStats();
+
     const recentUsers = await this.userRepo.find({
       order: { createdAt: 'DESC' },
       take: 10,
@@ -183,6 +191,9 @@ export class AdminService {
       totalPointsEarned: Number(pointsAgg?.total || 0),
       pendingKycCount: pendingKyc,
       openSupportTickets: openTickets,
+      totalCompensations: compensationStats.total,
+      pendingCompensations: compensationStats.pending,
+      totalCompensationPoints: compensationStats.totalPoints,
       recentUsers: recentUsers.map((u) => ({
         id: u.id,
         fullName: u.fullName,
@@ -324,5 +335,109 @@ export class AdminService {
     });
 
     return { tickets, total, page, limit };
+  }
+
+  async compensateContest(contestId: string) {
+    const contest = await this.compensationService.findContestWithMembers(contestId);
+    if (!contest) throw new NotFoundException('Contest not found');
+
+    if (contest.compensationStatus !== ContestCompensationStatus.NONE) {
+      throw new Error(`Contest already has compensation status: ${contest.compensationStatus}`);
+    }
+
+    return this.compensationService.processCompensation(contest);
+  }
+
+  async processPendingCompensations() {
+    return this.compensationService.processPendingCompensations();
+  }
+
+  async getCompensationLogs(query: { page?: number; limit?: number; status?: string }) {
+    return this.compensationService.getCompensationLogs(query);
+  }
+
+  async getDetailedCompensationStats() {
+    const total = await this.compensationService.getCompensationStats();
+
+    const dailyAgg = await this.compensationService.getCompensationLogRepo()
+      .createQueryBuilder('cl')
+      .select("DATE(cl.created_at)", "date")
+      .addSelect('COUNT(*)', 'count')
+      .addSelect('COALESCE(SUM(cl.compensation_points), 0)', 'points')
+      .groupBy('DATE(cl.created_at)')
+      .orderBy('DATE(cl.created_at)', 'DESC')
+      .limit(30)
+      .getRawMany();
+
+    return {
+      ...total,
+      dailyBreakdown: dailyAgg.map((d: any) => ({
+        date: d.date,
+        count: Number(d.count),
+        points: Number(d.points),
+      })),
+    };
+  }
+
+  async broadcastPush(title: string, message: string, tier?: string) {
+    let sentCount: number;
+
+    if (tier) {
+      sentCount = await this.notificationsService.broadcastToUsersByTier(tier, title, message);
+    } else {
+      sentCount = await this.notificationsService.broadcastToAllUsers(title, message);
+    }
+
+    return { sent: sentCount, title, message, tier: tier || 'all' };
+  }
+
+  async broadcastSms(message: string, tier?: string) {
+    const where: any = { isActive: true };
+    if (tier) where.currentTier = tier;
+
+    const users = await this.userRepo.find({ where, select: { id: true, phoneNumber: true } });
+    let sentCount = 0;
+
+    for (const user of users) {
+      if (user.phoneNumber) {
+        try {
+          await this.smsService.sendSms(user.phoneNumber, message);
+          sentCount++;
+        } catch (error) {
+          this.logger.error(`Failed to send SMS to user ${user.id}: ${(error as Error).message}`);
+        }
+      }
+    }
+
+    this.logger.log(`Broadcast SMS sent to ${sentCount}/${users.length} users`);
+    return { sent: sentCount, total: users.length, message, tier: tier || 'all' };
+  }
+
+  async exportCompensations(query: { status?: string }) {
+    const where: any = {};
+    if (query.status) where.status = query.status;
+
+    const logs = await this.compensationService.getCompensationLogRepo().find({
+      where,
+      order: { createdAt: 'DESC' },
+      relations: { contest: true, user: true },
+    });
+
+    return {
+      data: logs.map((l) => ({
+        id: l.id,
+        contestId: l.contestId,
+        contestTitle: l.contest?.title || '',
+        userId: l.userId,
+        userName: l.user?.fullName || l.user?.phoneNumber || '',
+        userPhone: l.user?.phoneNumber || '',
+        entryFeeInr: Number(l.entryFeeInr),
+        compensationPoints: l.compensationPoints,
+        status: l.status,
+        processedAt: l.processedAt?.toISOString() || '',
+        createdAt: l.createdAt.toISOString(),
+      })),
+      total: logs.length,
+    };
   }
 }

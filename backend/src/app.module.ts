@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -11,6 +13,7 @@ import { ContestMember } from './contests/entities/contest-member.entity';
 import { PointLog } from './points/entities/point-log.entity';
 import { FcmToken } from './notifications/entities/fcm-token.entity';
 import { Reminder } from './notifications/entities/reminder.entity';
+import { NotificationLog } from './notifications/entities/notification-log.entity';
 import { Share } from './share-tracker/entities/share.entity';
 import { Reward } from './rewards/entities/reward.entity';
 import { RewardRedemption } from './rewards/entities/reward-redemption.entity';
@@ -32,6 +35,7 @@ import { PrizeHomesModule } from './prize-homes/prize-homes.module';
 import { Transaction } from './transactions/entities/transaction.entity';
 import { TransactionsModule } from './transactions/transactions.module';
 import { RedisModule } from './redis/redis.module';
+import { RedisThrottlerStorageService } from './redis/redis-throttler-storage.service';
 import { ShareTrackerModule } from './share-tracker/share-tracker.module';
 import { Payment } from './payments/entities/payment.entity';
 import { PaymentsModule } from './payments/payments.module';
@@ -56,9 +60,15 @@ import { ChatModule } from './chat/chat.module';
 import { ReferralModule } from './referral/referral.module';
 import { SupportTicket } from './support/entities/support-ticket.entity';
 import { SupportModule } from './support/support.module';
+import { CompensationLog } from './compensation/entities/compensation.entity';
 import { AdminModule } from './admin/admin.module';
 import { AppConfigModule } from './config/config.module';
 import { SystemConfig } from './config/entities/system-config.entity';
+import { CompensationModule } from './compensation/compensation.module';
+import { SmsModule } from './sms/sms.module';
+import { AuditLog } from './audit/entities/audit-log.entity';
+import { AuditModule } from './audit/audit.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -76,8 +86,21 @@ import { SystemConfig } from './config/entities/system-config.entity';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, NotificationLog, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig, CompensationLog, AuditLog],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
+      }),
+    }),
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: [RedisThrottlerStorageService],
+      useFactory: (storage: RedisThrottlerStorageService) => ({
+        throttlers: [
+          {
+            ttl: 60000,
+            limit: 100,
+          },
+        ],
+        storage,
       }),
     }),
     ScheduleModule.forRoot(),
@@ -107,8 +130,18 @@ import { SystemConfig } from './config/entities/system-config.entity';
     ReferralModule,
     AdminModule,
     AppConfigModule,
+    CompensationModule,
+    AuditModule,
+    SmsModule,
+    CommonModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

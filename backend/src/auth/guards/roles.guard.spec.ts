@@ -20,8 +20,15 @@ describe('RolesGuard', () => {
     getClass: jest.fn(),
     switchToHttp: () => ({
       getRequest: () => ({ user }),
+      getResponse: jest.fn(),
+      getNext: jest.fn(),
     }),
-  });
+    getArgs: jest.fn(),
+    getArgByIndex: jest.fn(),
+    switchToRpc: jest.fn(),
+    switchToWs: jest.fn(),
+    getType: jest.fn().mockReturnValue('http'),
+  } as any);
 
   describe('when no roles are required', () => {
     it('should return true', () => {

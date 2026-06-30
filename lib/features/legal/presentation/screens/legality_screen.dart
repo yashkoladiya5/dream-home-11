@@ -89,6 +89,8 @@ class _LegalityScreenState extends State<LegalityScreen> {
                 border: Border.all(color: const Color(0x1FFFFFFF)),
               ),
               child: ExpansionTile(
+                shape: const Border(),
+                collapsedShape: const Border(),
                 title: Text(
                   section.title,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(

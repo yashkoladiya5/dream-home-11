@@ -88,6 +88,8 @@ class _FaqScreenState extends State<FaqScreen> {
               border: Border.all(color: const Color(0x1FFFFFFF)),
             ),
             child: ExpansionTile(
+              shape: const Border(),
+              collapsedShape: const Border(),
               title: Text(
                 item.question,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(

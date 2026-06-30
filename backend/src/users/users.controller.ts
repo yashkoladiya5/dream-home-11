@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Patch, Body, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -32,38 +33,28 @@ export class UsersController {
     return this.usersService.getMyContests(user.id);
   }
 
+  @Get('me/compensations')
+  @UseGuards(JwtAuthGuard)
+  async getMyCompensations(
+    @GetUser() user: User,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10) || 20));
+    return this.usersService.getUserCompensations(user.id, { page: pageNum, limit: limitNum });
+  }
+
   @Get('contests/home')
   @UseGuards(JwtAuthGuard)
   async getMyHomeContests(@GetUser() user: User) {
     return this.usersService.getMyHomeContests(user.id);
   }
 
-  @Post('deposit')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async deposit(@GetUser() user: User, @Body('amount') amount: number): Promise<User> {
-    return this.usersService.addCash(user.id, amount);
-  }
 
-  @Post('join-contest')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async joinContest(
-    @GetUser() user: User,
-    @Body('entryFee') entryFee: number,
-    @Body('pointsEarned') pointsEarned: number,
-  ): Promise<User> {
-    return this.usersService.joinContest(user.id, entryFee, pointsEarned);
-  }
-
-  @Post('redeem-reward')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async redeemReward(@GetUser() user: User, @Body('pointsCost') pointsCost: number): Promise<User> {
-    return this.usersService.redeemReward(user.id, pointsCost);
-  }
 
   @Patch('profile')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async updateProfile(

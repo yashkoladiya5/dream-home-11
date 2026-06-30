@@ -208,6 +208,8 @@ class _CommunityGuidelinesScreenState extends State<CommunityGuidelinesScreen> {
               border: Border.all(color: const Color(0x1FFFFFFF)),
             ),
             child: ExpansionTile(
+              shape: const Border(),
+              collapsedShape: const Border(),
               leading: Icon(item.icon, color: AppTheme.emeraldGreen, size: 20),
               title: Text(
                 item.title,

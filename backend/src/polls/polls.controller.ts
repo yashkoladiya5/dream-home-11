@@ -7,6 +7,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { PollsService } from './polls.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -33,6 +34,7 @@ export class PollsController {
   }
 
   @Post('vote')
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
   async vote(
     @Req() req,
     @Body('pollId') pollId: string,

@@ -31,8 +31,8 @@ class AdminContestsState {
     int? limit,
     bool? isLoading,
     String? error,
-    String? search,
-    String? statusFilter,
+    Object? search = const Object(),
+    Object? statusFilter = const Object(),
   }) {
     return AdminContestsState(
       contests: contests ?? this.contests,
@@ -41,8 +41,8 @@ class AdminContestsState {
       limit: limit ?? this.limit,
       isLoading: isLoading ?? this.isLoading,
       error: error,
-      search: search ?? this.search,
-      statusFilter: statusFilter ?? this.statusFilter,
+      search: search is String? ? search : this.search,
+      statusFilter: statusFilter is String? ? statusFilter : this.statusFilter,
     );
   }
 }
@@ -76,7 +76,7 @@ class AdminContestsNotifier extends StateNotifier<AdminContestsState> {
         page: result['page'] as int? ?? 1,
         isLoading: false,
       );
-    } catch (e, stack) {
+    } catch (e, _) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }

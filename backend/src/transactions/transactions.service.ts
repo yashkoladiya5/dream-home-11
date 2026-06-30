@@ -63,27 +63,41 @@ export class TransactionsService {
     totalPointsSpent: number;
     totalWithdrawn: number;
   }> {
-    const deposits = await this.transactionRepo.find({
-      where: { userId, type: 'deposit' },
-    });
-    const entries = await this.transactionRepo.find({
-      where: { userId, type: 'entry_fee' },
-    });
-    const pointsEarned = await this.transactionRepo.find({
-      where: { userId, type: 'points_earned' },
-    });
-    const redemptions = await this.transactionRepo.find({
-      where: { userId, type: 'redemption' },
-    });
-    const withdrawals = await this.transactionRepo.find({
-      where: { userId, type: 'withdrawal', status: 'completed' },
-    });
+    const result = await this.transactionRepo
+      .createQueryBuilder('t')
+      .select('t.type', 'type')
+      .addSelect('t.status', 'status')
+      .addSelect('SUM(t.cashAmount)', 'totalCash')
+      .addSelect('SUM(t.pointsAmount)', 'totalPoints')
+      .where('t.userId = :userId', { userId })
+      .groupBy('t.type')
+      .addGroupBy('t.status')
+      .getRawMany();
 
-    const totalCashDeposited = deposits.reduce((s, t) => s + Number(t.cashAmount), 0);
-    const totalCashSpent = entries.reduce((s, t) => s + Number(t.cashAmount), 0);
-    const totalPointsEarned = pointsEarned.reduce((s, t) => s + t.pointsAmount, 0);
-    const totalPointsSpent = redemptions.reduce((s, t) => s + t.pointsAmount, 0);
-    const totalWithdrawn = withdrawals.reduce((s, t) => s + Number(t.cashAmount), 0);
+    let totalCashDeposited = 0;
+    let totalCashSpent = 0;
+    let totalPointsEarned = 0;
+    let totalPointsSpent = 0;
+    let totalWithdrawn = 0;
+
+    for (const row of result) {
+      const type = row.type;
+      const status = row.status;
+      const cash = Number(row.totalCash || 0);
+      const points = Number(row.totalPoints || 0);
+
+      if (type === 'deposit') {
+        totalCashDeposited += cash;
+      } else if (type === 'entry_fee') {
+        totalCashSpent += cash;
+      } else if (type === 'points_earned') {
+        totalPointsEarned += points;
+      } else if (type === 'redemption') {
+        totalPointsSpent += points;
+      } else if (type === 'withdrawal' && status === 'completed') {
+        totalWithdrawn += cash;
+      }
+    }
 
     return { totalCashDeposited, totalCashSpent, totalPointsEarned, totalPointsSpent, totalWithdrawn };
   }

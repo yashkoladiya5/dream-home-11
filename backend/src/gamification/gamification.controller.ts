@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Req, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { GamificationService } from './gamification.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -8,6 +9,7 @@ export class GamificationController {
   constructor(private readonly gamificationService: GamificationService) {}
 
   @Post('spin')
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
   async spin(@Req() req) {
     return this.gamificationService.spin(req.user.id);
   }

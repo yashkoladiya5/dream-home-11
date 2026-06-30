@@ -99,6 +99,8 @@ class MoreScreen extends StatelessWidget {
                 border: Border.all(color: const Color(0x1FFFFFFF)),
               ),
               child: ExpansionTile(
+                shape: const Border(),
+                collapsedShape: const Border(),
                 leading: Icon(section.icon, color: AppTheme.goldYellow, size: 20),
                 title: Text(
                   section.title,

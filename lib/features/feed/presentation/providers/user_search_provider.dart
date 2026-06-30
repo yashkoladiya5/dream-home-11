@@ -35,12 +35,10 @@ final userSearchProvider = StateNotifierProvider<UserSearchNotifier, AsyncValue<
 
 class UserSearchNotifier extends StateNotifier<AsyncValue<List<UserSearchResult>>> {
   final Dio _dio;
-  String _currentQuery = '';
 
   UserSearchNotifier(this._dio) : super(const AsyncValue.data([]));
 
   Future<void> search(String query) async {
-    _currentQuery = query;
     if (query.trim().isEmpty) {
       state = const AsyncValue.data([]);
       return;
@@ -63,7 +61,6 @@ class UserSearchNotifier extends StateNotifier<AsyncValue<List<UserSearchResult>
   }
 
   void clearSearch() {
-    _currentQuery = '';
     state = const AsyncValue.data([]);
   }
 }

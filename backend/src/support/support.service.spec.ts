@@ -26,6 +26,7 @@ describe('SupportService', () => {
     attachmentUrl: '',
     createdAt: now,
     updatedAt: now,
+    user: undefined as any,
   };
 
   beforeEach(async () => {
