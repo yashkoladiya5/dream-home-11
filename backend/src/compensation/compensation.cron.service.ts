@@ -13,6 +13,14 @@ export class CompensationCronService {
     this.logger.log('Starting compensation check for unfilled contests...');
 
     try {
+      // First, auto-close any running/upcoming contests that have expired
+      const closeStats = await this.compensationService.autoCloseExpiredContests();
+      if (closeStats.completed > 0 || closeStats.cancelled > 0) {
+        this.logger.log(
+          `Auto-closed expired contests: ${closeStats.completed} completed, ${closeStats.cancelled} cancelled`,
+        );
+      }
+
       const result = await this.compensationService.processPendingCompensations();
 
       if (result.contestsProcessed > 0) {

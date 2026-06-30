@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, UseGuards, ParseUUIDPipe, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, In } from 'typeorm';
+import Redis from 'ioredis';
+import { REDIS_CLIENT } from '../redis/redis.constants';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -20,6 +22,7 @@ export class LeaderboardController {
     private readonly userRepo: Repository<User>,
     @InjectRepository(ContestMember)
     private readonly contestMemberRepo: Repository<ContestMember>,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
   @Get()
@@ -290,18 +293,75 @@ export class LeaderboardController {
     if (entries.length === 0) return entries;
 
     const userIds = entries.map(e => e.userId);
-    const users = await this.userRepo.find({
-      where: { id: In(userIds) },
-      select: { id: true, fullName: true, avatarUrl: true, currentTier: true },
-    });
+    const missingUserIds: string[] = [];
 
-    const userMap = new Map(users.map(u => [u.id, u]));
+    try {
+      // 1. Try to fetch cached profiles from Redis
+      const pipeline = this.redis.pipeline();
+      for (const id of userIds) {
+        pipeline.get(`user:cache:${id}`);
+      }
+      const cacheResults = await pipeline.exec();
 
-    return entries.map(entry => ({
-      ...entry,
-      fullName: userMap.get(entry.userId)?.fullName ?? undefined,
-      avatarUrl: userMap.get(entry.userId)?.avatarUrl ?? undefined,
-      currentTier: userMap.get(entry.userId)?.currentTier ?? undefined,
-    }));
+      const userMap = new Map<string, any>();
+      if (cacheResults) {
+        userIds.forEach((id, index) => {
+          const res = cacheResults[index];
+          const val = Array.isArray(res) ? res[1] : res;
+          if (val) {
+            try {
+              userMap.set(id, JSON.parse(val as string));
+            } catch (_) {}
+          }
+        });
+      }
+
+      // 2. Identify missing user profiles
+      for (const id of userIds) {
+        if (!userMap.has(id)) {
+          missingUserIds.push(id);
+        }
+      }
+
+      // 3. Query PostgreSQL only for missing profiles
+      if (missingUserIds.length > 0) {
+        const users = await this.userRepo.find({
+          where: { id: In(missingUserIds) },
+          select: { id: true, fullName: true, avatarUrl: true, currentTier: true },
+        });
+
+        // Cache missing profiles in Redis with 5 mins TTL
+        const cachePipeline = this.redis.pipeline();
+        for (const u of users) {
+          userMap.set(u.id, u);
+          cachePipeline.set(`user:cache:${u.id}`, JSON.stringify(u), 'EX', 300);
+        }
+        await cachePipeline.exec();
+      }
+
+      // 4. Map profiles back to matching leaderboard entries
+      return entries.map(entry => {
+        const u = userMap.get(entry.userId);
+        return {
+          ...entry,
+          fullName: u?.fullName ?? undefined,
+          avatarUrl: u?.avatarUrl ?? undefined,
+          currentTier: u?.currentTier ?? undefined,
+        };
+      });
+    } catch (_) {
+      // Fallback to direct PostgreSQL queries if Redis fails
+      const users = await this.userRepo.find({
+        where: { id: In(userIds) },
+        select: { id: true, fullName: true, avatarUrl: true, currentTier: true },
+      });
+      const userMap = new Map(users.map(u => [u.id, u]));
+      return entries.map(entry => ({
+        ...entry,
+        fullName: userMap.get(entry.userId)?.fullName ?? undefined,
+        avatarUrl: userMap.get(entry.userId)?.avatarUrl ?? undefined,
+        currentTier: userMap.get(entry.userId)?.currentTier ?? undefined,
+      }));
+    }
   }
 }

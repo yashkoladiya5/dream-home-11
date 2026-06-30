@@ -15,8 +15,20 @@ class DepositNotifier {
 
   Future<UserProfile?> deposit(double amount) async {
     try {
-      final response = await _dio.post('/api/v1/users/deposit', data: {'amount': amount});
-      return UserProfile.fromJson(response.data as Map<String, dynamic>);
+      final orderRes = await _dio.post('/api/v1/payments/order', data: {'amount': amount});
+      final orderId = orderRes.data['orderId'] as String;
+
+      final mockPayId = 'pay_${DateTime.now().millisecondsSinceEpoch}';
+      final verifyRes = await _dio.post('/api/v1/payments/verify', data: {
+        'orderId': orderId,
+        'paymentId': mockPayId,
+      });
+
+      if (verifyRes.data['success'] == true) {
+        final profileRes = await _dio.get('/api/v1/users/profile');
+        return UserProfile.fromJson(profileRes.data as Map<String, dynamic>);
+      }
+      return null;
     } catch (_) {
       return null;
     }

@@ -232,6 +232,8 @@ class _HowToPlayScreenState extends State<HowToPlayScreen> {
               border: Border.all(color: const Color(0x1FFFFFFF)),
             ),
             child: ExpansionTile(
+              shape: const Border(),
+              collapsedShape: const Border(),
               leading: Icon(item.icon, color: AppTheme.goldYellow, size: 20),
               title: Text(
                 item.title,

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../dashboard/presentation/widgets/shimmer_widget.dart';
+import '../../data/services/admin_api_service.dart';
 import '../providers/admin_compensations_provider.dart';
 
 class AdminCompensationsScreen extends ConsumerStatefulWidget {
@@ -15,6 +17,8 @@ class AdminCompensationsScreen extends ConsumerStatefulWidget {
 class _AdminCompensationsScreenState extends ConsumerState<AdminCompensationsScreen> {
   String? _statusFilter;
   int _page = 1;
+  bool _processing = false;
+  bool _exporting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +31,20 @@ class _AdminCompensationsScreenState extends ConsumerState<AdminCompensationsScr
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         backgroundColor: AppTheme.darkSlate,
+        actions: [
+          IconButton(
+            icon: _exporting
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryRed))
+                : const Icon(Icons.download_rounded, color: AppTheme.primaryRed),
+            onPressed: _exporting ? null : _exportCompensations,
+            tooltip: 'Export',
+          ),
+        ],
       ),
       body: Column(
         children: [
-          _buildStatsCard(),
+          _buildStatsAndBreakdown(),
+          _buildProcessPendingButton(),
           _buildFilters(),
           Expanded(
             child: RefreshIndicator(
@@ -148,31 +162,209 @@ class _AdminCompensationsScreenState extends ConsumerState<AdminCompensationsScr
     );
   }
 
-  Widget _buildStatsCard() {
+  Widget _buildProcessPendingButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 44,
+        child: ElevatedButton.icon(
+          onPressed: _processing ? null : _processPending,
+          icon: _processing
+              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.play_arrow_rounded, size: 18),
+          label: Text(_processing ? 'Processing...' : 'Process Pending'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.goldYellow,
+            foregroundColor: Colors.black,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _processPending() async {
+    setState(() => _processing = true);
+    try {
+      final dio = ref.read(apiClientProvider);
+      final service = AdminApiService(dio);
+      final result = await service.processPendingCompensations();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Processed: ${result['processed'] ?? 'done'}', style: GoogleFonts.outfit(color: Colors.white)),
+            backgroundColor: AppTheme.emeraldGreen,
+          ),
+        );
+        ref.invalidate(adminCompensationsProvider);
+        ref.invalidate(adminCompensationStatsProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: $e', style: GoogleFonts.outfit(color: Colors.white)),
+            backgroundColor: AppTheme.primaryRed),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _processing = false);
+    }
+  }
+
+  Future<void> _exportCompensations() async {
+    setState(() => _exporting = true);
+    try {
+      final dio = ref.read(apiClientProvider);
+      final service = AdminApiService(dio);
+      await service.exportCompensations(status: _statusFilter);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export started', style: GoogleFonts.outfit(color: Colors.white)),
+            backgroundColor: AppTheme.emeraldGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e', style: GoogleFonts.outfit(color: Colors.white)),
+            backgroundColor: AppTheme.primaryRed),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  Widget _buildStatsAndBreakdown() {
     final statsAsync = ref.watch(adminCompensationStatsProvider);
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: AppTheme.darkCardGradient,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1FFFFFFF)),
+    return statsAsync.when(
+      loading: () => Container(
+        margin: const EdgeInsets.all(16),
+        height: 80,
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryRed)),
       ),
-      child: statsAsync.when(
-        loading: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-        error: (_, _) => const SizedBox.shrink(),
-        data: (stats) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _statItem('${stats['total'] ?? 0}', 'Total'),
-              _statItem('${stats['pending'] ?? 0}', 'Pending'),
-              _statItem('${stats['totalPoints'] ?? 0}', 'Points'),
-              _statItem('${stats['total'] is int ? (stats['total'] as int) : 0}', 'Logs'),
-            ],
-          );
-        },
-      ),
+      error: (err, stack) => const SizedBox.shrink(),
+      data: (stats) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: AppTheme.darkCardGradient,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0x1FFFFFFF)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _statItem('${stats['total'] ?? 0}', 'Total'),
+                  _statItem('${stats['pending'] ?? 0}', 'Pending'),
+                  _statItem('${stats['totalPoints'] ?? 0}', 'Points'),
+                  _statItem('${(stats['dailyBreakdown'] as List?)?.length ?? 0}', 'Active Days'),
+                ],
+              ),
+            ),
+            _buildDailyBreakdown(stats),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDailyBreakdown(Map<String, dynamic> stats) {
+    final daily = stats['dailyBreakdown'] as List<dynamic>? ?? [];
+    if (daily.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 16, 8),
+          child: Text(
+            'Daily Trend (Last 30 Days)',
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 85,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: daily.length,
+            itemBuilder: (context, index) {
+              final d = daily[index] as Map<String, dynamic>;
+              final rawDate = d['date'] as String? ?? '';
+              String displayDate = rawDate;
+              try {
+                if (rawDate.contains('T')) {
+                  displayDate = rawDate.split('T')[0];
+                }
+                final parsed = DateTime.parse(displayDate);
+                final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                displayDate = '${months[parsed.month - 1]} ${parsed.day}';
+              } catch (_) {}
+
+              final count = d['count'] ?? 0;
+              final points = d['points'] ?? 0;
+
+              return Container(
+                width: 140,
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.darkCardGradient,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0x1FFFFFFF)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      displayDate,
+                      style: GoogleFonts.outfit(
+                        color: AppTheme.greyMedium,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$count Compensations',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '+$points PTS',
+                      style: GoogleFonts.outfit(
+                        color: AppTheme.goldYellow,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

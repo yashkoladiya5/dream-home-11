@@ -87,47 +87,7 @@ export class UsersService {
     return saved;
   }
 
-  async joinContest(userId: string, entryFee: number, pointsEarned: number): Promise<User> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (Number(user.walletBalanceInr) < entryFee) {
-      throw new BadRequestException('Insufficient wallet balance');
-    }
-    const multiplier = this.pointsEngineService.getMultiplier(user.currentTier);
-    const finalPoints = this.pointsEngineService.calculatePoints(pointsEarned, user.currentTier);
-    user.walletBalanceInr = Number(user.walletBalanceInr) - entryFee;
-    user.pointsBalance = Number(user.pointsBalance) + finalPoints;
-    user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
 
-    // Update tier rank based on lifetime points
-    if (user.lifetimePoints >= 5000) {
-      user.currentTier = UserLevel.PLATINUM;
-    } else if (user.lifetimePoints >= 2000) {
-      user.currentTier = UserLevel.GOLD;
-    } else if (user.lifetimePoints >= 1000) {
-      user.currentTier = UserLevel.SILVER;
-    }
-
-    await this.userRepository.save(user);
-
-    await this.pointsEngineService.logPointAction(userId, 'contest_join', pointsEarned, multiplier, finalPoints);
-
-    return user;
-  }
-
-  async redeemReward(userId: string, pointsCost: number): Promise<User> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (Number(user.pointsBalance) < pointsCost) {
-      throw new BadRequestException('Insufficient points balance');
-    }
-    user.pointsBalance = Number(user.pointsBalance) - pointsCost;
-    return this.userRepository.save(user);
-  }
 
   async awardPoints(userId: string, points: number): Promise<User> {
     const user = await this.findById(userId);

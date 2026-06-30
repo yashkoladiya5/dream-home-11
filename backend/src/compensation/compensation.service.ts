@@ -50,6 +50,40 @@ export class CompensationService {
     return Math.round(entryFeeInr * rate);
   }
 
+  async autoCloseExpiredContests(): Promise<{ completed: number; cancelled: number }> {
+    const now = new Date();
+    const expiredContests = await this.contestRepo.find({
+      where: [
+        {
+          status: ContestStatus.RUNNING,
+          endTime: LessThan(now),
+        },
+        {
+          status: ContestStatus.UPCOMING,
+          endTime: LessThan(now),
+        },
+      ],
+    });
+
+    let completed = 0;
+    let cancelled = 0;
+
+    for (const contest of expiredContests) {
+      if (contest.filledSlots >= contest.maxSlots) {
+        contest.status = ContestStatus.COMPLETED;
+        completed++;
+      } else {
+        contest.status = ContestStatus.CANCELLED;
+        cancelled++;
+      }
+      await this.contestRepo.save(contest);
+      this.logger.log(`Contest ${contest.id} ("${contest.title}") auto-closed: status set to ${contest.status}`);
+    }
+
+    return { completed, cancelled };
+  }
+
+
   async findUncompensatedContests(): Promise<Contest[]> {
     return this.contestRepo
       .createQueryBuilder('contest')

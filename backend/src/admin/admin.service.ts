@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { User, UserRole } from '../users/entities/user.entity';
 import { Kyc } from '../kyc/entities/kyc.entity';
-import { Contest, ContestStatus } from '../contests/entities/contest.entity';
+import { Contest, ContestStatus, CompensationStatus as ContestCompensationStatus } from '../contests/entities/contest.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
@@ -341,7 +341,7 @@ export class AdminService {
     const contest = await this.compensationService.findContestWithMembers(contestId);
     if (!contest) throw new NotFoundException('Contest not found');
 
-    if (contest.compensationStatus !== ('none' as any)) {
+    if (contest.compensationStatus !== ContestCompensationStatus.NONE) {
       throw new Error(`Contest already has compensation status: ${contest.compensationStatus}`);
     }
 

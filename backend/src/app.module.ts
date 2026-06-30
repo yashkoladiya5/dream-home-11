@@ -13,6 +13,7 @@ import { ContestMember } from './contests/entities/contest-member.entity';
 import { PointLog } from './points/entities/point-log.entity';
 import { FcmToken } from './notifications/entities/fcm-token.entity';
 import { Reminder } from './notifications/entities/reminder.entity';
+import { NotificationLog } from './notifications/entities/notification-log.entity';
 import { Share } from './share-tracker/entities/share.entity';
 import { Reward } from './rewards/entities/reward.entity';
 import { RewardRedemption } from './rewards/entities/reward-redemption.entity';
@@ -34,6 +35,7 @@ import { PrizeHomesModule } from './prize-homes/prize-homes.module';
 import { Transaction } from './transactions/entities/transaction.entity';
 import { TransactionsModule } from './transactions/transactions.module';
 import { RedisModule } from './redis/redis.module';
+import { RedisThrottlerStorageService } from './redis/redis-throttler-storage.service';
 import { ShareTrackerModule } from './share-tracker/share-tracker.module';
 import { Payment } from './payments/entities/payment.entity';
 import { PaymentsModule } from './payments/payments.module';
@@ -83,17 +85,22 @@ import { AuditModule } from './audit/audit.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig, CompensationLog, AuditLog],
+        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, NotificationLog, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig, CompensationLog, AuditLog],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 100,
-        },
-      ],
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: [RedisThrottlerStorageService],
+      useFactory: (storage: RedisThrottlerStorageService) => ({
+        throttlers: [
+          {
+            ttl: 60000,
+            limit: 100,
+          },
+        ],
+        storage,
+      }),
     }),
     ScheduleModule.forRoot(),
     UsersModule,

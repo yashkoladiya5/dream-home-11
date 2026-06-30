@@ -50,30 +50,7 @@ export class UsersController {
     return this.usersService.getMyHomeContests(user.id);
   }
 
-  @Post('deposit')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async deposit(@GetUser() user: User, @Body('amount') amount: number): Promise<User> {
-    return this.usersService.addCash(user.id, amount);
-  }
 
-  @Post('join-contest')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async joinContest(
-    @GetUser() user: User,
-    @Body('entryFee') entryFee: number,
-    @Body('pointsEarned') pointsEarned: number,
-  ): Promise<User> {
-    return this.usersService.joinContest(user.id, entryFee, pointsEarned);
-  }
-
-  @Post('redeem-reward')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async redeemReward(@GetUser() user: User, @Body('pointsCost') pointsCost: number): Promise<User> {
-    return this.usersService.redeemReward(user.id, pointsCost);
-  }
 
   @Patch('profile')
   @UseGuards(JwtAuthGuard)

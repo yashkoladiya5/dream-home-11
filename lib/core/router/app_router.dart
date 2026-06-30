@@ -22,6 +22,7 @@ import '../../features/points/presentation/screens/streak_screen.dart';
 import '../../features/notifications/presentation/screens/reminders_screen.dart';
 import '../../features/notifications/presentation/screens/create_reminder_screen.dart';
 import '../../features/notifications/presentation/screens/notification_preferences_screen.dart';
+import '../../features/notifications/presentation/screens/notification_inbox_screen.dart';
 import '../../features/share_tracker/presentation/screens/share_tracker_screen.dart';
 import '../../features/rewards/presentation/screens/rewards_catalog_screen.dart';
 import '../../features/rewards/presentation/screens/reward_detail_screen.dart';
@@ -219,6 +220,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/create-reminder',
         builder: (context, state) => const CreateReminderScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationInboxScreen(),
       ),
       GoRoute(
         path: '/share-tracker',
