@@ -119,6 +119,7 @@ class _FindPeopleScreenState extends ConsumerState<FindPeopleScreen> {
                       return ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: users.length,
+                        itemExtent: 64,
                         itemBuilder: (context, index) => _UserTile(user: users[index]),
                       );
                     },
@@ -156,6 +157,7 @@ class _FindPeopleScreenState extends ConsumerState<FindPeopleScreen> {
                             child: ListView.builder(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               itemCount: users.length,
+                              itemExtent: 64,
                               itemBuilder: (context, index) => _UserTile(
                                 user: users[index],
                                 rank: index + 1,

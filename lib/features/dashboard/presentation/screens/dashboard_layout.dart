@@ -13,6 +13,30 @@ import '../widgets/profile_tab.dart';
 import 'home_screen.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 
+class _NavItem {
+  final IconData outlineIcon;
+  final IconData filledIcon;
+  final String label;
+
+  const _NavItem(this.outlineIcon, this.filledIcon, this.label);
+}
+
+const _navItems = [
+  _NavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
+  _NavItem(Icons.emoji_events_outlined, Icons.emoji_events_rounded, 'Contest'),
+  _NavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Wallet'),
+  _NavItem(Icons.stars_outlined, Icons.stars_rounded, 'Rewards'),
+  _NavItem(Icons.person_outlined, Icons.person_rounded, 'Profile'),
+];
+
+const _appBarTitles = [
+  'Dream Home 11',
+  'Contests',
+  'My Wallet',
+  'Rewards Store',
+  'My Profile',
+];
+
 class DashboardLayout extends ConsumerStatefulWidget {
   const DashboardLayout({super.key});
 
@@ -46,26 +70,10 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
     _pageController.jumpToPage(index);
   }
 
-  String _getAppBarTitle() {
-    switch (_currentIndex) {
-      case 0:
-        return 'Dream Home 11';
-      case 1:
-        return 'Contests';
-      case 2:
-        return 'My Wallet';
-      case 3:
-        return 'Rewards Store';
-      case 4:
-        return 'My Profile';
-      default:
-        return 'Dream Home 11';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final profileState = ref.watch(userProfileProvider);
+    final hasProfile = ref.watch(userProfileProvider.select((async) => async.hasValue));
+    final pointsBalance = ref.watch(userProfileProvider.select((async) => async.maybeWhen(data: (p) => p.pointsBalance, orElse: () => null)));
     final unreadCountAsync = ref.watch(unreadNotificationCountProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
@@ -86,30 +94,26 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
         leading: Builder(
           builder: (context) {
             return IconButton(
-              icon: profileState.maybeWhen(
-                data: (profile) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.primaryRed,
-                        width: 1.5,
+              icon: hasProfile
+                  ? Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppTheme.primaryRed,
+                          width: 1.5,
+                        ),
                       ),
-                    ),
-                    child: const CircleAvatar(
-                      radius: 12,
-                      backgroundColor: AppTheme.secondarySlate,
-                      child: Icon(
-                        Icons.person_rounded,
-                        size: 16,
-                        color: AppTheme.white,
+                      child: const CircleAvatar(
+                        radius: 12,
+                        backgroundColor: AppTheme.secondarySlate,
+                        child: Icon(
+                          Icons.person_rounded,
+                          size: 16,
+                          color: AppTheme.white,
+                        ),
                       ),
-                    ),
-                  );
-                },
-                orElse: () =>
-                    const Icon(Icons.menu_rounded, color: AppTheme.white),
-              ),
+                    )
+                  : const Icon(Icons.menu_rounded, color: AppTheme.white),
               onPressed: () => Scaffold.of(context).openDrawer(),
             );
           },
@@ -117,7 +121,7 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
         title: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           child: Text(
-            _getAppBarTitle(),
+            _appBarTitles[_currentIndex],
             key: ValueKey<int>(_currentIndex),
             style: const TextStyle(
               fontWeight: FontWeight.bold,
@@ -127,9 +131,8 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
         ),
         centerTitle: true,
         actions: [
-          // Elegant points counter pill in AppBar for quick summary
-          profileState.maybeWhen(
-            data: (profile) => Padding(
+          if (pointsBalance != null)
+            Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: Center(
                 child: Container(
@@ -154,7 +157,7 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${profile.pointsBalance} PTS',
+                        '$pointsBalance PTS',
                         style: const TextStyle(
                           color: AppTheme.goldYellow,
                           fontWeight: FontWeight.bold,
@@ -166,8 +169,6 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
                 ),
               ),
             ),
-            orElse: () => const SizedBox.shrink(),
-          ),
           // Elegant Notification Bell Icon with Red Badge
           unreadCountAsync.maybeWhen(
             data: (count) {
@@ -218,156 +219,110 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
         children: [
           const OfflineBanner(),
           Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              physics: const BouncingScrollPhysics(),
-              children: const [
-                HomeScreen(),
-                ContestTab(),
-                WalletTab(),
-                RewardsTab(),
-                ProfileTab(),
-              ],
+            child: RepaintBoundary(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+                physics: const BouncingScrollPhysics(),
+                children: const [
+                  RepaintBoundary(child: HomeScreen()),
+                  RepaintBoundary(child: ContestTab()),
+                  RepaintBoundary(child: WalletTab()),
+                  RepaintBoundary(child: RewardsTab()),
+                  RepaintBoundary(child: ProfileTab()),
+                ],
+              ),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: Container(
-        margin: EdgeInsets.only(
-          left: 18,
-          right: 18,
-          bottom: bottomPadding > 0 ? bottomPadding : 16,
-        ),
-        height: 70,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-            BoxShadow(
-              color: AppTheme.primaryRed.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppTheme.secondarySlate.withValues(alpha: 0.82),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  width: 1.2,
-                ),
+      bottomNavigationBar: RepaintBoundary(
+        child: Container(
+          margin: EdgeInsets.only(
+            left: 18,
+            right: 18,
+            bottom: bottomPadding > 0 ? bottomPadding : 16,
+          ),
+          height: 70,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
               ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // Sliding Active Indicator Capsule behind the Active Icon
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutBack,
-                    left: capsuleLeftOffset,
-                    top: 5,
-                    child: Container(
-                      width: capsuleWidth,
-                      height: 55,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.primaryRed.withValues(alpha: 0.22),
-                            AppTheme.primaryRed.withValues(alpha: 0.04),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: AppTheme.primaryRed.withValues(alpha: 0.35),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryRed.withValues(alpha: 0.15),
-                            blurRadius: 8,
-                            spreadRadius: 0.5,
+              BoxShadow(
+                color: AppTheme.primaryRed.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.secondarySlate.withValues(alpha: 0.82),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    width: 1.2,
+                  ),
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutBack,
+                      left: capsuleLeftOffset,
+                      top: 5,
+                      child: Container(
+                        width: capsuleWidth,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryRed.withValues(alpha: 0.22),
+                              AppTheme.primaryRed.withValues(alpha: 0.04),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
                           ),
-                        ],
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: AppTheme.primaryRed.withValues(alpha: 0.35),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryRed.withValues(alpha: 0.15),
+                              blurRadius: 8,
+                              spreadRadius: 0.5,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-
-                  // Pulsing Indicator Dot
-                  // AnimatedPositioned(
-                  //   duration: const Duration(milliseconds: 300),
-                  //   curve: Curves.easeOutCubic,
-                  //   left: (tabWidth * _currentIndex) + (tabWidth - 5) / 2,
-                  //   bottom: 8,
-                  //   child: Container(
-                  //     width: 5,
-                  //     height: 5,
-                  //     decoration: BoxDecoration(
-                  //       shape: BoxShape.circle,
-                  //       color: AppTheme.primaryRed,
-                  //       boxShadow: [
-                  //         BoxShadow(
-                  //           color: AppTheme.primaryRed.withValues(alpha: 0.8),
-                  //           blurRadius: 4,
-                  //           spreadRadius: 1,
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
-
-                  // Navigation Items
-                  Row(
-                    children: [
-                      _buildNavBarItem(
-                        0,
-                        Icons.home_outlined,
-                        Icons.home_rounded,
-                        'Home',
-                      ),
-                      _buildNavBarItem(
-                        1,
-                        Icons.emoji_events_outlined,
-                        Icons.emoji_events_rounded,
-                        'Contest',
-                      ),
-                      _buildNavBarItem(
-                        2,
-                        Icons.account_balance_wallet_outlined,
-                        Icons.account_balance_wallet_rounded,
-                        'Wallet',
-                      ),
-                      _buildNavBarItem(
-                        3,
-                        Icons.stars_outlined,
-                        Icons.stars_rounded,
-                        'Rewards',
-                      ),
-                      _buildNavBarItem(
-                        4,
-                        Icons.person_outlined,
-                        Icons.person_rounded,
-                        'Profile',
-                      ),
-                    ],
-                  ),
-                ],
+                    Row(
+                      children: List.generate(_navItems.length, (index) {
+                        return _DashboardNavBarItem(
+                          index: index,
+                          currentIndex: _currentIndex,
+                          navItem: _navItems[index],
+                          onTap: _onTabTapped,
+                        );
+                      }),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -375,17 +330,27 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
       ),
     );
   }
+}
 
-  Widget _buildNavBarItem(
-    int index,
-    IconData outlineIcon,
-    IconData filledIcon,
-    String label,
-  ) {
-    final isSelected = _currentIndex == index;
+class _DashboardNavBarItem extends StatelessWidget {
+  final int index;
+  final int currentIndex;
+  final _NavItem navItem;
+  final void Function(int) onTap;
+
+  const _DashboardNavBarItem({
+    required this.index,
+    required this.currentIndex,
+    required this.navItem,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = currentIndex == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => _onTabTapped(index),
+        onTap: () => onTap(index),
         behavior: HitTestBehavior.opaque,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -395,10 +360,8 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutBack,
               child: Icon(
-                isSelected ? filledIcon : outlineIcon,
-                color: isSelected
-                    ? AppTheme.white
-                    : AppTheme.greyMedium.withValues(alpha: 0.7),
+                isSelected ? navItem.filledIcon : navItem.outlineIcon,
+                color: isSelected ? AppTheme.white : AppTheme.greyMedium.withValues(alpha: 0.7),
                 size: 22,
               ),
             ),
@@ -408,21 +371,13 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected
-                    ? AppTheme.white
-                    : AppTheme.greyMedium.withValues(alpha: 0.7),
+                color: isSelected ? AppTheme.white : AppTheme.greyMedium.withValues(alpha: 0.7),
                 letterSpacing: 0.2,
                 shadows: isSelected
-                    ? [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ]
+                    ? [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 1))]
                     : null,
               ),
-              child: Text(label),
+              child: Text(navItem.label),
             ),
             const SizedBox(height: 6),
           ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/image_cache_manager.dart';
 import '../providers/prize_home_provider.dart';
 import '../../data/models/prize_home.dart';
 import '../../../dashboard/presentation/widgets/shimmer_widget.dart';
@@ -88,15 +90,14 @@ class HomeSpecDetailScreen extends ConsumerWidget {
                     fit: StackFit.expand,
                     children: [
                       if (home.imageUrl != null)
-                        Image.network(
-                          home.imageUrl!,
+                        CachedNetworkImage(
+                          cacheManager: AppImageCacheManager.manager,
+                          imageUrl: home.imageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
+                          placeholder: (context, url) =>
                               _buildHeroGradient(home, theme),
-                          loadingBuilder: (_, child, progress) {
-                            if (progress == null) return child;
-                            return _buildHeroGradient(home, theme);
-                          },
+                          errorWidget: (context, url, error) =>
+                              _buildHeroGradient(home, theme),
                         )
                       else
                         _buildHeroGradient(home, theme),

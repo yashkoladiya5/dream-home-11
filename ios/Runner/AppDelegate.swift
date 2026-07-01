@@ -22,6 +22,18 @@ import Foundation
       }
     }
 
+    let securityChannel = FlutterMethodChannel(name: "com.dreamhome11/security",
+                                               binaryMessenger: controller.binaryMessenger)
+    securityChannel.setMethodCallHandler { (call, result) in
+      if call.method == "enableScreenshotProtection" {
+        result(true)
+      } else if call.method == "disableScreenshotProtection" {
+        result(true)
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

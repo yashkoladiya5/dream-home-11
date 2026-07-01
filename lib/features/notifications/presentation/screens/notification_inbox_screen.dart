@@ -93,6 +93,8 @@ class NotificationInboxScreen extends ConsumerWidget {
             return ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               itemCount: notifications.length,
+              itemExtent: 72,
+              cacheExtent: 400,
               itemBuilder: (context, index) {
                 final log = notifications[index];
                 return Padding(

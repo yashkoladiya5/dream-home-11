@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/image_cache_manager.dart';
 import '../providers/feed_provider.dart';
 import '../../data/models/feed_post.dart';
 
@@ -107,6 +109,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: posts.length + 1,
+              addAutomaticKeepAlives: true,
+              cacheExtent: 500,
               itemBuilder: (context, index) {
                 if (index == posts.length) {
                   return const Padding(
@@ -239,24 +243,22 @@ class _PostCard extends ConsumerWidget {
             const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                post.imageUrl!,
+              child: CachedNetworkImage(
+                cacheManager: AppImageCacheManager.manager,
+                imageUrl: post.imageUrl!,
                 width: double.infinity,
                 height: 200,
                 fit: BoxFit.cover,
-                errorBuilder: (ctx, err, stack) => Container(
+                placeholder: (ctx, url) => Container(
+                  height: 200,
+                  color: const Color(0x1AFFFFFF),
+                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.greyMedium)),
+                ),
+                errorWidget: (ctx, url, error) => Container(
                   height: 200,
                   color: const Color(0x1AFFFFFF),
                   child: const Center(child: Icon(Icons.broken_image_rounded, color: AppTheme.greyMedium)),
                 ),
-                loadingBuilder: (ctx, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    height: 200,
-                    color: const Color(0x1AFFFFFF),
-                    child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.greyMedium)),
-                  );
-                },
               ),
             ),
           ],

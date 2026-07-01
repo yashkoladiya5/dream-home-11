@@ -222,6 +222,9 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: _messages.length + (_isLoadingMore ? 1 : 0),
       reverse: true,
+      itemExtent: 72,
+      addAutomaticKeepAlives: true,
+      cacheExtent: 500,
       itemBuilder: (context, index) {
         if (index >= _messages.length) {
           return const Padding(

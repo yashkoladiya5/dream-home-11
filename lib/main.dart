@@ -5,9 +5,10 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/config/presentation/widgets/config_gate.dart';
 import 'features/notifications/services/notification_handler.dart';
-import 'features/config/presentation/providers/config_provider.dart';
+import 'core/performance/performance_monitor.dart';
 import 'core/security/device_security_service.dart';
 import 'core/security/security_guard_screen.dart';
+import 'core/performance/image_preloader.dart';
 
 bool isFirebaseInitialized = false;
 
@@ -39,28 +40,13 @@ class _AppStartup extends ConsumerStatefulWidget {
   ConsumerState<_AppStartup> createState() => _AppStartupState();
 }
 
-class _AppStartupState extends ConsumerState<_AppStartup> with WidgetsBindingObserver {
+class _AppStartupState extends ConsumerState<_AppStartup> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    ref.read(configNotifierProvider.notifier).startPolling();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      ref.read(notificationHandlerProvider).initialize();
-      ref.read(configNotifierProvider.notifier).refresh();
-    } else if (state == AppLifecycleState.paused) {
-      ref.read(configNotifierProvider.notifier).stopPolling();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(imagePreloaderProvider).preCacheCommonImages();
+    });
   }
 
   @override
@@ -96,6 +82,7 @@ class _DreamHomeAppState extends ConsumerState<DreamHomeApp> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(notificationHandlerProvider).initialize();
+      ref.watch(performanceMonitorProvider);
     });
   }
 

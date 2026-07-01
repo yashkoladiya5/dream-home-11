@@ -283,6 +283,10 @@ export class LeaderboardController {
       order: { pointsEarned: 'DESC' },
       take: limit,
       skip: (page - 1) * limit,
+      select: {
+        id: true, userId: true, pointsEarned: true,
+        user: { id: true, fullName: true, avatarUrl: true, currentTier: true, lifetimePoints: true },
+      },
     });
 
     const entries: LeaderboardEntry[] = members.map((m, i) => ({
