@@ -6,6 +6,8 @@ import 'core/theme/app_theme.dart';
 import 'features/config/presentation/widgets/config_gate.dart';
 import 'features/notifications/services/notification_handler.dart';
 import 'features/config/presentation/providers/config_provider.dart';
+import 'core/security/device_security_service.dart';
+import 'core/security/security_guard_screen.dart';
 
 bool isFirebaseInitialized = false;
 
@@ -63,7 +65,21 @@ class _AppStartupState extends ConsumerState<_AppStartup> with WidgetsBindingObs
 
   @override
   Widget build(BuildContext context) {
-    return ConfigGate(child: widget.child);
+    return Consumer(
+      builder: (context, ref, _) {
+        final integrityAsync = ref.watch(deviceSecurityProvider);
+        return integrityAsync.when(
+          data: (result) {
+            if (!result.isSecure) {
+              return SecurityGuardScreen(indicators: result.rootIndicators);
+            }
+            return ConfigGate(child: widget.child);
+          },
+          loading: () => ConfigGate(child: widget.child),
+          error: (_, _) => ConfigGate(child: widget.child),
+        );
+      },
+    );
   }
 }
 

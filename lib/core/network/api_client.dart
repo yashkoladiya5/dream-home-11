@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
@@ -22,14 +23,23 @@ final apiClientProvider = Provider<Dio>((ref) {
 
   final dio = Dio(options);
 
-  // SSL pinning for production builds
+  // SSL pinning for production builds using proper PlatformAdapter
   if (!kIsWeb && kReleaseMode) {
-    (dio.httpClientAdapter as dynamic).onHttpClientCreate = (HttpClient client) {
-      client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-        return false;
-      };
-      return client;
-    };
+    dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: () {
+        final client = HttpClient(context: SecurityContext(withTrustedRoots: false));
+        client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+          // SHA-256 certificate pinning
+          // In production, pin the actual server certificate fingerprint(s)
+          // For now, we reject all untrusted certificates in release mode
+          // To pin a specific cert, compute its SHA-256 fingerprint and compare:
+          //   final fingerprint = sha256.convert(cert.sha256).toString();
+          //   return pinnedFingerprints.contains(fingerprint);
+          return false;
+        };
+        return client;
+      },
+    );
   }
 
   // JWT token interceptor

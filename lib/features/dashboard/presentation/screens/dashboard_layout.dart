@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/offline_banner.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/navigation_drawer.dart';
 import '../widgets/contest_tab.dart';
@@ -213,20 +214,27 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
           const SizedBox(width: 8),
         ],
       ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        physics: const BouncingScrollPhysics(),
-        children: const [
-          HomeScreen(),
-          ContestTab(),
-          WalletTab(),
-          RewardsTab(),
-          ProfileTab(),
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              physics: const BouncingScrollPhysics(),
+              children: const [
+                HomeScreen(),
+                ContestTab(),
+                WalletTab(),
+                RewardsTab(),
+                ProfileTab(),
+              ],
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: Container(
