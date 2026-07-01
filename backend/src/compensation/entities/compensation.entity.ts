@@ -1,5 +1,5 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, Unique,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, Unique, Index,
 } from 'typeorm';
 import { Contest } from '../../contests/entities/contest.entity';
 import { User } from '../../users/entities/user.entity';
@@ -12,6 +12,8 @@ export enum CompensationStatus {
 
 @Entity('compensation_logs')
 @Unique(['contestId', 'userId'])
+@Index(['userId'])
+@Index(['status'])
 export class CompensationLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;

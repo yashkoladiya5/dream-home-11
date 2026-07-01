@@ -111,26 +111,47 @@ const ALL_ENTITIES = [
 //  Rate-limit test helper module
 // ============================================================
 
-@Controller('_rate_test')
-class RateTestController {
-  @Get()
-  get() {
-    return { ok: true };
+  @Controller('_rate_test')
+  class RateTestController {
+    @Get()
+    get() {
+      return { ok: true };
+    }
   }
-}
 
-@Module({
-  imports: [
-    ThrottlerModule.forRoot({
-      throttlers: [{ ttl: 3000, limit: 3 }],
-    }),
-  ],
-  controllers: [RateTestController],
-  providers: [
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
-})
-class RateLimitTestModule {}
+  @Module({
+    imports: [
+      ThrottlerModule.forRoot({
+        throttlers: [{ ttl: 3000, limit: 3 }],
+      }),
+    ],
+    controllers: [RateTestController],
+    providers: [
+      { provide: APP_GUARD, useClass: ThrottlerGuard },
+    ],
+  })
+  class RateLimitTestModule {}
+
+  @Controller('_rate_test_otp')
+  class RateTestOtpController {
+    @Get()
+    requestOtp() {
+      return { success: true, message: 'OTP sent' };
+    }
+  }
+
+  @Module({
+    imports: [
+      ThrottlerModule.forRoot({
+        throttlers: [{ ttl: 60000, limit: 5 }],
+      }),
+    ],
+    controllers: [RateTestOtpController],
+    providers: [
+      { provide: APP_GUARD, useClass: ThrottlerGuard },
+    ],
+  })
+  class RateLimitOtpTestModule {}
 
 // ============================================================
 //  Main test suite
@@ -195,6 +216,14 @@ describe('Security E2E', () => {
       getMongoRepository: jest.fn().mockReturnValue(createMockRepo()),
       destroy: jest.fn(),
       initialize: jest.fn(),
+      transaction: jest.fn().mockImplementation(async (cb: Function) => {
+        const mockEntityManager = {
+          findOne: jest.fn().mockResolvedValue(null),
+          find: jest.fn().mockResolvedValue([]),
+          save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
+        };
+        return cb(mockEntityManager);
+      }),
     };
 
     const mockRedisClient = {
@@ -465,6 +494,153 @@ describe('Security E2E', () => {
       // 4th request should be blocked
       await request(httpServer)
         .get('/_rate_test')
+        .expect(HttpStatus.TOO_MANY_REQUESTS);
+    });
+  });
+
+  // ============================================================
+  //  7. Malformed Token Edge Cases
+  // ============================================================
+
+  describe('Edge case tokens', () => {
+    it('should reject Bearer with empty token string', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/users/me')
+        .set('Authorization', 'Bearer ')
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it('should reject base64-like junk token', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/users/me')
+        .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0')
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it('should reject SQL injection in auth header value', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/users/me')
+        .set('Authorization', "Bearer ' OR '1'='1")
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+  });
+
+  // ============================================================
+  //  8. Malformed UUID & Path Traversal
+  // ============================================================
+
+  describe('Input edge cases', () => {
+    it('should handle malformed contest UUID without crashing', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/contests/not-a-uuid')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(r => {
+          // Should not return 500 — any other status is acceptable
+          expect(r.status).not.toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+        });
+    });
+
+    it('should reject path traversal in user profile URL', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/users/profile/../admin/dashboard')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(r => {
+          expect([HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN, HttpStatus.NOT_FOUND]).toContain(r.status);
+        });
+    });
+
+    it('should reject path traversal in contests URL', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/contests/../../../etc/passwd')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(r => {
+          expect([
+            HttpStatus.BAD_REQUEST,
+            HttpStatus.UNAUTHORIZED,
+            HttpStatus.FORBIDDEN,
+            HttpStatus.NOT_FOUND,
+          ]).toContain(r.status);
+        });
+    });
+  });
+
+  // ============================================================
+  //  9. Extreme Input Values
+  // ============================================================
+
+  describe('Extreme input values', () => {
+    it('should handle negative amount in contest join body gracefully', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/contests/some-contest-id/join')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ amount: -1 })
+        .expect(r => {
+          expect(r.status).not.toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+        });
+    });
+
+    it('should handle extremely large amount in contest join body gracefully', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/contests/some-contest-id/join')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ amount: 999999999 })
+        .expect(r => {
+          expect(r.status).not.toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+        });
+    });
+
+    it('should handle 10KB string fields in KYC submit gracefully', async () => {
+      const largeString = 'A'.repeat(10240);
+      await request(app.getHttpServer())
+        .post('/api/v1/kyc/submit')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          aadhaarNumber: largeString,
+          panNumber: largeString,
+          fullName: largeString,
+        })
+        .expect(r => {
+          expect([
+            HttpStatus.OK,
+            HttpStatus.BAD_REQUEST,
+          ]).toContain(r.status);
+        });
+    });
+  });
+
+  // ============================================================
+  //  10. Rate Limit Edge Case
+  // ============================================================
+
+  describe('Rate limit edge case', () => {
+    let rateLimitOtpApp: INestApplication;
+
+    beforeAll(async () => {
+      const rlModule = await Test.createTestingModule({
+        imports: [RateLimitOtpTestModule],
+      }).compile();
+
+      rateLimitOtpApp = rlModule.createNestApplication();
+      await rateLimitOtpApp.init();
+    });
+
+    afterAll(async () => {
+      await rateLimitOtpApp.close();
+    });
+
+    it('should return 429 when more than 5 requests are made per minute', async () => {
+      const httpServer = rateLimitOtpApp.getHttpServer();
+
+      // First 5 requests should pass
+      for (let i = 0; i < 5; i++) {
+        await request(httpServer)
+          .get('/_rate_test_otp')
+          .expect(HttpStatus.OK);
+      }
+
+      // 6th request should be blocked
+      await request(httpServer)
+        .get('/_rate_test_otp')
         .expect(HttpStatus.TOO_MANY_REQUESTS);
     });
   });

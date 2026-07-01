@@ -23,8 +23,8 @@ export default function () {
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   const endpoints = [
-    `${BASE_URL}${API_PREFIX}/payments/transactions?page=1&limit=10`,
-    `${BASE_URL}${API_PREFIX}/users/dashboard`,
+    `${BASE_URL}${API_PREFIX}/transactions?page=1&limit=10`,
+    `${BASE_URL}${API_PREFIX}/transactions/balance`,
   ];
 
   for (const url of endpoints) {
