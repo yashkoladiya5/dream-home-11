@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -6,6 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { HealthModule } from './health/health.module';
 import { User } from './users/entities/user.entity';
 import { Kyc } from './kyc/entities/kyc.entity';
 import { Contest } from './contests/entities/contest.entity';
@@ -88,6 +90,10 @@ import { CommonModule } from './common/common.module';
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
         entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, NotificationLog, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig, CompensationLog, AuditLog],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
+        extra: {
+          max: config.get<number>('DB_POOL_SIZE', 50),
+          idleTimeoutMillis: 30000,
+        },
       }),
     }),
     ThrottlerModule.forRootAsync({
@@ -97,7 +103,7 @@ import { CommonModule } from './common/common.module';
         throttlers: [
           {
             ttl: 60000,
-            limit: 100,
+            limit: process.env.NODE_ENV === 'production' ? 100 : 100000,
           },
         ],
         storage,
@@ -134,6 +140,7 @@ import { CommonModule } from './common/common.module';
     AuditModule,
     SmsModule,
     CommonModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -144,4 +151,8 @@ import { CommonModule } from './common/common.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

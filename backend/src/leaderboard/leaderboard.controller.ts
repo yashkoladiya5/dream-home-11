@@ -16,7 +16,7 @@ import { LeaderboardSyncService } from './leaderboard-sync.service';
 
 @Controller('api/v1/leaderboard')
 @UseGuards(JwtAuthGuard)
-@Throttle({ default: { ttl: 60000, limit: 60 } })
+@Throttle({ default: { ttl: 60000, limit: 10000 } })
 export class LeaderboardController {
   constructor(
     private readonly leaderboardRedis: LeaderboardRedisService,
@@ -98,7 +98,6 @@ export class LeaderboardController {
     const [matchingUsers, totalCount] = await this.userRepo.findAndCount({
       where: [
         { fullName: ILike(`%${query.trim()}%`) },
-        { phoneNumber: ILike(`%${query.trim()}%`) },
       ],
       select: {
         id: true,

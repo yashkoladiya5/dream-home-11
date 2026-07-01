@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Patch, Body, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Query, UseGuards, HttpCode, HttpStatus, UsePipes, ValidationPipe } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from './entities/user.entity';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Controller('api/v1/users')
 export class UsersController {
@@ -57,13 +58,12 @@ export class UsersController {
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false }))
   async updateProfile(
     @GetUser() user: User,
-    @Body('fullName') fullName?: string,
-    @Body('email') email?: string,
-    @Body('avatarUrl') avatarUrl?: string,
+    @Body() dto: UpdateProfileDto,
   ): Promise<User> {
-    return this.usersService.updateProfile(user.id, { fullName, email, avatarUrl });
+    return this.usersService.updateProfile(user.id, dto);
   }
 
   @Patch('bank-details')

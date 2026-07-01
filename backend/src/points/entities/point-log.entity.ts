@@ -1,7 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Index } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('point_logs')
+@Index(['userId'])
+@Index(['createdAt'])
+@Index(['action'])
 export class PointLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;

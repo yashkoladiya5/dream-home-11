@@ -1,6 +1,17 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Response, Request } from 'express';
 
+const statusText: Record<number, string> = {
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  403: 'Forbidden',
+  404: 'Not Found',
+  409: 'Conflict',
+  422: 'Unprocessable Entity',
+  429: 'Too Many Requests',
+  500: 'Internal Server Error',
+};
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
@@ -27,11 +38,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     this.logger.error(`${request.method} ${request.url} - ${status}`);
 
+    const error = statusText[status] || 'Error';
+    const requestId = (request as any).requestId || 'unknown';
+
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    let respMessage = message;
+    if (isProduction && status >= 500) {
+      respMessage = 'Internal server error';
+    }
+
     response.status(status).json({
       statusCode: status,
-      message: process.env.NODE_ENV === 'production' && status === HttpStatus.INTERNAL_SERVER_ERROR
-        ? 'Internal server error'
-        : message,
+      message: respMessage,
+      error,
+      requestId,
       timestamp: new Date().toISOString(),
       path: request.url,
     });

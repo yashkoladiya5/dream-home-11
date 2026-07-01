@@ -45,7 +45,7 @@ export class AuthController {
   }
 
   @Post('mock-login')
-  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @Throttle({ default: { ttl: 60000, limit: 1000 } })
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async mockLogin(@Body() dto: MockLoginDto) {

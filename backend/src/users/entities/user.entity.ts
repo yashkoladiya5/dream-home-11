@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   OneToOne,
+  Index,
 } from 'typeorm';
 import { Kyc } from '../../kyc/entities/kyc.entity';
 
@@ -21,6 +22,10 @@ export enum UserRole {
 }
 
 @Entity('users')
+@Index(['phoneNumber'])
+@Index(['referralCode'])
+@Index(['lifetimePoints'])
+@Index(['isActive'])
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -215,14 +215,25 @@ export class UsersService {
     let totalRanks = 0;
     let bestRank = Number.MAX_SAFE_INTEGER;
 
+    // Batch load all members for all contests at once
+    const allMembers = await this.contestMemberRepository.find({
+      where: { contestId: In(contestIds) },
+      order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
+    });
+
+    // Build a map: contestId -> member[]
+    const membersByContest = new Map<string, typeof allMembers>();
+    for (const m of allMembers) {
+      if (!membersByContest.has(m.contestId)) membersByContest.set(m.contestId, []);
+      membersByContest.get(m.contestId)!.push(m);
+    }
+
+    // Calculate stats from the map
     for (const contestId of contestIds) {
-      const allMembers = await this.contestMemberRepository.find({
-        where: { contestId },
-        order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
-      });
-      const rank = allMembers.findIndex(m => m.userId === userId) + 1;
-      totalRanks += rank;
-      if (rank < bestRank) bestRank = rank;
+      const contestMembers = membersByContest.get(contestId) || [];
+      const rank = contestMembers.findIndex(m => m.userId === userId) + 1;
+      totalRanks += rank || 1;
+      if (rank > 0 && rank < bestRank) bestRank = rank;
       if (rank === 1) wonCount++;
     }
 
@@ -255,19 +266,26 @@ export class UsersService {
       order: { joinedAt: 'DESC' },
     });
 
-    const contests = await Promise.all(members.map(async (member) => {
+    if (members.length === 0) return { contests: [] };
+
+    const contestIds = members.map(m => m.contestId);
+
+    // Batch rank calculation using window function
+    const rankResults = await this.contestMemberRepository
+      .createQueryBuilder('cm')
+      .select('cm.contestId', 'contestId')
+      .addSelect('RANK() OVER (PARTITION BY cm.contestId ORDER BY cm.pointsEarned DESC)', 'rank')
+      .where('cm.userId = :userId', { userId })
+      .andWhere('cm.contestId IN (:...contestIds)', { contestIds })
+      .getRawMany();
+
+    const rankMap = new Map(rankResults.map(r => [r.contestId, parseInt(r.rank)]));
+
+    const contests = members.map((member) => {
       const myPoints = member.pointsEarned;
-
-      const rankResult = await this.contestMemberRepository
-        .createQueryBuilder('cm')
-        .select('COUNT(*)', 'rank')
-        .where('cm.contestId = :contestId', { contestId: member.contestId })
-        .andWhere('cm.pointsEarned > :myPoints', { myPoints })
-        .getRawOne();
-      const myRank = Number(rankResult?.rank || 0) + 1;
-
+      const myRank = rankMap.get(member.contestId) ?? 1;
       return { ...member.contest, myPoints, myRank };
-    }));
+    });
 
     return { contests };
   }
@@ -279,26 +297,50 @@ export class UsersService {
       order: { joinedAt: 'DESC' },
     });
 
-    const contests = await Promise.all(members.map(async (member) => {
+    if (members.length === 0) return { contests: [] };
+
+    const contestIds = members.map(m => m.contestId);
+
+    // Batch rank calculation using window function
+    const rankResults = await this.contestMemberRepository
+      .createQueryBuilder('cm')
+      .select('cm.contestId', 'contestId')
+      .addSelect('RANK() OVER (PARTITION BY cm.contestId ORDER BY cm.pointsEarned DESC)', 'rank')
+      .where('cm.userId = :userId', { userId })
+      .andWhere('cm.contestId IN (:...contestIds)', { contestIds })
+      .getRawMany();
+    const rankMap = new Map(rankResults.map(r => [r.contestId, parseInt(r.rank)]));
+
+    // Batch total members count per contest
+    const memberCounts = await this.contestMemberRepository
+      .createQueryBuilder('cm')
+      .select('cm.contestId', 'contestId')
+      .addSelect('COUNT(*)', 'count')
+      .where('cm.contestId IN (:...contestIds)', { contestIds })
+      .groupBy('cm.contestId')
+      .getRawMany();
+    const totalMembersMap = new Map(memberCounts.map(m => [m.contestId, parseInt(m.count)]));
+
+    // Batch first place points per contest
+    const firstPlaceResults = await this.contestMemberRepository
+      .createQueryBuilder('cm')
+      .select('cm.contestId', 'contestId')
+      .addSelect('MAX(cm.pointsEarned)', 'maxPoints')
+      .where('cm.contestId IN (:...contestIds)', { contestIds })
+      .groupBy('cm.contestId')
+      .getRawMany();
+    const firstPlaceMap = new Map(firstPlaceResults.map(r => [r.contestId, parseInt(r.maxPoints)]));
+
+    const contests = members.map((member) => {
       const contest = member.contest;
       if (!contest) return null;
 
       const myPoints = member.pointsEarned;
+      const myRank = rankMap.get(member.contestId) ?? 1;
+      const totalMembers = totalMembersMap.get(member.contestId) ?? 0;
+      const maxPoints = firstPlaceMap.get(member.contestId) ?? myPoints;
+      const pointsToFirst = maxPoints > myPoints ? maxPoints - myPoints : null;
 
-      const rankResult = await this.contestMemberRepository
-        .createQueryBuilder('cm')
-        .select('COUNT(*)', 'rank')
-        .where('cm.contestId = :contestId', { contestId: member.contestId })
-        .andWhere('cm.pointsEarned > :myPoints', { myPoints })
-        .getRawOne();
-      const myRank = Number(rankResult?.rank || 0) + 1;
-
-      // Calculate total members in this contest
-      const totalMembers = await this.contestMemberRepository.count({
-        where: { contestId: member.contestId },
-      });
-
-      // Calculate time-based progress for running contests
       let progressPercentage = 0;
       if (contest.status === 'running') {
         const now = new Date().getTime();
@@ -310,15 +352,6 @@ export class UsersService {
       } else if (contest.status === 'completed') {
         progressPercentage = 100;
       }
-
-      // Calculate points to first place
-      const firstPlace = await this.contestMemberRepository.findOne({
-        where: { contestId: member.contestId },
-        order: { pointsEarned: 'DESC' },
-      });
-      const pointsToFirst = firstPlace && firstPlace.userId !== member.userId
-        ? firstPlace.pointsEarned - myPoints
-        : null;
 
       return {
         id: contest.id,
@@ -342,7 +375,7 @@ export class UsersService {
         progressPercentage,
         pointsToFirst,
       };
-    }));
+    });
 
     // Filter out nulls and sort: running first, upcoming second, then by start time ascending
     const filtered = contests
