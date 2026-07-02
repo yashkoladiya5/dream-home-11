@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { Repository, DataSource, Like, Between, MoreThanOrEqual, LessThanOrEqual, In } from 'typeorm';
 import { randomBytes } from 'crypto';
 import { Contest, ContestStatus, ContestType } from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
@@ -65,13 +65,21 @@ export class ContestsService {
       order,
       skip: (page - 1) * limit,
       take: limit,
+      select: {
+        id: true, title: true, entryFeeInr: true, prize: true, maxSlots: true,
+        filledSlots: true, status: true, startTime: true, endTime: true,
+        type: true, inviteCode: true,
+      },
     });
 
     return { contests, total, page, limit };
   }
 
   async findById(id: string): Promise<Contest | null> {
-    return this.contestRepository.findOne({ where: { id } });
+    return this.contestRepository.findOne({
+      where: { id },
+      select: { id: true, title: true, entryFeeInr: true, prize: true, maxSlots: true, filledSlots: true, status: true, startTime: true, endTime: true, type: true },
+    });
   }
 
   async findByCode(code: string): Promise<Contest | null> {
@@ -79,7 +87,10 @@ export class ContestsService {
   }
 
   async getMembers(contestId: string): Promise<{ members: ContestMember[]; total: number }> {
-    const contest = await this.contestRepository.findOne({ where: { id: contestId } });
+    const contest = await this.contestRepository.findOne({
+      where: { id: contestId },
+      select: { id: true, title: true, entryFeeInr: true, prize: true, maxSlots: true, filledSlots: true, startTime: true, status: true },
+    });
     if (!contest) {
       throw new NotFoundException('Contest not found');
     }
@@ -92,7 +103,10 @@ export class ContestsService {
   }
 
   async findByInviteCode(code: string): Promise<{ contest: Contest; canJoin: boolean; reason: string | null }> {
-    const contest = await this.contestRepository.findOne({ where: { inviteCode: code.toUpperCase() } });
+    const contest = await this.contestRepository.findOne({
+      where: { inviteCode: code.toUpperCase() },
+      select: { id: true, title: true, entryFeeInr: true, prize: true, maxSlots: true, filledSlots: true, status: true, startTime: true, type: true },
+    });
     if (!contest) {
       throw new NotFoundException('Contest not found for this invite code');
     }
@@ -355,34 +369,51 @@ export class ContestsService {
   }[]> {
     const completedContests = await this.contestRepository.find({
       where: { status: ContestStatus.COMPLETED },
+      select: { id: true, title: true, endTime: true, prize: true },
+      take: 20,
       order: { endTime: 'DESC' },
     });
 
-    const result = await Promise.all(
-      completedContests.map(async (contest) => {
-        const members = await this.contestMemberRepository.find({
-          where: { contestId: contest.id },
-          relations: { user: true },
-          order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
-          take: 3,
-        });
+    if (completedContests.length === 0) return [];
 
-        const winners = members.map((m, index) => ({
-          userId: m.userId,
-          userName: m.user?.fullName || 'Anonymous',
-          points: m.pointsEarned,
-          rank: index + 1,
-        }));
+    const contestIds = completedContests.map(c => c.id);
+    const allMembers = await this.contestMemberRepository.find({
+      where: { contestId: In(contestIds) },
+      relations: { user: true },
+      order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
+      select: {
+        id: true,
+        contestId: true,
+        pointsEarned: true,
+        userId: true,
+        user: { id: true, fullName: true, avatarUrl: true },
+      },
+    });
 
-        return {
-          contestId: contest.id,
-          contestTitle: contest.title,
-          prize: contest.prize || 'N/A',
-          completedAt: contest.endTime,
-          winners,
-        };
-      }),
-    );
+    const membersByContest = new Map<string, typeof allMembers>();
+    for (const member of allMembers) {
+      const list = membersByContest.get(member.contestId) || [];
+      list.push(member);
+      membersByContest.set(member.contestId, list);
+    }
+
+    const result = completedContests.map((contest) => {
+      const members = (membersByContest.get(contest.id) || []).slice(0, 3);
+      const winners = members.map((m, index) => ({
+        userId: m.userId,
+        userName: m.user?.fullName || 'Anonymous',
+        points: m.pointsEarned,
+        rank: index + 1,
+      }));
+
+      return {
+        contestId: contest.id,
+        contestTitle: contest.title,
+        prize: contest.prize || 'N/A',
+        completedAt: contest.endTime,
+        winners,
+      };
+    });
 
     return result;
   }

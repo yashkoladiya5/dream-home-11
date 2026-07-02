@@ -266,6 +266,7 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         itemCount: filtered.length,
+                        itemExtent: 60,
                         itemBuilder: (context, index) {
                           final member = filtered[index];
                           final isMe = member.id == _myUserId;
@@ -332,6 +333,9 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: _messages.length + (_isLoadingMore ? 1 : 0),
       reverse: true,
+      itemExtent: 72,
+      addAutomaticKeepAlives: true,
+      cacheExtent: 500,
       itemBuilder: (context, index) {
         if (index >= _messages.length) {
           return const Padding(

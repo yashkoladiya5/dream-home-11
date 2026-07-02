@@ -5,7 +5,15 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/config/presentation/widgets/config_gate.dart';
 import 'features/notifications/services/notification_handler.dart';
-import 'features/config/presentation/providers/config_provider.dart';
+import 'core/performance/performance_monitor.dart';
+import 'core/security/device_security_service.dart';
+import 'core/security/security_guard_screen.dart';
+import 'core/performance/image_preloader.dart';
+import 'package:flutter/scheduler.dart';
+import 'core/performance/memory_profiler.dart';
+import 'core/performance/rendering_analyzer.dart';
+import 'core/performance/scroll_tracker.dart';
+import 'core/performance/lazy_init.dart';
 
 bool isFirebaseInitialized = false;
 
@@ -37,33 +45,59 @@ class _AppStartup extends ConsumerStatefulWidget {
   ConsumerState<_AppStartup> createState() => _AppStartupState();
 }
 
-class _AppStartupState extends ConsumerState<_AppStartup> with WidgetsBindingObserver {
+class _AppStartupState extends ConsumerState<_AppStartup> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    ref.read(configNotifierProvider.notifier).startPolling();
-  }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final initializer = ref.read(appInitializerProvider);
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
+      initializer.addService(
+        DeferredInitService(
+          serviceName: 'ImagePreloader',
+          initFn: () => ref.read(imagePreloaderProvider).preCacheCommonImages(),
+        ),
+        InitPriority.background,
+      );
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      ref.read(notificationHandlerProvider).initialize();
-      ref.read(configNotifierProvider.notifier).refresh();
-    } else if (state == AppLifecycleState.paused) {
-      ref.read(configNotifierProvider.notifier).stopPolling();
-    }
+      initializer.addService(
+        DeferredInitService(
+          serviceName: 'MemoryProfiler',
+          initFn: () async { ref.read(memoryProfilerProvider); },
+        ),
+        InitPriority.background,
+      );
+
+      initializer.addService(
+        DeferredInitService(
+          serviceName: 'RenderingAnalyzer',
+          initFn: () async { ref.read(renderingAnalyzerProvider); },
+        ),
+        InitPriority.background,
+      );
+
+      initializer.initializeBackground();
+      initializer.initializeIdle();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return ConfigGate(child: widget.child);
+    return Consumer(
+      builder: (context, ref, _) {
+        final integrityAsync = ref.watch(deviceSecurityProvider);
+        return integrityAsync.when(
+          data: (result) {
+            if (!result.isSecure) {
+              return SecurityGuardScreen(indicators: result.rootIndicators);
+            }
+            return ConfigGate(child: widget.child);
+          },
+          loading: () => ConfigGate(child: widget.child),
+          error: (_, _) => ConfigGate(child: widget.child),
+        );
+      },
+    );
   }
 }
 
@@ -80,18 +114,31 @@ class _DreamHomeAppState extends ConsumerState<DreamHomeApp> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(notificationHandlerProvider).initialize();
+      ref.watch(performanceMonitorProvider);
+
+      final initializer = ref.read(appInitializerProvider);
+      initializer.initializeRequired();
+
+      final analyzer = ref.read(renderingAnalyzerProvider);
+      SchedulerBinding.instance.addTimingsCallback((timings) {
+        analyzer.onFrame(Duration.zero);
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
+    final tracker = ref.watch(scrollTrackerProvider);
 
-    return MaterialApp.router(
-      title: 'Dream Home 11',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      routerConfig: router,
+    return TrackedScrollConfiguration(
+      tracker: tracker,
+      child: MaterialApp.router(
+        title: 'Dream Home 11',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.darkTheme,
+        routerConfig: router,
+      ),
     );
   }
 }

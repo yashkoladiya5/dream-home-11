@@ -39,7 +39,10 @@ export class NotificationsService {
   }
 
   async getUserTokens(userId: string): Promise<FcmToken[]> {
-    return this.fcmTokenRepo.find({ where: { userId } });
+    return this.fcmTokenRepo.find({
+      where: { userId },
+      select: { id: true, token: true, deviceType: true },
+    });
   }
 
   async createReminder(userId: string, contestId: string, remindAt: Date): Promise<Reminder> {
@@ -71,6 +74,10 @@ export class NotificationsService {
       where: { userId },
       relations: { contest: true },
       order: { remindAt: 'DESC' },
+      select: {
+        id: true, userId: true, contestId: true, remindAt: true, status: true, createdAt: true,
+        contest: { id: true, title: true },
+      },
     });
   }
 
@@ -151,7 +158,10 @@ export class NotificationsService {
   }
 
   async broadcastToUsersByTier(tier: string, title: string, body: string, data?: Record<string, string>): Promise<number> {
-    const users = await this.userRepo.find({ where: { currentTier: tier as any, isActive: true } });
+    const users = await this.userRepo.find({
+      where: { currentTier: tier as any, isActive: true },
+      select: { id: true, phoneNumber: true, fullName: true },
+    });
     for (const user of users) {
       await this.createNotification(user.id, title, body, data?.type || 'broadcast');
     }

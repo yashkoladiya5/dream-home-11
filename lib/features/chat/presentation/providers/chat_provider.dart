@@ -1,15 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../data/repositories/chat_repository.dart';
 import '../../data/models/chat_message.dart';
-
-final _secureStorage = FlutterSecureStorage();
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
+  final storage = ref.read(secureStorageProvider);
   final repo = ChatRepository();
   ref.onDispose(() => repo.dispose());
 
-  _secureStorage.read(key: 'auth_token').then((token) {
+  storage.read(key: 'session_token').then((token) {
     if (token != null) {
       repo.connect(token);
     }

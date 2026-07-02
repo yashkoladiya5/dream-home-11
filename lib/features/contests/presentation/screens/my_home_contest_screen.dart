@@ -72,6 +72,8 @@ class MyHomeContestScreen extends ConsumerWidget {
             return ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: contests.length,
+              addAutomaticKeepAlives: true,
+              cacheExtent: 500,
               itemBuilder: (context, index) {
                 return _MyContestCard(contest: contests[index]);
               },

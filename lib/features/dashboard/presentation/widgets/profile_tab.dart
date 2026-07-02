@@ -56,7 +56,7 @@ class ProfileTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(userProfileProvider);
-    final authState = ref.watch(authProvider);
+    final isAdmin = ref.watch(authProvider.select((auth) => auth.role?.name == 'admin'));
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 350),
@@ -170,9 +170,9 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 24),
 
                   // Details list
-                  if (authState.role?.name == 'admin')
+                  if (isAdmin)
                     const SizedBox(height: 12),
-                  if (authState.role?.name == 'admin')
+                  if (isAdmin)
                     _buildInfoTile(
                       context,
                       label: 'Admin Panel',
@@ -181,7 +181,7 @@ class ProfileTab extends ConsumerWidget {
                       icon: Icons.admin_panel_settings_rounded,
                       onTap: () => context.push('/admin'),
                     ),
-                  if (authState.role?.name == 'admin')
+                  if (isAdmin)
                     _buildInfoTile(
                       context,
                       label: 'Manage Contests',
@@ -190,7 +190,7 @@ class ProfileTab extends ConsumerWidget {
                       icon: Icons.sports_esports_rounded,
                       onTap: () => context.push('/admin/contests'),
                     ),
-                  if (authState.role?.name == 'admin')
+                  if (isAdmin)
                     _buildInfoTile(
                       context,
                       label: 'System Config',
@@ -199,7 +199,7 @@ class ProfileTab extends ConsumerWidget {
                       icon: Icons.settings_rounded,
                       onTap: () => context.push('/admin/config'),
                     ),
-                  if (authState.role?.name == 'admin')
+                  if (isAdmin)
                     _buildInfoTile(
                       context,
                       label: 'Support Tickets',

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/image_cache_manager.dart';
 import '../providers/prize_home_provider.dart';
 import '../../data/models/prize_home.dart';
 import '../../../dashboard/presentation/widgets/shimmer_widget.dart';
@@ -203,18 +205,17 @@ class HomeGalleryScreen extends ConsumerWidget {
                                 ),
                                 clipBehavior: Clip.antiAlias,
                                 child: home.imageUrl != null
-                                    ? Image.network(
-                                        home.imageUrl!,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        height: 130,
-                                        errorBuilder: (_, _, _) =>
-                                            _buildGalleryPlaceholder(home),
-                                        loadingBuilder: (_, child, progress) {
-                                          if (progress == null) return child;
-                                          return _buildGalleryPlaceholder(home);
-                                        },
-                                      )
+                                ? CachedNetworkImage(
+                                    cacheManager: AppImageCacheManager.manager,
+                                    imageUrl: home.imageUrl!,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: 130,
+                                    placeholder: (context, url) =>
+                                        _buildGalleryPlaceholder(home),
+                                    errorWidget: (context, url, error) =>
+                                        _buildGalleryPlaceholder(home),
+                                  )
                                     : _buildGalleryPlaceholder(home),
                               ),
                               Padding(

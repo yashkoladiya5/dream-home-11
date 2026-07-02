@@ -26,13 +26,21 @@ export class UsersService {
   ) {}
 
   async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { phoneNumber } });
+    return this.userRepository.findOne({
+      where: { phoneNumber },
+      select: { id: true, phoneNumber: true, fullName: true, isActive: true, referralCode: true },
+    });
   }
 
   async findById(id: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },
       relations: { kyc: true },
+      select: {
+        id: true, phoneNumber: true, fullName: true, walletBalanceInr: true,
+        pointsBalance: true, lifetimePoints: true, currentTier: true, avatarUrl: true, isActive: true,
+        kyc: { status: true, aadhaarNumber: true, panNumber: true },
+      },
     });
   }
 

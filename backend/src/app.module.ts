@@ -90,6 +90,9 @@ import { CommonModule } from './common/common.module';
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
         entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, NotificationLog, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig, CompensationLog, AuditLog],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
+        logging: ['error', 'warn', 'schema'],
+        maxQueryExecutionTime: 1000,
+        applicationName: config.get<string>('APP_NAME', 'dream-home-11'),
         extra: {
           max: config.get<number>('DB_POOL_SIZE', 50),
           idleTimeoutMillis: 30000,

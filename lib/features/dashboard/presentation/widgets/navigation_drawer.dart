@@ -11,7 +11,7 @@ class NavigationDrawerWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(userProfileProvider);
-    final authState = ref.watch(authProvider);
+    final isAdmin = ref.watch(authProvider.select((auth) => auth.role?.name == 'admin'));
 
     return Drawer(
       backgroundColor: AppTheme.darkSlate,
@@ -213,7 +213,7 @@ class NavigationDrawerWidget extends ConsumerWidget {
                     title: 'Terms & Conditions',
                     onTap: () {},
                   ),
-                  if (authState.role?.name == 'admin')
+                  if (isAdmin)
                     _buildDrawerItem(
                       context,
                       icon: Icons.admin_panel_settings_rounded,
@@ -223,7 +223,7 @@ class NavigationDrawerWidget extends ConsumerWidget {
                         context.push('/admin');
                       },
                     ),
-                  if (authState.role?.name == 'admin') ...[
+                  if (isAdmin) ...[
                     _buildDrawerItem(
                       context,
                       icon: Icons.sports_esports_rounded,

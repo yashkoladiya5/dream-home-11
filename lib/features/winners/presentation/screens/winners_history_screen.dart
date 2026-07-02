@@ -148,6 +148,8 @@ class WinnersHistoryScreen extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               itemCount: winners.length,
+              addAutomaticKeepAlives: true,
+              cacheExtent: 500,
               itemBuilder: (context, index) {
                 final contest = winners[index];
                 return Padding(

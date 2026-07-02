@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/image_cache_manager.dart';
 import '../../data/models/kyc_document_type.dart';
 
 class KycPhotoCard extends StatelessWidget {
@@ -112,12 +114,20 @@ class KycPhotoCard extends StatelessWidget {
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => _buildPlaceholder(theme),
                     )
-                  : Image.network(
-                      imageUrl!,
+                  : CachedNetworkImage(
+                      cacheManager: AppImageCacheManager.manager,
+                      imageUrl: imageUrl!,
                       height: 160,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _buildPlaceholder(theme),
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey.shade800,
+                        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey.shade800,
+                        child: const Icon(Icons.broken_image, color: Colors.grey),
+                      ),
                     ),
             ),
             if (isUploading)

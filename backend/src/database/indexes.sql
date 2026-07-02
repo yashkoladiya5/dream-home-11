@@ -1,0 +1,10 @@
+-- Performance indexes for frequently queried foreign keys
+CREATE INDEX IF NOT EXISTS idx_contest_members_contest_id ON contest_members(contest_id);
+CREATE INDEX IF NOT EXISTS idx_contest_members_user_id ON contest_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_point_logs_user_id ON point_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_point_logs_created_at ON point_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
+CREATE INDEX IF NOT EXISTS idx_notification_logs_user_id ON notification_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_compensation_logs_user_id ON compensation_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
