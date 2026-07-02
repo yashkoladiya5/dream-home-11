@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'app_performance_config.dart';
 
 class MemorySnapshot {
   final DateTime timestamp;
@@ -55,7 +56,7 @@ class MemoryProfiler with WidgetsBindingObserver {
 
   MemoryProfiler({Duration? leakTimeout})
     : _leakTimeout = leakTimeout ?? const Duration(minutes: 5) {
-    if (!kReleaseMode) {
+    if (AppPerformanceConfig.enableMemoryProfiler) {
       WidgetsBinding.instance.addObserver(this);
       _snapshotTimer = Timer.periodic(
         const Duration(seconds: 60),
@@ -129,7 +130,7 @@ class MemoryProfiler with WidgetsBindingObserver {
   }
 
   void _takeSnapshot() {
-    if (kReleaseMode) return;
+    if (!AppPerformanceConfig.enableMemoryProfiler) return;
     _purgeCollected();
 
     final snapshot = MemorySnapshot(

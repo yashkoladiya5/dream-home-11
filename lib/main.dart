@@ -9,6 +9,7 @@ import 'core/performance/performance_monitor.dart';
 import 'core/security/device_security_service.dart';
 import 'core/security/security_guard_screen.dart';
 import 'core/performance/image_preloader.dart';
+import 'core/performance/performance_overlay.dart';
 import 'package:flutter/scheduler.dart';
 import 'core/performance/memory_profiler.dart';
 import 'core/performance/rendering_analyzer.dart';
@@ -133,11 +134,13 @@ class _DreamHomeAppState extends ConsumerState<DreamHomeApp> {
 
     return TrackedScrollConfiguration(
       tracker: tracker,
-      child: MaterialApp.router(
-        title: 'Dream Home 11',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
-        routerConfig: router,
+      child: PerformanceOverlayToggle(
+        child: MaterialApp.router(
+          title: 'Dream Home 11',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.darkTheme,
+          routerConfig: router,
+        ),
       ),
     );
   }
