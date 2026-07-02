@@ -7,6 +7,9 @@ import 'package:dream_home_11/features/notifications/services/notification_handl
 class _MockNotificationHandler implements NotificationHandler {
   @override
   Future<void> initialize() async {}
+
+  @override
+  void dispose() {}
 }
 
 Widget createTestApp() {

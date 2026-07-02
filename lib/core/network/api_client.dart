@@ -64,7 +64,8 @@ final apiClientProvider = Provider<Dio>((ref) {
             offlineQueue.enqueue(QueuedRequest(options: options, handler: handler));
             return;
           }
-        } catch (_) {
+        } catch (e) {
+          debugPrint('[ApiClient] Connectivity check failed: $e');
         }
         handler.next(options);
       },

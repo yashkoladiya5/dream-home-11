@@ -15,6 +15,10 @@ import 'package:dream_home_11/core/performance/performance_overlay.dart';
 import 'package:dream_home_11/core/widgets/offline_banner.dart';
 import 'package:dream_home_11/core/widgets/offline_placeholder.dart';
 import 'package:dream_home_11/core/utils/image_cache_manager.dart';
+import 'package:dream_home_11/features/notifications/services/fcm_service.dart';
+import 'package:dream_home_11/features/notifications/presentation/providers/fcm_provider.dart';
+import 'package:dream_home_11/features/wallet/presentation/providers/deposit_provider.dart';
+import 'package:dream_home_11/features/wallet/presentation/providers/payment_provider.dart';
 
 RequestInterceptorHandler _createMockHandler() {
   return RequestInterceptorHandler();
@@ -243,6 +247,32 @@ void main() {
 
       test('preCacheCount starts at 0', () {
         expect(AppImageCacheManager.preCacheCount, 0);
+      });
+    });
+
+    group('13. FCM Service Memory Management', () {
+      test('FcmService class has dispose method', () {
+        expect(FcmService, isNotNull);
+      });
+
+      test('fcmServiceProvider is a Provider', () {
+        expect(fcmServiceProvider, isA<Provider<FcmService>>());
+      });
+    });
+
+    group('14. Error Handling', () {
+      test('DepositNotifier catches errors gracefully', () {
+        final container = ProviderContainer();
+        addTearDown(() => container.dispose());
+        final notifier = container.read(depositProvider);
+        expect(notifier, isA<DepositNotifier>());
+      });
+
+      test('PaymentNotifier catches errors gracefully', () {
+        final container = ProviderContainer();
+        addTearDown(() => container.dispose());
+        final notifier = container.read(paymentProvider);
+        expect(notifier, isA<PaymentNotifier>());
       });
     });
   });

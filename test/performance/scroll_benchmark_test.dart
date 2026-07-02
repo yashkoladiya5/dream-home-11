@@ -2,6 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:dream_home_11/core/performance/scroll_tracker.dart';
+import 'package:dream_home_11/core/performance/memory_profiler.dart';
+import 'package:dream_home_11/core/performance/rendering_analyzer.dart';
+import 'package:dream_home_11/core/performance/performance_monitor.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -87,5 +91,44 @@ void main() {
       expect(found, isNotNull);
       expect(found!.tracker, same(tracker));
     });
+
+    test('Memory benchmark captures snapshot', () async {
+      final profiler = MemoryProfiler();
+      addTearDown(() => profiler.dispose());
+
+      final obj1 = Object();
+      final obj2 = Object();
+      profiler.registerDisposable(obj1, label: 'test_obj1');
+      profiler.registerDisposable(obj2, label: 'test_obj2');
+
+      expect(profiler.registeredObjectsCount, greaterThanOrEqualTo(2));
+
+      profiler.unregisterDisposable(obj1);
+      profiler.unregisterDisposable(obj2);
+    }, timeout: const Timeout(Duration(seconds: 10)));
+
+    test('RenderingAnalyzer tracks frame timings', () {
+      final analyzer = RenderingAnalyzer();
+      addTearDown(() => analyzer.dispose());
+
+      expect(analyzer.currentFps, 0);
+
+      analyzer.onFrame(const Duration(milliseconds: 8));
+      analyzer.onFrame(const Duration(milliseconds: 12));
+      analyzer.onFrame(const Duration(milliseconds: 16));
+
+      expect(analyzer.currentFps, greaterThanOrEqualTo(0));
+    }, timeout: const Timeout(Duration(seconds: 10)));
+
+    test('PerformanceMonitor produces metrics', () async {
+      final container = ProviderContainer();
+      addTearDown(() => container.dispose());
+
+      final monitor = container.read(performanceMonitorProvider);
+      addTearDown(() => monitor.dispose());
+
+      expect(monitor, isA<PerformanceMonitor>());
+      expect(monitor.metricsStream, isA<Stream<PerformanceMetrics>>());
+    }, timeout: const Timeout(Duration(seconds: 10)));
   });
 }

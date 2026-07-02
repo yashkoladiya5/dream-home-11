@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../dashboard/data/models/user_profile.dart';
@@ -29,7 +30,8 @@ class DepositNotifier {
         return UserProfile.fromJson(profileRes.data as Map<String, dynamic>);
       }
       return null;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[DepositNotifier] deposit error: $e');
       return null;
     }
   }

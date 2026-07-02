@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/models/notification_log.dart';
@@ -45,7 +46,9 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationLo
       });
       // Force update the unread count provider
       ref.invalidate(unreadNotificationCountProvider);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NotificationsNotifier] markAsRead error: $e');
+    }
   }
 
   Future<void> readAll() async {
@@ -69,7 +72,9 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationLo
       });
       // Force update the unread count provider
       ref.invalidate(unreadNotificationCountProvider);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NotificationsNotifier] readAll error: $e');
+    }
   }
 }
 
@@ -82,7 +87,8 @@ final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
     final dio = ref.watch(apiClientProvider);
     final response = await dio.get('/api/v1/notifications/unread-count');
     return response.data['unreadCount'] as int? ?? 0;
-  } catch (_) {
+  } catch (e) {
+    debugPrint('[NotificationsNotifier] unreadCount error: $e');
     return 0;
   }
 });
