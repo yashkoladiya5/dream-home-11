@@ -1,6 +1,7 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerBehindProxyGuard } from './common/guards/throttler-behind-proxy.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -71,6 +72,7 @@ import { SmsModule } from './sms/sms.module';
 import { AuditLog } from './audit/entities/audit-log.entity';
 import { AuditModule } from './audit/audit.module';
 import { CommonModule } from './common/common.module';
+import { MetricsModule } from './common/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -105,8 +107,8 @@ import { CommonModule } from './common/common.module';
       useFactory: (storage: RedisThrottlerStorageService) => ({
         throttlers: [
           {
-            ttl: 60000,
-            limit: process.env.NODE_ENV === 'production' ? 100 : 100000,
+        ttl: 60000,
+        limit: process.env.NODE_ENV === 'production' ? 30 : 100000,
           },
         ],
         storage,
@@ -144,13 +146,14 @@ import { CommonModule } from './common/common.module';
     SmsModule,
     CommonModule,
     HealthModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: ThrottlerBehindProxyGuard,
     },
   ],
 })

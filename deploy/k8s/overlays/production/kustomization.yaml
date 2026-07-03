@@ -1,0 +1,59 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: dream-home-11-production
+
+namespace: dream-home-11
+
+resources:
+  - ../../
+
+patches:
+  # Override replicas to 5 for production
+  - target:
+      kind: Deployment
+      name: dream-home-11
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 5
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          limits:
+            cpu: "2"
+            memory: "1Gi"
+          requests:
+            cpu: "1"
+            memory: "512Mi"
+
+  # Increase HPA bounds for production
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: dream-home-11
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 5
+      - op: replace
+        path: /spec/maxReplicas
+        value: 20
+      - op: replace
+        path: /spec/metrics/0/resource/target/averageUtilization
+        value: 60
+
+  # Stricter PDB for production
+  - target:
+      kind: PodDisruptionBudget
+      name: dream-home-11
+    patch: |-
+      - op: replace
+        path: /spec/minAvailable
+        value: 3
+
+configMapGenerator:
+  - name: dream-home-11-config
+    behavior: merge
+    literals:
+      - NODE_ENV=production

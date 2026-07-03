@@ -51,6 +51,9 @@ dependencies:
   url_launcher: ^6.2.1
   socket_io_client: ^3.1.6
   crypto: ^3.0.3
+  sentry_flutter: ^8.0.0
+  sentry_dio: ^8.0.0
+  sentry_logging: ^8.0.0
 
 dev_dependencies:
   flutter_test:

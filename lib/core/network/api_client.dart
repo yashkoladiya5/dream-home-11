@@ -4,12 +4,16 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../analytics/sentry_config.dart';
+import '../analytics/sentry_dio_interceptor.dart';
 import 'api_config.dart';
 import 'certificate_pinning.dart';
 import 'connectivity_service.dart';
 import 'offline_request_queue.dart';
 
 final apiClientProvider = Provider<Dio>((ref) {
+  SentryConfig.configure();
+
   final options = BaseOptions(
     baseUrl: ApiConfig.baseUrl,
     connectTimeout: ApiConfig.connectTimeout,
@@ -79,6 +83,9 @@ final apiClientProvider = Provider<Dio>((ref) {
       responseBody: true,
     ));
   }
+
+  // Sentry error tracking interceptor
+  dio.interceptors.add(SentryDioInterceptor());
 
   return dio;
 });

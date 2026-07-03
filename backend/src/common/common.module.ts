@@ -1,17 +1,19 @@
 import { Global, Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
-import { AllExceptionsFilter } from './filters/http-exception.filter';
+import { SentryExceptionFilter } from './filters/sentry-exception.filter';
 import { SanitizePipe } from './pipes/sanitize.pipe';
+import { PinoLoggerService } from './logger/pino-logger.service';
 
 @Global()
 @Module({
   providers: [
     SanitizePipe,
+    PinoLoggerService,
     {
       provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
+      useClass: SentryExceptionFilter,
     },
   ],
-  exports: [SanitizePipe],
+  exports: [SanitizePipe, PinoLoggerService],
 })
 export class CommonModule {}

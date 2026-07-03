@@ -1,0 +1,14 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: dream-home-11
+  namespace: dream-home-11
+  labels:
+    app.kubernetes.io/name: dream-home-11
+    app.kubernetes.io/component: backend
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: dream-home-11
+      app.kubernetes.io/component: backend

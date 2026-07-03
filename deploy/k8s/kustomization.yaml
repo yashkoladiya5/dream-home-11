@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: dream-home-11
+
+# All resources that make up the base deployment
+resources:
+  - namespace.yaml
+  - service-account.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - network-policy.yaml
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/instance: dream-home-11
+
+# Common annotations applied to all resources
+commonAnnotations:
+  app.kubernetes.io/description: "Dream Home 11 - Fantasy Sports Platform Backend"

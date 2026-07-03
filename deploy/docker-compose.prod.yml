@@ -62,15 +62,17 @@ services:
       - ../backend/.env.production
     volumes:
       - uploads:/app/uploads
+    labels:
+      logging: "fluentd"
     logging:
-      driver: json-file
+      driver: fluentd
       options:
-        max-size: '10m'
-        max-file: '3'
+        fluentd-address: localhost:24224
+        tag: docker.app
     networks:
       - dream_network
     healthcheck:
-      test: ['CMD', 'node', '-e', "require('http').get('http://localhost:3000/health', r => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ['CMD', 'node', '-e', "require('http').get('http://localhost:3000/health/ready', r => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -113,6 +115,26 @@ services:
     networks:
       - dream_network
 
+  # Fluentd log collector
+  fluentd:
+    build:
+      context: ./fluentd
+      dockerfile: Dockerfile
+    container_name: dream_home_11_fluentd
+    restart: always
+    environment:
+      ENV_NAME: production
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      LOKI_URL: ${LOKI_URL:-}
+    ports:
+      - '24224:24224'
+      - '24224:24224/udp'
+    volumes:
+      - fluentd-buffers:/var/log/fluentd-buffers
+      - /var/log/containers:/var/log/containers:ro
+    networks:
+      - dream_network
+
 networks:
   dream_network:
     driver: bridge
@@ -121,4 +143,6 @@ volumes:
   uploads:
     driver: local
   certbot-data:
+    driver: local
+  fluentd-buffers:
     driver: local

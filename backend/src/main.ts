@@ -4,8 +4,12 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { join } from 'path';
 import helmet from 'helmet';
 import compression from 'compression';
+import * as Sentry from '@sentry/node';
 import { AppModule } from './app.module';
 import { SanitizePipe } from './common/pipes/sanitize.pipe';
+import { SentryExceptionFilter } from './common/filters/sentry-exception.filter';
+import { SentryInterceptor } from './common/interceptors/sentry.interceptor';
+import { PinoLoggerService } from './common/logger/pino-logger.service';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -26,10 +30,30 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: process.env.NODE_ENV === 'production'
-      ? ['log', 'error', 'warn']
-      : ['log', 'error', 'warn', 'debug', 'verbose'],
+    bufferLogs: true,
   });
+
+  app.useLogger(app.get(PinoLoggerService));
+
+  const sentryDsn = process.env.SENTRY_DSN;
+  if (sentryDsn) {
+    Sentry.init({
+      dsn: sentryDsn,
+      environment: process.env.NODE_ENV || 'development',
+      release: `dreamhome11-api@${process.env.npm_package_version || '1.0.0'}`,
+      tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.2'),
+      beforeSend(event) {
+        if (event.tags?.status_code) {
+          const code = parseInt(event.tags.status_code as string, 10);
+          if (code >= 400 && code < 500) return null;
+        }
+        return event;
+      },
+    });
+  }
+
+  app.useGlobalFilters(new SentryExceptionFilter());
+  app.useGlobalInterceptors(new SentryInterceptor());
 
   app.set('trust proxy', 1);
 

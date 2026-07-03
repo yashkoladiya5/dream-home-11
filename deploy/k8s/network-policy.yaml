@@ -1,0 +1,86 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dream-home-11
+  namespace: dream-home-11
+  labels:
+    app.kubernetes.io/name: dream-home-11
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: dream-home-11
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from the nginx ingress controller namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 3000
+          protocol: TCP
+    # Allow traffic from the same namespace (e.g., other internal services)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: dream-home-11
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+
+    # ═══════════════════════════════════════════════════════════════
+    # PostgreSQL / PgBouncer egress
+    # REPLACE with your actual PostgreSQL CIDR ranges:
+    #   - If using managed DB (RDS, CloudSQL, etc.):
+    #     to:
+    #       - ipBlock:
+    #           cidr: 10.0.0.0/16
+    #     ports:
+    #       - port: 5432
+    #         protocol: TCP
+    #   - If using in-cluster PostgreSQL, remove the egress to
+    #     external CIDR and add an ingress rule in the DB's namespace.
+    # ═══════════════════════════════════════════════════════════════
+    # - to:
+    #     - ipBlock:
+    #         cidr: REPLACE_WITH_DB_CIDR
+    #   ports:
+    #     - port: 5432
+    #       protocol: TCP
+
+    # ═══════════════════════════════════════════════════════════════
+    # Redis egress
+    # REPLACE with your actual Redis CIDR ranges:
+    # ═══════════════════════════════════════════════════════════════
+    # - to:
+    #     - ipBlock:
+    #         cidr: REPLACE_WITH_REDIS_CIDR
+    #   ports:
+    #     - port: 6379
+    #       protocol: TCP
+
+    # Allow outbound HTTP(S) for external API calls (Firebase, etc.)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - port: 443
+          protocol: TCP
+        - port: 80
+          protocol: TCP

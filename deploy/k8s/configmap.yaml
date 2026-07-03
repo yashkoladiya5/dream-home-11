@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dream-home-11-config
+  namespace: dream-home-11
+  labels:
+    app.kubernetes.io/name: dream-home-11
+    app.kubernetes.io/component: backend
+data:
+  # Application
+  NODE_ENV: "production"
+  PORT: "3000"
+
+  # Database
+  DB_PORT: "5432"
+  DB_POOL_MAX: "25"
+
+  # Redis
+  REDIS_PORT: "6379"
+
+  # Auth
+  JWT_EXPIRATION: "7d"
+  ENABLE_MOCK_AUTH: "false"

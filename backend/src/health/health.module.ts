@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthController } from './health.controller';
-import { User } from '../users/entities/user.entity';
+import { RedisModule } from '../redis/redis.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [RedisModule],
   controllers: [HealthController],
 })
 export class HealthModule {}

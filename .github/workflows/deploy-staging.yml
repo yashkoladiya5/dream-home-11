@@ -1,0 +1,38 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to staging server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/dreamhome11
+            echo ">>> Pulling latest images..."
+            docker-compose -f docker-compose.prod.yml pull
+            echo ">>> Running database migrations..."
+            docker-compose -f docker-compose.prod.yml run --rm app npx typeorm migration:run
+            echo ">>> Restarting services..."
+            docker-compose -f docker-compose.prod.yml up -d
+
+  health-check:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify health endpoint
+        run: |
+          curl -f --retry 5 --retry-delay 10 --retry-max-time 60 \
+            "${{ secrets.STAGING_URL }}/health" || exit 1
