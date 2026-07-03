@@ -62,7 +62,9 @@ describe('StreakService', () => {
     it('should start streak at 1 for new users', async () => {
       const user = { ...mockUser, currentStreak: 0, lastStreakDate: null };
       (userRepo.findOne as jest.Mock).mockResolvedValue(user);
-      (userRepo.save as jest.Mock).mockImplementation((u) => Promise.resolve(u));
+      (userRepo.save as jest.Mock).mockImplementation((u) =>
+        Promise.resolve(u),
+      );
 
       const result = await service.updateStreak('user-1');
       expect(result.currentStreak).toBe(1);
@@ -72,9 +74,16 @@ describe('StreakService', () => {
     it('should increment streak for consecutive day', async () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const user = { ...mockUser, currentStreak: 3, longestStreak: 3, lastStreakDate: yesterday };
+      const user = {
+        ...mockUser,
+        currentStreak: 3,
+        longestStreak: 3,
+        lastStreakDate: yesterday,
+      };
       (userRepo.findOne as jest.Mock).mockResolvedValue(user);
-      (userRepo.save as jest.Mock).mockImplementation((u) => Promise.resolve(u));
+      (userRepo.save as jest.Mock).mockImplementation((u) =>
+        Promise.resolve(u),
+      );
 
       const result = await service.updateStreak('user-1');
       expect(result.currentStreak).toBe(4);
@@ -84,9 +93,16 @@ describe('StreakService', () => {
     it('should reset streak to 1 if day was missed', async () => {
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-      const user = { ...mockUser, currentStreak: 5, longestStreak: 5, lastStreakDate: threeDaysAgo };
+      const user = {
+        ...mockUser,
+        currentStreak: 5,
+        longestStreak: 5,
+        lastStreakDate: threeDaysAgo,
+      };
       (userRepo.findOne as jest.Mock).mockResolvedValue(user);
-      (userRepo.save as jest.Mock).mockImplementation((u) => Promise.resolve(u));
+      (userRepo.save as jest.Mock).mockImplementation((u) =>
+        Promise.resolve(u),
+      );
 
       const result = await service.updateStreak('user-1');
       expect(result.currentStreak).toBe(1);
@@ -95,9 +111,16 @@ describe('StreakService', () => {
 
     it('should not increment if already logged in today', async () => {
       const today = new Date();
-      const user = { ...mockUser, currentStreak: 5, longestStreak: 5, lastStreakDate: today };
+      const user = {
+        ...mockUser,
+        currentStreak: 5,
+        longestStreak: 5,
+        lastStreakDate: today,
+      };
       (userRepo.findOne as jest.Mock).mockResolvedValue(user);
-      (userRepo.save as jest.Mock).mockImplementation((u) => Promise.resolve(u));
+      (userRepo.save as jest.Mock).mockImplementation((u) =>
+        Promise.resolve(u),
+      );
 
       const result = await service.updateStreak('user-1');
       expect(result.currentStreak).toBe(5);
@@ -107,9 +130,18 @@ describe('StreakService', () => {
     it('should award 100 bonus at 7-day streak', async () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const user = { ...mockUser, currentStreak: 6, longestStreak: 6, lastStreakDate: yesterday, lifetimePoints: 500, pointsBalance: 500 };
+      const user = {
+        ...mockUser,
+        currentStreak: 6,
+        longestStreak: 6,
+        lastStreakDate: yesterday,
+        lifetimePoints: 500,
+        pointsBalance: 500,
+      };
       (userRepo.findOne as jest.Mock).mockResolvedValue(user);
-      (userRepo.save as jest.Mock).mockImplementation((u) => Promise.resolve(u));
+      (userRepo.save as jest.Mock).mockImplementation((u) =>
+        Promise.resolve(u),
+      );
 
       const result = await service.updateStreak('user-1');
       expect(result.currentStreak).toBe(7);
@@ -120,9 +152,18 @@ describe('StreakService', () => {
     it('should award 600 bonus at 30-day streak', async () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const user = { ...mockUser, currentStreak: 29, longestStreak: 29, lastStreakDate: yesterday, lifetimePoints: 2000, pointsBalance: 2000 };
+      const user = {
+        ...mockUser,
+        currentStreak: 29,
+        longestStreak: 29,
+        lastStreakDate: yesterday,
+        lifetimePoints: 2000,
+        pointsBalance: 2000,
+      };
       (userRepo.findOne as jest.Mock).mockResolvedValue(user);
-      (userRepo.save as jest.Mock).mockImplementation((u) => Promise.resolve(u));
+      (userRepo.save as jest.Mock).mockImplementation((u) =>
+        Promise.resolve(u),
+      );
 
       const result = await service.updateStreak('user-1');
       expect(result.currentStreak).toBe(30);
@@ -158,9 +199,16 @@ describe('StreakService', () => {
     it('should apply -200 penalty to users who missed yesterday', async () => {
       const twoDaysAgo = new Date();
       twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-      const user = { ...mockUser, currentStreak: 5, lastStreakDate: twoDaysAgo, pointsBalance: 500 };
+      const user = {
+        ...mockUser,
+        currentStreak: 5,
+        lastStreakDate: twoDaysAgo,
+        pointsBalance: 500,
+      };
       (userRepo.find as jest.Mock).mockResolvedValue([user]);
-      (userRepo.save as jest.Mock).mockImplementation((u) => Promise.resolve(u));
+      (userRepo.save as jest.Mock).mockImplementation((u) =>
+        Promise.resolve(u),
+      );
 
       const count = await service.applyMissedDayPenalties();
       expect(count).toBe(1);

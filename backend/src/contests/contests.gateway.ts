@@ -22,7 +22,9 @@ interface JwtPayload {
     credentials: true,
   },
 })
-export class ContestsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ContestsGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -57,17 +59,13 @@ export class ContestsGateway implements OnGatewayConnection, OnGatewayDisconnect
       const user = await this.usersService.findById(payload.sub);
 
       if (!user || !user.isActive) {
-        this.logger.warn(
-          `User not found or inactive for client ${client.id}`,
-        );
+        this.logger.warn(`User not found or inactive for client ${client.id}`);
         client.disconnect();
         return;
       }
 
       client.data.userId = user.id;
-      this.logger.log(
-        `Client ${client.id} connected as user ${user.id}`,
-      );
+      this.logger.log(`Client ${client.id} connected as user ${user.id}`);
     } catch (error) {
       this.logger.error(
         `Error in handleConnection for client ${client.id}: ${error}`,
@@ -120,7 +118,16 @@ export class ContestsGateway implements OnGatewayConnection, OnGatewayDisconnect
     console.log(`[ContestsGateway] Client ${client.id} left room ${room}`);
   }
 
-  emitPointUpdate(contestId: string, data: { userId: string; points: number; activity: string; description: string; timestamp: Date }) {
+  emitPointUpdate(
+    contestId: string,
+    data: {
+      userId: string;
+      points: number;
+      activity: string;
+      description: string;
+      timestamp: Date;
+    },
+  ) {
     this.server.to(`contest:${contestId}`).emit('contest.pointUpdate', {
       contestId,
       ...data,

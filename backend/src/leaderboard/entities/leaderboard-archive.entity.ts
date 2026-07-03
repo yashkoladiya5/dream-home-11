@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  Index,
+} from 'typeorm';
 
 @Entity('leaderboard_archives')
 @Index(['cycle', 'snapshotDate'])
@@ -19,7 +25,12 @@ export class LeaderboardArchive {
   @Column({ type: 'integer' })
   rank: number;
 
-  @Column({ name: 'previous_tier', type: 'varchar', length: 20, nullable: true })
+  @Column({
+    name: 'previous_tier',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
   previousTier: string | null;
 
   @Column({ name: 'snapshot_date', type: 'timestamptz' })

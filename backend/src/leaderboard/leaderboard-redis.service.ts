@@ -24,9 +24,7 @@ export class LeaderboardRedisService {
   static readonly WEEKLY_TTL = 7 * 24 * 60 * 60;
   static readonly MONTHLY_TTL = 30 * 24 * 60 * 60;
 
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   private async _exec<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
     try {
@@ -39,12 +37,26 @@ export class LeaderboardRedisService {
 
   // --- Core Sorted Set Operations ---
 
-  async addScore(leaderboardKey: string, userId: string, score: number): Promise<void> {
-    await this._exec(() => this.redis.zadd(leaderboardKey, score, userId), undefined);
+  async addScore(
+    leaderboardKey: string,
+    userId: string,
+    score: number,
+  ): Promise<void> {
+    await this._exec(
+      () => this.redis.zadd(leaderboardKey, score, userId),
+      undefined,
+    );
   }
 
-  async incrementScore(leaderboardKey: string, userId: string, increment: number): Promise<number> {
-    return this._exec(() => this.redis.zincrby(leaderboardKey, increment, userId).then(Number), 0);
+  async incrementScore(
+    leaderboardKey: string,
+    userId: string,
+    increment: number,
+  ): Promise<number> {
+    return this._exec(
+      () => this.redis.zincrby(leaderboardKey, increment, userId).then(Number),
+      0,
+    );
   }
 
   async getTopUsers(
@@ -55,19 +67,30 @@ export class LeaderboardRedisService {
     return this._exec(async () => {
       const start = (page - 1) * limit;
       const end = start + limit - 1;
-      const results = await this.redis.zrevrange(leaderboardKey, start, end, 'WITHSCORES');
+      const results = await this.redis.zrevrange(
+        leaderboardKey,
+        start,
+        end,
+        'WITHSCORES',
+      );
       return this._parseResults(results, start);
     }, []);
   }
 
-  async getUserRank(leaderboardKey: string, userId: string): Promise<number | null> {
+  async getUserRank(
+    leaderboardKey: string,
+    userId: string,
+  ): Promise<number | null> {
     return this._exec(async () => {
       const rank = await this.redis.zrevrank(leaderboardKey, userId);
       return rank !== null ? rank + 1 : null;
     }, null);
   }
 
-  async getUserScore(leaderboardKey: string, userId: string): Promise<number | null> {
+  async getUserScore(
+    leaderboardKey: string,
+    userId: string,
+  ): Promise<number | null> {
     return this._exec(async () => {
       const score = await this.redis.zscore(leaderboardKey, userId);
       return score !== null ? Number(score) : null;
@@ -94,7 +117,12 @@ export class LeaderboardRedisService {
     return this._exec(async () => {
       const start = minRank - 1;
       const end = maxRank - 1;
-      const results = await this.redis.zrevrange(leaderboardKey, start, end, 'WITHSCORES');
+      const results = await this.redis.zrevrange(
+        leaderboardKey,
+        start,
+        end,
+        'WITHSCORES',
+      );
       return this._parseResults(results, start);
     }, []);
   }
@@ -104,7 +132,11 @@ export class LeaderboardRedisService {
     userId: string,
     page: number = 1,
     limit: number = 20,
-  ): Promise<{ entries: LeaderboardEntry[]; userRank: LeaderboardEntry | null; totalCount: number }> {
+  ): Promise<{
+    entries: LeaderboardEntry[];
+    userRank: LeaderboardEntry | null;
+    totalCount: number;
+  }> {
     const [entries, userRank, totalCount] = await Promise.all([
       this.getTopUsers(leaderboardKey, page, limit),
       this._getUserEntry(leaderboardKey, userId),
@@ -119,13 +151,19 @@ export class LeaderboardRedisService {
 
   getTtlForCycle(cycle: string): number | null {
     switch (cycle) {
-      case 'weekly': return LeaderboardRedisService.WEEKLY_TTL;
-      case 'monthly': return LeaderboardRedisService.MONTHLY_TTL;
-      default: return null;
+      case 'weekly':
+        return LeaderboardRedisService.WEEKLY_TTL;
+      case 'monthly':
+        return LeaderboardRedisService.MONTHLY_TTL;
+      default:
+        return null;
     }
   }
 
-  async setKeyExpiry(leaderboardKey: string, ttl: number | null): Promise<void> {
+  async setKeyExpiry(
+    leaderboardKey: string,
+    ttl: number | null,
+  ): Promise<void> {
     if (ttl !== null) {
       await this._exec(() => this.redis.expire(leaderboardKey, ttl), undefined);
     }
@@ -135,18 +173,27 @@ export class LeaderboardRedisService {
 
   getCycleKey(cycle: string, contestId?: string): string {
     switch (cycle) {
-      case 'weekly': return LeaderboardRedisService.WEEKLY_KEY;
-      case 'monthly': return LeaderboardRedisService.MONTHLY_KEY;
-      case 'custom': return contestId ? this.getContestKey(contestId) : LeaderboardRedisService.GLOBAL_KEY;
-      default: return LeaderboardRedisService.GLOBAL_KEY;
+      case 'weekly':
+        return LeaderboardRedisService.WEEKLY_KEY;
+      case 'monthly':
+        return LeaderboardRedisService.MONTHLY_KEY;
+      case 'custom':
+        return contestId
+          ? this.getContestKey(contestId)
+          : LeaderboardRedisService.GLOBAL_KEY;
+      default:
+        return LeaderboardRedisService.GLOBAL_KEY;
     }
   }
 
   static getStaticCycleKey(cycle: string): string {
     switch (cycle) {
-      case 'weekly': return LeaderboardRedisService.WEEKLY_KEY;
-      case 'monthly': return LeaderboardRedisService.MONTHLY_KEY;
-      default: return LeaderboardRedisService.GLOBAL_KEY;
+      case 'weekly':
+        return LeaderboardRedisService.WEEKLY_KEY;
+      case 'monthly':
+        return LeaderboardRedisService.MONTHLY_KEY;
+      default:
+        return LeaderboardRedisService.GLOBAL_KEY;
     }
   }
 
@@ -174,7 +221,10 @@ export class LeaderboardRedisService {
 
   // --- Private Helpers ---
 
-  private _parseResults(results: string[], startIndex: number): LeaderboardEntry[] {
+  private _parseResults(
+    results: string[],
+    startIndex: number,
+  ): LeaderboardEntry[] {
     const entries: LeaderboardEntry[] = [];
     for (let i = 0; i < results.length; i += 2) {
       const userId = results[i];
@@ -182,7 +232,7 @@ export class LeaderboardRedisService {
       entries.push({
         userId,
         score,
-        rank: startIndex + (i / 2) + 1,
+        rank: startIndex + i / 2 + 1,
       });
     }
     return entries;

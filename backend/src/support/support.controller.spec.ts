@@ -34,9 +34,7 @@ describe('SupportController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SupportController],
-      providers: [
-        { provide: SupportService, useValue: mockSupportService },
-      ],
+      providers: [{ provide: SupportService, useValue: mockSupportService }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue(mockJwtAuthGuard)
@@ -60,30 +58,49 @@ describe('SupportController', () => {
 
   describe('POST /api/v1/support/tickets', () => {
     it('should create a ticket without file', async () => {
-      const dto = { subject: 'Test ticket', message: 'Test message', category: 'general' };
+      const dto = {
+        subject: 'Test ticket',
+        message: 'Test message',
+        category: 'general',
+      };
       mockSupportService.createTicket.mockResolvedValue(mockTicket);
 
       const result = await controller.createTicket(mockUser as any, dto);
 
       expect(result).toEqual(mockTicket);
-      expect(mockSupportService.createTicket).toHaveBeenCalledWith('user-uuid-12345', dto, undefined);
+      expect(mockSupportService.createTicket).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        dto,
+        undefined,
+      );
     });
 
     it('should create a ticket with valid file attachment', async () => {
-      const dto = { subject: 'Test ticket', message: 'Test message', category: 'technical' };
+      const dto = {
+        subject: 'Test ticket',
+        message: 'Test message',
+        category: 'technical',
+      };
       const file = {
         originalname: 'screenshot.png',
         buffer: Buffer.from('test'),
         mimetype: 'image/png',
         size: 1024,
       } as Express.Multer.File;
-      const ticketWithAttachment = { ...mockTicket, attachmentUrl: '/uploads/support/test.png' };
+      const ticketWithAttachment = {
+        ...mockTicket,
+        attachmentUrl: '/uploads/support/test.png',
+      };
       mockSupportService.createTicket.mockResolvedValue(ticketWithAttachment);
 
       const result = await controller.createTicket(mockUser as any, dto, file);
 
       expect(result).toEqual(ticketWithAttachment);
-      expect(mockSupportService.createTicket).toHaveBeenCalledWith('user-uuid-12345', dto, file);
+      expect(mockSupportService.createTicket).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        dto,
+        file,
+      );
     });
 
     it('should accept pdf file type', async () => {
@@ -98,7 +115,11 @@ describe('SupportController', () => {
 
       await controller.createTicket(mockUser as any, dto, file);
 
-      expect(mockSupportService.createTicket).toHaveBeenCalledWith('user-uuid-12345', dto, file);
+      expect(mockSupportService.createTicket).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        dto,
+        file,
+      );
     });
 
     it('should accept jpeg file type', async () => {
@@ -113,7 +134,11 @@ describe('SupportController', () => {
 
       await controller.createTicket(mockUser as any, dto, file);
 
-      expect(mockSupportService.createTicket).toHaveBeenCalledWith('user-uuid-12345', dto, file);
+      expect(mockSupportService.createTicket).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        dto,
+        file,
+      );
     });
 
     it('should throw BadRequestException for invalid file type', async () => {
@@ -125,7 +150,9 @@ describe('SupportController', () => {
         size: 1024,
       } as Express.Multer.File;
 
-      await expect(controller.createTicket(mockUser as any, dto, file)).rejects.toThrow(BadRequestException);
+      await expect(
+        controller.createTicket(mockUser as any, dto, file),
+      ).rejects.toThrow(BadRequestException);
       expect(mockSupportService.createTicket).not.toHaveBeenCalled();
     });
 
@@ -138,7 +165,9 @@ describe('SupportController', () => {
         size: 6 * 1024 * 1024,
       } as Express.Multer.File;
 
-      await expect(controller.createTicket(mockUser as any, dto, file)).rejects.toThrow(BadRequestException);
+      await expect(
+        controller.createTicket(mockUser as any, dto, file),
+      ).rejects.toThrow(BadRequestException);
       expect(mockSupportService.createTicket).not.toHaveBeenCalled();
     });
 
@@ -186,17 +215,29 @@ describe('SupportController', () => {
       const result = await controller.getUserTickets(mockUser as any);
 
       expect(result).toEqual(mockResponse);
-      expect(mockSupportService.getUserTickets).toHaveBeenCalledWith('user-uuid-12345', 1, 20);
+      expect(mockSupportService.getUserTickets).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        1,
+        20,
+      );
     });
 
     it('should accept page and limit query params', async () => {
       const mockResponse = { tickets: [], total: 0, page: 2, limit: 10 };
       mockSupportService.getUserTickets.mockResolvedValue(mockResponse);
 
-      const result = await controller.getUserTickets(mockUser as any, '2', '10');
+      const result = await controller.getUserTickets(
+        mockUser as any,
+        '2',
+        '10',
+      );
 
       expect(result).toEqual(mockResponse);
-      expect(mockSupportService.getUserTickets).toHaveBeenCalledWith('user-uuid-12345', 2, 10);
+      expect(mockSupportService.getUserTickets).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        2,
+        10,
+      );
     });
   });
 
@@ -204,16 +245,26 @@ describe('SupportController', () => {
     it('should return a single ticket', async () => {
       mockSupportService.getTicketById.mockResolvedValue(mockTicket);
 
-      const result = await controller.getTicketById(mockUser as any, 'ticket-uuid-1');
+      const result = await controller.getTicketById(
+        mockUser as any,
+        'ticket-uuid-1',
+      );
 
       expect(result).toEqual(mockTicket);
-      expect(mockSupportService.getTicketById).toHaveBeenCalledWith('user-uuid-12345', 'ticket-uuid-1');
+      expect(mockSupportService.getTicketById).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        'ticket-uuid-1',
+      );
     });
 
     it('should propagate NotFoundException from service', async () => {
-      mockSupportService.getTicketById.mockRejectedValue(new (require('@nestjs/common').NotFoundException)());
+      mockSupportService.getTicketById.mockRejectedValue(
+        new (require('@nestjs/common').NotFoundException)(),
+      );
 
-      await expect(controller.getTicketById(mockUser as any, 'nonexistent')).rejects.toThrow();
+      await expect(
+        controller.getTicketById(mockUser as any, 'nonexistent'),
+      ).rejects.toThrow();
     });
   });
 });

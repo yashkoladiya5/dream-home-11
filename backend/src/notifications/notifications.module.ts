@@ -10,7 +10,11 @@ import { PointsModule } from '../points/points.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([FcmToken, Reminder, NotificationLog, User]), PointsModule, UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([FcmToken, Reminder, NotificationLog, User]),
+    PointsModule,
+    UsersModule,
+  ],
   controllers: [NotificationsController],
   providers: [NotificationsService],
   exports: [NotificationsService],

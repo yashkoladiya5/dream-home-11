@@ -22,7 +22,9 @@ export class ContestMember {
   @Column({ name: 'user_id', type: 'uuid', nullable: false })
   userId: string;
 
-  @ManyToOne(() => Contest, (contest) => contest.members, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Contest, (contest) => contest.members, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'contest_id' })
   contest: Contest;
 

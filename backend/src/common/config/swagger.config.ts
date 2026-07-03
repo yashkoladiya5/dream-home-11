@@ -4,7 +4,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 export function createSwaggerConfig(app: INestApplication): void {
   const config = new DocumentBuilder()
     .setTitle('Dream Home 11 API')
-    .setDescription('Production-grade API for Dream Home 11 — fantasy home contest platform')
+    .setDescription(
+      'Production-grade API for Dream Home 11 — fantasy home contest platform',
+    )
     .setVersion('1.0.0')
     .setContact(
       'Developer Team',
@@ -17,7 +19,8 @@ export function createSwaggerConfig(app: INestApplication): void {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: 'Enter JWT token obtained from auth/verify-otp or auth/mock-login',
+        description:
+          'Enter JWT token obtained from auth/verify-otp or auth/mock-login',
       },
       'JWT-auth',
     )
@@ -30,9 +33,15 @@ export function createSwaggerConfig(app: INestApplication): void {
       },
       'ApiKey-auth',
     )
-    .addTag('Auth', 'Authentication endpoints — OTP verification, token refresh, mock login')
+    .addTag(
+      'Auth',
+      'Authentication endpoints — OTP verification, token refresh, mock login',
+    )
     .addTag('Users', 'User profile, dashboard, settings, bank details')
-    .addTag('Contests', 'Contest listing, joining, private contests, winners, leaderboards')
+    .addTag(
+      'Contests',
+      'Contest listing, joining, private contests, winners, leaderboards',
+    )
     .addTag('Payments', 'Payment orders, verification, transaction history')
     .addTag('Wallet', 'Wallet balance, withdrawal requests, withdrawal history')
     .addTag('KYC', 'KYC submission, status check, document upload')

@@ -1,10 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager, LessThan, Brackets } from 'typeorm';
-import { Contest, ContestStatus, CompensationStatus as ContestCompensationStatus } from '../contests/entities/contest.entity';
+import {
+  Contest,
+  ContestStatus,
+  CompensationStatus as ContestCompensationStatus,
+} from '../contests/entities/contest.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User } from '../users/entities/user.entity';
-import { CompensationLog, CompensationStatus as LogStatus } from './entities/compensation.entity';
+import {
+  CompensationLog,
+  CompensationStatus as LogStatus,
+} from './entities/compensation.entity';
 import { PointsEngineService } from '../points/points-engine.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SmsService } from '../sms/sms.service';
@@ -50,7 +57,10 @@ export class CompensationService {
     return Math.round(entryFeeInr * rate);
   }
 
-  async autoCloseExpiredContests(): Promise<{ completed: number; cancelled: number }> {
+  async autoCloseExpiredContests(): Promise<{
+    completed: number;
+    cancelled: number;
+  }> {
     const now = new Date();
     const expiredContests = await this.contestRepo.find({
       where: [
@@ -77,25 +87,32 @@ export class CompensationService {
         cancelled++;
       }
       await this.contestRepo.save(contest);
-      this.logger.log(`Contest ${contest.id} ("${contest.title}") auto-closed: status set to ${contest.status}`);
+      this.logger.log(
+        `Contest ${contest.id} ("${contest.title}") auto-closed: status set to ${contest.status}`,
+      );
     }
 
     return { completed, cancelled };
   }
-
 
   async findUncompensatedContests(): Promise<Contest[]> {
     return this.contestRepo
       .createQueryBuilder('contest')
       .leftJoinAndSelect('contest.members', 'members')
       .leftJoinAndSelect('members.user', 'user')
-      .where('contest.compensationStatus = :status', { status: ContestCompensationStatus.NONE })
+      .where('contest.compensationStatus = :status', {
+        status: ContestCompensationStatus.NONE,
+      })
       .andWhere(
         new Brackets((qb) => {
-          qb.where('contest.status = :completed', { completed: ContestStatus.COMPLETED })
+          qb.where('contest.status = :completed', {
+            completed: ContestStatus.COMPLETED,
+          })
             .andWhere('contest.endTime < :now', { now: new Date() })
             .andWhere('contest.filledSlots < contest.maxSlots')
-            .orWhere('contest.status = :cancelled', { cancelled: ContestStatus.CANCELLED });
+            .orWhere('contest.status = :cancelled', {
+              cancelled: ContestStatus.CANCELLED,
+            });
         }),
       )
       .getMany();
@@ -108,7 +125,9 @@ export class CompensationService {
     });
   }
 
-  async processCompensation(contest: Contest): Promise<{ processed: number; totalPoints: number }> {
+  async processCompensation(
+    contest: Contest,
+  ): Promise<{ processed: number; totalPoints: number }> {
     if (!contest.members || contest.members.length === 0) {
       contest.compensationStatus = ContestCompensationStatus.PROCESSED;
       await this.contestRepo.save(contest);
@@ -121,11 +140,15 @@ export class CompensationService {
       .update(Contest)
       .set({ compensationStatus: ContestCompensationStatus.PENDING })
       .where('id = :id', { id: contest.id })
-      .andWhere('compensationStatus = :status', { status: ContestCompensationStatus.NONE })
+      .andWhere('compensationStatus = :status', {
+        status: ContestCompensationStatus.NONE,
+      })
       .execute();
 
     if (claimResult.affected === 0) {
-      this.logger.warn(`Contest ${contest.id} already claimed for compensation by another process`);
+      this.logger.warn(
+        `Contest ${contest.id} already claimed for compensation by another process`,
+      );
       return { processed: 0, totalPoints: 0 };
     }
 
@@ -139,51 +162,84 @@ export class CompensationService {
 
         const user = member.user;
         if (!user) {
-          this.logger.warn(`User not found for member ${member.id} in contest ${contest.id}`);
+          this.logger.warn(
+            `User not found for member ${member.id} in contest ${contest.id}`,
+          );
           continue;
         }
 
-        const multiplier = this.pointsEngineService.getMultiplier(user.currentTier);
+        const multiplier = this.pointsEngineService.getMultiplier(
+          user.currentTier,
+        );
         const finalPoints = Math.round(points * multiplier);
 
-        await this.userRepo.manager.transaction(async (entityManager: EntityManager) => {
-          await this.pointsEngineService.logPointActionWithEntityManager(
-            entityManager,
-            user.id,
-            'contest_compensation',
-            points,
-            multiplier,
-            finalPoints,
-          );
-
-          await entityManager.increment(User, { id: user.id }, 'pointsBalance', finalPoints);
-          await entityManager.increment(User, { id: user.id }, 'lifetimePoints', finalPoints);
-          await entityManager.increment(User, { id: user.id }, 'weeklyPoints', finalPoints);
-          await entityManager.increment(User, { id: user.id }, 'monthlyPoints', finalPoints);
-
-          if (member.pointsEarned !== undefined) {
-            await entityManager.update(
-              ContestMember,
-              { id: member.id },
-              { pointsEarned: (member.pointsEarned || 0) + finalPoints },
+        await this.userRepo.manager.transaction(
+          async (entityManager: EntityManager) => {
+            await this.pointsEngineService.logPointActionWithEntityManager(
+              entityManager,
+              user.id,
+              'contest_compensation',
+              points,
+              multiplier,
+              finalPoints,
             );
-          }
 
-          const log = entityManager.create(CompensationLog, {
-            contestId: contest.id,
-            userId: user.id,
-            entryFeeInr: entryFee,
-            compensationPoints: finalPoints,
-            status: LogStatus.PROCESSED,
-            processedAt: new Date(),
-          });
-          await entityManager.save(log);
-        });
+            await entityManager.increment(
+              User,
+              { id: user.id },
+              'pointsBalance',
+              finalPoints,
+            );
+            await entityManager.increment(
+              User,
+              { id: user.id },
+              'lifetimePoints',
+              finalPoints,
+            );
+            await entityManager.increment(
+              User,
+              { id: user.id },
+              'weeklyPoints',
+              finalPoints,
+            );
+            await entityManager.increment(
+              User,
+              { id: user.id },
+              'monthlyPoints',
+              finalPoints,
+            );
 
-        this.notificationsService.sendCompensationNotification(user.id, finalPoints);
+            if (member.pointsEarned !== undefined) {
+              await entityManager.update(
+                ContestMember,
+                { id: member.id },
+                { pointsEarned: (member.pointsEarned || 0) + finalPoints },
+              );
+            }
+
+            const log = entityManager.create(CompensationLog, {
+              contestId: contest.id,
+              userId: user.id,
+              entryFeeInr: entryFee,
+              compensationPoints: finalPoints,
+              status: LogStatus.PROCESSED,
+              processedAt: new Date(),
+            });
+            await entityManager.save(log);
+          },
+        );
+
+        this.notificationsService.sendCompensationNotification(
+          user.id,
+          finalPoints,
+        );
 
         if (user.phoneNumber) {
-          this.smsService.sendCompensationSms(user.phoneNumber, finalPoints, contest.title || 'Unknown Contest');
+          this.smsService.sendCompensationSms(
+            user.phoneNumber,
+            finalPoints,
+            contest.title || 'Unknown Contest',
+          );
         }
 
         processed++;
@@ -245,9 +301,15 @@ export class CompensationService {
     return this.compensationLogRepo;
   }
 
-  async getCompensationStats(): Promise<{ total: number; pending: number; totalPoints: number }> {
+  async getCompensationStats(): Promise<{
+    total: number;
+    pending: number;
+    totalPoints: number;
+  }> {
     const total = await this.compensationLogRepo.count();
-    const pending = await this.compensationLogRepo.count({ where: { status: LogStatus.PENDING } });
+    const pending = await this.compensationLogRepo.count({
+      where: { status: LogStatus.PENDING },
+    });
     const pointsAgg = await this.compensationLogRepo
       .createQueryBuilder('cl')
       .select('COALESCE(SUM(cl.compensationPoints), 0)', 'total')
@@ -255,7 +317,11 @@ export class CompensationService {
     return { total, pending, totalPoints: Number(pointsAgg?.total || 0) };
   }
 
-  async getCompensationLogs(query: { page?: number; limit?: number; status?: string }) {
+  async getCompensationLogs(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;

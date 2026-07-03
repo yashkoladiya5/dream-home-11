@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('shares')
@@ -16,7 +23,12 @@ export class Share {
   @Column({ name: 'contest_id', type: 'uuid', nullable: true })
   contestId: string | null;
 
-  @Column({ name: 'share_channel', type: 'varchar', length: 50, nullable: false })
+  @Column({
+    name: 'share_channel',
+    type: 'varchar',
+    length: 50,
+    nullable: false,
+  })
   shareChannel: string;
 
   @Column({ type: 'varchar', length: 20, default: 'sent' })

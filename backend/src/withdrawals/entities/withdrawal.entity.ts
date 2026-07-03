@@ -1,4 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum WithdrawalStatus {
@@ -19,13 +27,29 @@ export class Withdrawal {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ name: 'amount', type: 'numeric', precision: 10, scale: 2, default: 0 })
+  @Column({
+    name: 'amount',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    default: 0,
+  })
   amount: number;
 
-  @Column({ name: 'status', type: 'enum', enum: WithdrawalStatus, default: WithdrawalStatus.PENDING })
+  @Column({
+    name: 'status',
+    type: 'enum',
+    enum: WithdrawalStatus,
+    default: WithdrawalStatus.PENDING,
+  })
   status: WithdrawalStatus;
 
-  @Column({ name: 'bank_account_number', type: 'varchar', length: 30, nullable: true })
+  @Column({
+    name: 'bank_account_number',
+    type: 'varchar',
+    length: 30,
+    nullable: true,
+  })
   bankAccountNumber: string;
 
   @Column({ name: 'bank_ifsc', type: 'varchar', length: 20, nullable: true })

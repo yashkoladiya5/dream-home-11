@@ -12,11 +12,34 @@ export class PointsEngineService {
     platinum: 1.5,
   };
 
-  private readonly DAILY_ACTIONS: Record<string, { name: string; description: string; basePoints: number; dailyCap: number }> = {
-    app_open: { name: 'App Open', description: 'Open the app daily', basePoints: 10, dailyCap: 1 },
-    notification_on: { name: 'Notification Toggle', description: 'Enable notifications', basePoints: 20, dailyCap: 1 },
-    feed_like_comment: { name: 'Feed Engagement', description: 'Like or comment on posts', basePoints: 10, dailyCap: 5 },
-    daily_login: { name: 'Daily Login', description: 'Log in to the app', basePoints: 10, dailyCap: 1 },
+  private readonly DAILY_ACTIONS: Record<
+    string,
+    { name: string; description: string; basePoints: number; dailyCap: number }
+  > = {
+    app_open: {
+      name: 'App Open',
+      description: 'Open the app daily',
+      basePoints: 10,
+      dailyCap: 1,
+    },
+    notification_on: {
+      name: 'Notification Toggle',
+      description: 'Enable notifications',
+      basePoints: 20,
+      dailyCap: 1,
+    },
+    feed_like_comment: {
+      name: 'Feed Engagement',
+      description: 'Like or comment on posts',
+      basePoints: 10,
+      dailyCap: 5,
+    },
+    daily_login: {
+      name: 'Daily Login',
+      description: 'Log in to the app',
+      basePoints: 10,
+      dailyCap: 1,
+    },
   };
 
   constructor(
@@ -113,20 +136,38 @@ export class PointsEngineService {
       where: {
         userId,
         action,
-        createdAt: MoreThanOrEqual(today) as any,
+        createdAt: MoreThanOrEqual(today),
       },
     });
     return count;
   }
 
-  async canPerformAction(userId: string, action: string): Promise<{ canPerform: boolean; todayCount: number; dailyCap: number; reason?: string }> {
+  async canPerformAction(
+    userId: string,
+    action: string,
+  ): Promise<{
+    canPerform: boolean;
+    todayCount: number;
+    dailyCap: number;
+    reason?: string;
+  }> {
     const def = this.DAILY_ACTIONS[action];
     if (!def) {
-      return { canPerform: false, todayCount: 0, dailyCap: 0, reason: 'Unknown action' };
+      return {
+        canPerform: false,
+        todayCount: 0,
+        dailyCap: 0,
+        reason: 'Unknown action',
+      };
     }
     const todayCount = await this.getTodayActionCount(userId, action);
     if (todayCount >= def.dailyCap) {
-      return { canPerform: false, todayCount, dailyCap: def.dailyCap, reason: 'Daily cap reached' };
+      return {
+        canPerform: false,
+        todayCount,
+        dailyCap: def.dailyCap,
+        reason: 'Daily cap reached',
+      };
     }
     return { canPerform: true, todayCount, dailyCap: def.dailyCap };
   }
@@ -177,7 +218,7 @@ export class PointsEngineService {
       where: {
         userId,
         action: In(actionKeys),
-        createdAt: MoreThanOrEqual(today) as any,
+        createdAt: MoreThanOrEqual(today),
       },
     });
     todayPoints = todayLogs.reduce((sum, log) => sum + log.finalPoints, 0);
@@ -225,7 +266,13 @@ export class PointsEngineService {
     const multiplier = this.getMultiplier(tier);
     const finalPoints = this.calculatePoints(def.basePoints, tier);
 
-    await this.logPointAction(userId, action, def.basePoints, multiplier, finalPoints);
+    await this.logPointAction(
+      userId,
+      action,
+      def.basePoints,
+      multiplier,
+      finalPoints,
+    );
 
     return {
       success: true,
@@ -235,7 +282,7 @@ export class PointsEngineService {
       finalPoints,
       todayCount: status.todayCount + 1,
       dailyCap: def.dailyCap,
-      canPerform: (status.todayCount + 1) < def.dailyCap,
+      canPerform: status.todayCount + 1 < def.dailyCap,
       lifetimePoints: 0,
       currentTier: tier,
     };

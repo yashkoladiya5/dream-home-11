@@ -13,7 +13,14 @@ import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Achievement, UserAchievement, User, ContestMember, Share, RewardRedemption]),
+    TypeOrmModule.forFeature([
+      Achievement,
+      UserAchievement,
+      User,
+      ContestMember,
+      Share,
+      RewardRedemption,
+    ]),
     PointsModule,
     UsersModule,
   ],

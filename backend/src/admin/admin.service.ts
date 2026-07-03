@@ -3,7 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { User, UserRole } from '../users/entities/user.entity';
 import { Kyc } from '../kyc/entities/kyc.entity';
-import { Contest, ContestStatus, CompensationStatus as ContestCompensationStatus } from '../contests/entities/contest.entity';
+import {
+  Contest,
+  ContestStatus,
+  CompensationStatus as ContestCompensationStatus,
+} from '../contests/entities/contest.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
@@ -130,7 +134,14 @@ export class AdminService {
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
-    const allowedFields = ['role', 'isActive', 'currentTier', 'state', 'fullName', 'email'];
+    const allowedFields = [
+      'role',
+      'isActive',
+      'currentTier',
+      'state',
+      'fullName',
+      'email',
+    ];
     for (const field of allowedFields) {
       if (dto[field as keyof typeof dto] !== undefined) {
         (user as any)[field] = dto[field as keyof typeof dto];
@@ -142,13 +153,23 @@ export class AdminService {
 
   async getDashboardStats() {
     const totalUsers = await this.userRepo.count();
-    const activeUsers = await this.userRepo.count({ where: { isActive: true } });
-    const adminUsers = await this.userRepo.count({ where: { role: UserRole.ADMIN } });
+    const activeUsers = await this.userRepo.count({
+      where: { isActive: true },
+    });
+    const adminUsers = await this.userRepo.count({
+      where: { role: UserRole.ADMIN },
+    });
 
     const totalContests = await this.contestRepo.count();
-    const runningContests = await this.contestRepo.count({ where: { status: ContestStatus.RUNNING } });
-    const upcomingContests = await this.contestRepo.count({ where: { status: ContestStatus.UPCOMING } });
-    const completedContests = await this.contestRepo.count({ where: { status: ContestStatus.COMPLETED } });
+    const runningContests = await this.contestRepo.count({
+      where: { status: ContestStatus.RUNNING },
+    });
+    const upcomingContests = await this.contestRepo.count({
+      where: { status: ContestStatus.UPCOMING },
+    });
+    const completedContests = await this.contestRepo.count({
+      where: { status: ContestStatus.COMPLETED },
+    });
 
     const depositsAgg = await this.transactionRepo
       .createQueryBuilder('t')
@@ -162,10 +183,15 @@ export class AdminService {
       .where("t.type = 'points_earned' OR t.type = 'points_bonus'")
       .getRawOne();
 
-    const pendingKyc = await this.kycRepo.count({ where: { status: 'pending' as any } });
-    const openTickets = await this.supportTicketRepo.count({ where: { status: 'open' as any } });
+    const pendingKyc = await this.kycRepo.count({
+      where: { status: 'pending' as any },
+    });
+    const openTickets = await this.supportTicketRepo.count({
+      where: { status: 'open' },
+    });
 
-    const compensationStats = await this.compensationService.getCompensationStats();
+    const compensationStats =
+      await this.compensationService.getCompensationStats();
 
     const recentUsers = await this.userRepo.find({
       order: { createdAt: 'DESC' },
@@ -215,7 +241,13 @@ export class AdminService {
     };
   }
 
-  async getContests(query: { page?: number; limit?: number; status?: string; type?: string; search?: string }) {
+  async getContests(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    type?: string;
+    search?: string;
+  }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;
@@ -248,7 +280,12 @@ export class AdminService {
     return { ...contest, memberCount };
   }
 
-  async getKycSubmissions(query: { page?: number; limit?: number; status?: string; userId?: string }) {
+  async getKycSubmissions(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    userId?: string;
+  }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;
@@ -283,7 +320,8 @@ export class AdminService {
     if (!kyc) throw new NotFoundException('KYC submission not found');
 
     kyc.status = 'rejected' as any;
-    (kyc as any).rejectionReason = reason || 'KYC documents do not meet verification requirements';
+    (kyc as any).rejectionReason =
+      reason || 'KYC documents do not meet verification requirements';
     kyc.verifiedAt = new Date();
     await this.kycRepo.save(kyc);
     return kyc;
@@ -298,11 +336,24 @@ export class AdminService {
     }
 
     const allowedFields: (keyof SystemConfig)[] = [
-      'appName', 'appVersion', 'apiVersion', 'environment',
-      'maintenanceMode', 'minAppVersionAndroid', 'minAppVersionIos',
-      'maxWithdrawalAmount', 'minWithdrawalAmount',
-      'dailySpinEnabled', 'pollsEnabled', 'feedEnabled', 'chatEnabled', 'referralEnabled',
-      'maxDailyPosts', 'maxDailySpins', 'supportEmail', 'restrictedStates',
+      'appName',
+      'appVersion',
+      'apiVersion',
+      'environment',
+      'maintenanceMode',
+      'minAppVersionAndroid',
+      'minAppVersionIos',
+      'maxWithdrawalAmount',
+      'minWithdrawalAmount',
+      'dailySpinEnabled',
+      'pollsEnabled',
+      'feedEnabled',
+      'chatEnabled',
+      'referralEnabled',
+      'maxDailyPosts',
+      'maxDailySpins',
+      'supportEmail',
+      'restrictedStates',
     ];
 
     const filtered: any = {};
@@ -317,7 +368,12 @@ export class AdminService {
     return this.configRepo.findOne({ where: { id: config.id } });
   }
 
-  async getSupportTickets(query: { page?: number; limit?: number; status?: string; category?: string }) {
+  async getSupportTickets(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    category?: string;
+  }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;
@@ -338,11 +394,14 @@ export class AdminService {
   }
 
   async compensateContest(contestId: string) {
-    const contest = await this.compensationService.findContestWithMembers(contestId);
+    const contest =
+      await this.compensationService.findContestWithMembers(contestId);
     if (!contest) throw new NotFoundException('Contest not found');
 
     if (contest.compensationStatus !== ContestCompensationStatus.NONE) {
-      throw new Error(`Contest already has compensation status: ${contest.compensationStatus}`);
+      throw new Error(
+        `Contest already has compensation status: ${contest.compensationStatus}`,
+      );
     }
 
     return this.compensationService.processCompensation(contest);
@@ -352,16 +411,21 @@ export class AdminService {
     return this.compensationService.processPendingCompensations();
   }
 
-  async getCompensationLogs(query: { page?: number; limit?: number; status?: string }) {
+  async getCompensationLogs(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }) {
     return this.compensationService.getCompensationLogs(query);
   }
 
   async getDetailedCompensationStats() {
     const total = await this.compensationService.getCompensationStats();
 
-    const dailyAgg = await this.compensationService.getCompensationLogRepo()
+    const dailyAgg = await this.compensationService
+      .getCompensationLogRepo()
       .createQueryBuilder('cl')
-      .select("DATE(cl.created_at)", "date")
+      .select('DATE(cl.created_at)', 'date')
       .addSelect('COUNT(*)', 'count')
       .addSelect('COALESCE(SUM(cl.compensation_points), 0)', 'points')
       .groupBy('DATE(cl.created_at)')
@@ -383,9 +447,16 @@ export class AdminService {
     let sentCount: number;
 
     if (tier) {
-      sentCount = await this.notificationsService.broadcastToUsersByTier(tier, title, message);
+      sentCount = await this.notificationsService.broadcastToUsersByTier(
+        tier,
+        title,
+        message,
+      );
     } else {
-      sentCount = await this.notificationsService.broadcastToAllUsers(title, message);
+      sentCount = await this.notificationsService.broadcastToAllUsers(
+        title,
+        message,
+      );
     }
 
     return { sent: sentCount, title, message, tier: tier || 'all' };
@@ -395,7 +466,10 @@ export class AdminService {
     const where: any = { isActive: true };
     if (tier) where.currentTier = tier;
 
-    const users = await this.userRepo.find({ where, select: { id: true, phoneNumber: true } });
+    const users = await this.userRepo.find({
+      where,
+      select: { id: true, phoneNumber: true },
+    });
     let sentCount = 0;
 
     for (const user of users) {
@@ -404,13 +478,20 @@ export class AdminService {
           await this.smsService.sendSms(user.phoneNumber, message);
           sentCount++;
         } catch (error) {
-          this.logger.error(`Failed to send SMS to user ${user.id}: ${(error as Error).message}`);
+          this.logger.error(
+            `Failed to send SMS to user ${user.id}: ${(error as Error).message}`,
+          );
         }
       }
     }
 
     this.logger.log(`Broadcast SMS sent to ${sentCount}/${users.length} users`);
-    return { sent: sentCount, total: users.length, message, tier: tier || 'all' };
+    return {
+      sent: sentCount,
+      total: users.length,
+      message,
+      tier: tier || 'all',
+    };
   }
 
   async exportCompensations(query: { status?: string }) {

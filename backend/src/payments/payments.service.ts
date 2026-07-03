@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
@@ -7,7 +11,8 @@ import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class PaymentsService {
-  private readonly webhookSecret = process.env.WEBHOOK_SECRET || 'dream11_webhook_secret_key_2026';
+  private readonly webhookSecret =
+    process.env.WEBHOOK_SECRET || 'dream11_webhook_secret_key_2026';
 
   constructor(
     @InjectRepository(Payment)
@@ -15,7 +20,11 @@ export class PaymentsService {
     private readonly transactionsService: TransactionsService,
   ) {}
 
-  async createOrder(userId: string, amount: number, paymentMethod?: string): Promise<Payment> {
+  async createOrder(
+    userId: string,
+    amount: number,
+    paymentMethod?: string,
+  ): Promise<Payment> {
     if (amount < 10 || amount > 50000) {
       throw new BadRequestException('Amount must be between ₹10 and ₹50,000');
     }
@@ -34,11 +43,17 @@ export class PaymentsService {
     return this.paymentRepo.save(payment);
   }
 
-  async verifyPayment(userId: string, orderId: string, paymentId: string): Promise<{ payment: Payment; bonusPoints: number }> {
+  async verifyPayment(
+    userId: string,
+    orderId: string,
+    paymentId: string,
+  ): Promise<{ payment: Payment; bonusPoints: number }> {
     const payment = await this.paymentRepo.findOne({ where: { orderId } });
     if (!payment) throw new NotFoundException('Payment order not found');
-    if (payment.userId !== userId) throw new BadRequestException('Order does not belong to user');
-    if (payment.status !== 'pending') throw new BadRequestException('Payment already processed');
+    if (payment.userId !== userId)
+      throw new BadRequestException('Order does not belong to user');
+    if (payment.status !== 'pending')
+      throw new BadRequestException('Payment already processed');
 
     const payload = `${orderId}|${paymentId}|${payment.amount}|completed`;
     const signature = crypto

@@ -67,7 +67,10 @@ describe('PollsController', () => {
 
       expect(result).toEqual({ poll: mockPoll, userVote: mockUserVote });
       expect(mockPollsService.getActivePoll).toHaveBeenCalledTimes(1);
-      expect(mockPollsService.getUserVote).toHaveBeenCalledWith('user-uuid-12345', 'poll-1');
+      expect(mockPollsService.getUserVote).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        'poll-1',
+      );
     });
 
     it('should return message when no active poll exists', async () => {
@@ -100,7 +103,11 @@ describe('PollsController', () => {
       const result = await controller.vote(mockRequest, 'poll-1', 0);
 
       expect(result).toEqual(voteResult);
-      expect(mockPollsService.vote).toHaveBeenCalledWith('user-uuid-12345', 'poll-1', 0);
+      expect(mockPollsService.vote).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        'poll-1',
+        0,
+      );
     });
   });
 
@@ -122,7 +129,10 @@ describe('PollsController', () => {
       const result = await controller.getResults('poll-1', mockRequest);
 
       expect(result).toEqual({ ...resultsData, userVote });
-      expect(mockPollsService.getUserVote).toHaveBeenCalledWith('user-uuid-12345', 'poll-1');
+      expect(mockPollsService.getUserVote).toHaveBeenCalledWith(
+        'user-uuid-12345',
+        'poll-1',
+      );
       expect(mockPollsService.getPollResults).toHaveBeenCalledWith('poll-1');
     });
   });

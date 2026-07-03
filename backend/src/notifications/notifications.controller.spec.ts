@@ -22,9 +22,7 @@ describe('NotificationsController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotificationsController],
-      providers: [
-        { provide: NotificationsService, useValue: service },
-      ],
+      providers: [{ provide: NotificationsService, useValue: service }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
@@ -41,7 +39,10 @@ describe('NotificationsController', () => {
     it('should call getUserNotifications with parsed query parameters', async () => {
       const req = { user: { id: 'u-1' } };
       await controller.getNotifications(req, '2', '15');
-      expect(service.getUserNotifications).toHaveBeenCalledWith('u-1', { page: 2, limit: 15 });
+      expect(service.getUserNotifications).toHaveBeenCalledWith('u-1', {
+        page: 2,
+        limit: 15,
+      });
     });
   });
 
@@ -58,7 +59,9 @@ describe('NotificationsController', () => {
   describe('markAsRead', () => {
     it('should throw BadRequestException if notification ID is not valid UUID', async () => {
       const req = { user: { id: 'u-1' } };
-      await expect(controller.markAsRead(req, 'invalid-id')).rejects.toThrow(BadRequestException);
+      await expect(controller.markAsRead(req, 'invalid-id')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should call markAsRead and return success status', async () => {
@@ -67,7 +70,10 @@ describe('NotificationsController', () => {
       service.markAsRead!.mockResolvedValue({ id: uuid, isRead: true });
       const result = await controller.markAsRead(req, uuid);
       expect(service.markAsRead).toHaveBeenCalledWith('u-1', uuid);
-      expect(result).toEqual({ success: true, notification: { id: uuid, isRead: true } });
+      expect(result).toEqual({
+        success: true,
+        notification: { id: uuid, isRead: true },
+      });
     });
   });
 

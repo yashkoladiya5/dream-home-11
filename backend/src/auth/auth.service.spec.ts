@@ -67,8 +67,17 @@ describe('AuthService', () => {
   };
 
   const mockReferralService = {
-    applyReferral: jest.fn().mockResolvedValue({ success: true, message: 'Referral applied', pointsAwarded: 30 }),
-    getReferralStats: jest.fn().mockResolvedValue({ referralCode: 'TESTCODE', totalReferred: 0, totalRewardsEarned: 0, totalKycCompleted: 0 }),
+    applyReferral: jest.fn().mockResolvedValue({
+      success: true,
+      message: 'Referral applied',
+      pointsAwarded: 30,
+    }),
+    getReferralStats: jest.fn().mockResolvedValue({
+      referralCode: 'TESTCODE',
+      totalReferred: 0,
+      totalRewardsEarned: 0,
+      totalKycCompleted: 0,
+    }),
     getReferralHistory: jest.fn().mockResolvedValue([]),
     processKycReferral: jest.fn().mockResolvedValue(undefined),
     ensureReferralCode: jest.fn().mockResolvedValue('TESTCODE'),
@@ -170,17 +179,25 @@ describe('AuthService', () => {
       // Attempt 1
       await expect(
         service.verifyOtp(idToken, deviceId, '000001'),
-      ).rejects.toThrow(new UnauthorizedException('Invalid OTP verification code'));
+      ).rejects.toThrow(
+        new UnauthorizedException('Invalid OTP verification code'),
+      );
 
       // Attempt 2
       await expect(
         service.verifyOtp(idToken, deviceId, '000002'),
-      ).rejects.toThrow(new UnauthorizedException('Invalid OTP verification code'));
+      ).rejects.toThrow(
+        new UnauthorizedException('Invalid OTP verification code'),
+      );
 
       // Attempt 3 - Should throw too many attempts exception and delete cache
       await expect(
         service.verifyOtp(idToken, deviceId, '000003'),
-      ).rejects.toThrow(new UnauthorizedException('Too many failed attempts. Please request a new OTP.'));
+      ).rejects.toThrow(
+        new UnauthorizedException(
+          'Too many failed attempts. Please request a new OTP.',
+        ),
+      );
 
       expect(service['otpStore'].get(phoneNumber)).toBeUndefined();
     });

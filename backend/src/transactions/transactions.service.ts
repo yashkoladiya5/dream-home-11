@@ -41,10 +41,20 @@ export class TransactionsService {
     return this.transactionRepo.save(tx);
   }
 
-  async getHistory(userId: string, page = 1, limit = 20, type?: string): Promise<{ transactions: Transaction[]; total: number; page: number; limit: number }> {
+  async getHistory(
+    userId: string,
+    page = 1,
+    limit = 20,
+    type?: string,
+  ): Promise<{
+    transactions: Transaction[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const where: any = { userId };
     if (type) {
-      const types = type.split(',').map(t => t.trim());
+      const types = type.split(',').map((t) => t.trim());
       where.type = In(types);
     }
     const [transactions, total] = await this.transactionRepo.findAndCount({
@@ -99,6 +109,12 @@ export class TransactionsService {
       }
     }
 
-    return { totalCashDeposited, totalCashSpent, totalPointsEarned, totalPointsSpent, totalWithdrawn };
+    return {
+      totalCashDeposited,
+      totalCashSpent,
+      totalPointsEarned,
+      totalPointsSpent,
+      totalWithdrawn,
+    };
   }
 }

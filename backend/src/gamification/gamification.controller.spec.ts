@@ -101,16 +101,22 @@ describe('GamificationController', () => {
 
   describe('GET /api/v1/gamification/spin/status', () => {
     it('should call gamificationService.getSpinStatus with req.user.id', async () => {
-      mockGamificationService.getSpinStatus.mockResolvedValue(mockSpinStatusResult);
+      mockGamificationService.getSpinStatus.mockResolvedValue(
+        mockSpinStatusResult,
+      );
 
       await controller.spinStatus(mockRequest);
 
       expect(gamificationService.getSpinStatus).toHaveBeenCalledTimes(1);
-      expect(gamificationService.getSpinStatus).toHaveBeenCalledWith('user-uuid-12345');
+      expect(gamificationService.getSpinStatus).toHaveBeenCalledWith(
+        'user-uuid-12345',
+      );
     });
 
     it('should return the spin status response', async () => {
-      mockGamificationService.getSpinStatus.mockResolvedValue(mockSpinStatusResult);
+      mockGamificationService.getSpinStatus.mockResolvedValue(
+        mockSpinStatusResult,
+      );
 
       const result = await controller.spinStatus(mockRequest);
 

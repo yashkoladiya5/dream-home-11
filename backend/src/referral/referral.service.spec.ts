@@ -97,7 +97,9 @@ describe('ReferralService', () => {
   }
 
   function setupTransactionMocks(): void {
-    mockQueryRunner.manager.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+    mockQueryRunner.manager.createQueryBuilder.mockReturnValue(
+      mockQueryBuilder,
+    );
   }
 
   beforeEach(async () => {
@@ -161,9 +163,9 @@ describe('ReferralService', () => {
     it('should throw NotFoundException for invalid referral code', async () => {
       mockUserRepo.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.applyReferral(mockUser, 'INVALID'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.applyReferral(mockUser, 'INVALID')).rejects.toThrow(
+        NotFoundException,
+      );
 
       expect(mockUserRepo.findOne).toHaveBeenCalledWith({
         where: { referralCode: 'INVALID' },
@@ -175,9 +177,9 @@ describe('ReferralService', () => {
       const selfUser = { ...mockUser, referralCode: 'SELFCODE' };
       mockUserRepo.findOne.mockResolvedValue(selfUser);
 
-      await expect(
-        service.applyReferral(selfUser, 'SELFCODE'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.applyReferral(selfUser, 'SELFCODE')).rejects.toThrow(
+        BadRequestException,
+      );
 
       expect(mockDataSource.createQueryRunner).not.toHaveBeenCalled();
     });
@@ -186,9 +188,9 @@ describe('ReferralService', () => {
       mockUserRepo.findOne.mockResolvedValue(mockReferrerUser);
       mockReferralRepo.findOne.mockResolvedValue({ id: 'existing-ref' });
 
-      await expect(
-        service.applyReferral(mockUser, 'REFCODE1'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.applyReferral(mockUser, 'REFCODE1')).rejects.toThrow(
+        BadRequestException,
+      );
 
       expect(mockReferralRepo.findOne).toHaveBeenCalledWith({
         where: { refereeId: mockUser.id },
@@ -202,9 +204,9 @@ describe('ReferralService', () => {
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({ id: 'existing-pair' });
 
-      await expect(
-        service.applyReferral(mockUser, 'REFCODE1'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.applyReferral(mockUser, 'REFCODE1')).rejects.toThrow(
+        BadRequestException,
+      );
 
       expect(mockReferralRepo.findOne).toHaveBeenNthCalledWith(2, {
         where: {
@@ -223,9 +225,9 @@ describe('ReferralService', () => {
       mockUserRepo.findOne.mockResolvedValue(sameDeviceReferrer);
       mockReferralRepo.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.applyReferral(mockUser, 'REFCODE1'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.applyReferral(mockUser, 'REFCODE1')).rejects.toThrow(
+        BadRequestException,
+      );
 
       expect(mockDataSource.createQueryRunner).not.toHaveBeenCalled();
     });
@@ -294,15 +296,12 @@ describe('ReferralService', () => {
       expect(referrerLock.pointsBalance).toBe(530);
       expect(referrerLock.lifetimePoints).toBe(1030);
 
-      expect(mockQueryRunner.manager.create).toHaveBeenCalledWith(
-        Referral,
-        {
-          referrerId: mockReferrerUser.id,
-          refereeId: currentUser.id,
-          signupReward: 30,
-          status: ReferralStatus.PENDING,
-        },
-      );
+      expect(mockQueryRunner.manager.create).toHaveBeenCalledWith(Referral, {
+        referrerId: mockReferrerUser.id,
+        refereeId: currentUser.id,
+        signupReward: 30,
+        status: ReferralStatus.PENDING,
+      });
 
       expect(mockQueryRunner.manager.create).toHaveBeenCalledWith(
         Transaction,

@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CompensationService } from './compensation.service';
-import { Contest, ContestStatus, CompensationStatus as ContestCompensationStatus } from '../contests/entities/contest.entity';
+import {
+  Contest,
+  ContestStatus,
+  CompensationStatus as ContestCompensationStatus,
+} from '../contests/entities/contest.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User, UserLevel } from '../users/entities/user.entity';
 import { CompensationLog } from './entities/compensation.entity';
@@ -13,9 +17,13 @@ import { SmsService } from '../sms/sms.service';
 describe('CompensationService', () => {
   let service: CompensationService;
   let contestRepo: Partial<Record<keyof Repository<Contest>, jest.Mock>>;
-  let contestMemberRepo: Partial<Record<keyof Repository<ContestMember>, jest.Mock>>;
+  let contestMemberRepo: Partial<
+    Record<keyof Repository<ContestMember>, jest.Mock>
+  >;
   let userRepo: Partial<Record<keyof Repository<User>, jest.Mock>>;
-  let compensationLogRepo: Partial<Record<keyof Repository<CompensationLog>, jest.Mock>>;
+  let compensationLogRepo: Partial<
+    Record<keyof Repository<CompensationLog>, jest.Mock>
+  >;
 
   const mockPointsEngineService = {
     getMultiplier: jest.fn().mockReturnValue(1.0),
@@ -55,9 +63,15 @@ describe('CompensationService', () => {
       providers: [
         CompensationService,
         { provide: getRepositoryToken(Contest), useValue: contestRepo },
-        { provide: getRepositoryToken(ContestMember), useValue: contestMemberRepo },
+        {
+          provide: getRepositoryToken(ContestMember),
+          useValue: contestMemberRepo,
+        },
         { provide: getRepositoryToken(User), useValue: userRepo },
-        { provide: getRepositoryToken(CompensationLog), useValue: compensationLogRepo },
+        {
+          provide: getRepositoryToken(CompensationLog),
+          useValue: compensationLogRepo,
+        },
         { provide: PointsEngineService, useValue: mockPointsEngineService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: SmsService, useValue: mockSmsService },
@@ -82,7 +96,9 @@ describe('CompensationService', () => {
       // Slab checks (e.g. 300 should return the 499 slab points, which is 1500)
       expect(service.calculateCompensationPoints(300)).toBe(1500);
       // Interpolation check above 499
-      expect(service.calculateCompensationPoints(600)).toBe(Math.round(600 * (1500/499)));
+      expect(service.calculateCompensationPoints(600)).toBe(
+        Math.round(600 * (1500 / 499)),
+      );
     });
   });
 

@@ -41,7 +41,9 @@ export class AchievementsService {
     private readonly pointsEngineService: PointsEngineService,
   ) {}
 
-  async getAchievementsWithProgress(userId: string): Promise<AchievementProgress[]> {
+  async getAchievementsWithProgress(
+    userId: string,
+  ): Promise<AchievementProgress[]> {
     const allAchievements = await this.achievementRepo.find({
       order: { sortOrder: 'ASC' },
     });
@@ -68,16 +70,22 @@ export class AchievementsService {
     }));
   }
 
-  async checkAndAwardAchievements(userId: string): Promise<AchievementProgress[]> {
+  async checkAndAwardAchievements(
+    userId: string,
+  ): Promise<AchievementProgress[]> {
     const all = await this.getAchievementsWithProgress(userId);
-    const alreadyEarned = new Set(all.filter((a) => a.earned).map((a) => a.key));
+    const alreadyEarned = new Set(
+      all.filter((a) => a.earned).map((a) => a.key),
+    );
 
-    const [contestCount, shareCount, redemptionCount, user] = await Promise.all([
-      this.contestMemberRepo.count({ where: { userId } }),
-      this.shareRepo.count({ where: { userId } }),
-      this.redemptionRepo.count({ where: { userId } }),
-      this.userRepo.findOne({ where: { id: userId } }),
-    ]);
+    const [contestCount, shareCount, redemptionCount, user] = await Promise.all(
+      [
+        this.contestMemberRepo.count({ where: { userId } }),
+        this.shareRepo.count({ where: { userId } }),
+        this.redemptionRepo.count({ where: { userId } }),
+        this.userRepo.findOne({ where: { id: userId } }),
+      ],
+    );
 
     if (!user) return all;
 
@@ -123,7 +131,9 @@ export class AchievementsService {
       }
 
       if (earned) {
-        const ach = await this.achievementRepo.findOne({ where: { key: achievement.key } });
+        const ach = await this.achievementRepo.findOne({
+          where: { key: achievement.key },
+        });
         if (!ach) continue;
 
         await this.userAchievementRepo.save(
@@ -131,8 +141,13 @@ export class AchievementsService {
         );
 
         if (ach.bonusPoints > 0) {
-          const multiplier = this.pointsEngineService.getMultiplier(user.currentTier);
-          const finalPoints = this.pointsEngineService.calculatePoints(ach.bonusPoints, user.currentTier);
+          const multiplier = this.pointsEngineService.getMultiplier(
+            user.currentTier,
+          );
+          const finalPoints = this.pointsEngineService.calculatePoints(
+            ach.bonusPoints,
+            user.currentTier,
+          );
           user.pointsBalance = Number(user.pointsBalance) + finalPoints;
           user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
 
@@ -154,7 +169,9 @@ export class AchievementsService {
           );
         }
 
-        this.logger.log(`🏆 User ${userId} earned achievement: ${achievement.key}`);
+        this.logger.log(
+          `🏆 User ${userId} earned achievement: ${achievement.key}`,
+        );
       }
     }
 

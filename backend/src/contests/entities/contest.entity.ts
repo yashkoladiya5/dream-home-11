@@ -42,7 +42,13 @@ export class Contest {
   })
   type: ContestType;
 
-  @Column({ name: 'entry_fee_inr', type: 'numeric', precision: 10, scale: 2, default: 0.0 })
+  @Column({
+    name: 'entry_fee_inr',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    default: 0.0,
+  })
   entryFeeInr: number;
 
   @Column({ name: 'points_to_join', type: 'integer', default: 0 })
@@ -66,13 +72,27 @@ export class Contest {
   @Column({ type: 'text', nullable: true })
   rules: string;
 
-  @Column({ name: 'invite_code', type: 'varchar', length: 8, nullable: true, unique: true })
+  @Column({
+    name: 'invite_code',
+    type: 'varchar',
+    length: 8,
+    nullable: true,
+    unique: true,
+  })
   inviteCode: string;
 
-  @Column({ name: 'start_time', type: 'timestamp with time zone', nullable: false })
+  @Column({
+    name: 'start_time',
+    type: 'timestamp with time zone',
+    nullable: false,
+  })
   startTime: Date;
 
-  @Column({ name: 'end_time', type: 'timestamp with time zone', nullable: false })
+  @Column({
+    name: 'end_time',
+    type: 'timestamp with time zone',
+    nullable: false,
+  })
   endTime: Date;
 
   @Column({

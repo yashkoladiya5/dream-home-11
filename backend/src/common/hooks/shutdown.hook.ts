@@ -1,4 +1,9 @@
-import { Injectable, OnApplicationShutdown, Logger, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  OnApplicationShutdown,
+  Logger,
+  Inject,
+} from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import Redis from 'ioredis';
@@ -17,25 +22,32 @@ export class ShutdownHook implements OnApplicationShutdown {
   ) {}
 
   async onApplicationShutdown(signal: string) {
-    const timeout = parseInt(process.env.GRACEFUL_SHUTDOWN_TIMEOUT || '10000', 10);
-    this.logger.log(`Shutdown initiated (signal: ${signal}, timeout: ${timeout}ms)`);
+    const timeout = parseInt(
+      process.env.GRACEFUL_SHUTDOWN_TIMEOUT || '10000',
+      10,
+    );
+    this.logger.log(
+      `Shutdown initiated (signal: ${signal}, timeout: ${timeout}ms)`,
+    );
 
     const tasks: Promise<void>[] = [];
 
     const withTimeout = <T>(promise: Promise<T>, name: string): Promise<void> =>
       Promise.race([
-        promise.then(() => this.logger.log(`${name} closed`)).catch((err) => { this.logger.error(`${name} error`, err); }),
-        new Promise<void>((_, reject) => setTimeout(() => reject(new Error(`${name} timeout`)), timeout)),
+        promise
+          .then(() => this.logger.log(`${name} closed`))
+          .catch((err) => {
+            this.logger.error(`${name} error`, err);
+          }),
+        new Promise<void>((_, reject) =>
+          setTimeout(() => reject(new Error(`${name} timeout`)), timeout),
+        ),
       ]).catch((err) => this.logger.warn(err.message));
 
-    tasks.push(
-      withTimeout(this.redisClient.quit(), 'Redis'),
-    );
+    tasks.push(withTimeout(this.redisClient.quit(), 'Redis'));
 
     if (this.dataSource.isInitialized) {
-      tasks.push(
-        withTimeout(this.dataSource.destroy(), 'TypeORM'),
-      );
+      tasks.push(withTimeout(this.dataSource.destroy(), 'TypeORM'));
     }
 
     const httpServer = this.httpAdapterHost?.httpAdapter?.getHttpServer();

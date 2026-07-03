@@ -14,19 +14,43 @@ describe('LeaderboardResetService', () => {
 
   const mockUsers: User[] = [
     {
-      id: 'user-1', fullName: 'Alice', lifetimePoints: 5000, weeklyPoints: 200, monthlyPoints: 800,
-      currentTier: UserLevel.GOLD, isActive: true, phoneNumber: '+911111111111', deviceId: 'd1',
-      pointsBalance: 0, walletBalanceInr: 0,
+      id: 'user-1',
+      fullName: 'Alice',
+      lifetimePoints: 5000,
+      weeklyPoints: 200,
+      monthlyPoints: 800,
+      currentTier: UserLevel.GOLD,
+      isActive: true,
+      phoneNumber: '+911111111111',
+      deviceId: 'd1',
+      pointsBalance: 0,
+      walletBalanceInr: 0,
     } as User,
     {
-      id: 'user-2', fullName: 'Bob', lifetimePoints: 3000, weeklyPoints: 150, monthlyPoints: 600,
-      currentTier: UserLevel.SILVER, isActive: true, phoneNumber: '+912222222222', deviceId: 'd2',
-      pointsBalance: 0, walletBalanceInr: 0,
+      id: 'user-2',
+      fullName: 'Bob',
+      lifetimePoints: 3000,
+      weeklyPoints: 150,
+      monthlyPoints: 600,
+      currentTier: UserLevel.SILVER,
+      isActive: true,
+      phoneNumber: '+912222222222',
+      deviceId: 'd2',
+      pointsBalance: 0,
+      walletBalanceInr: 0,
     } as User,
     {
-      id: 'user-3', fullName: 'Charlie', lifetimePoints: 1000, weeklyPoints: 50, monthlyPoints: 300,
-      currentTier: UserLevel.BRONZE, isActive: true, phoneNumber: '+913333333333', deviceId: 'd3',
-      pointsBalance: 0, walletBalanceInr: 0,
+      id: 'user-3',
+      fullName: 'Charlie',
+      lifetimePoints: 1000,
+      weeklyPoints: 50,
+      monthlyPoints: 300,
+      currentTier: UserLevel.BRONZE,
+      isActive: true,
+      phoneNumber: '+913333333333',
+      deviceId: 'd3',
+      pointsBalance: 0,
+      walletBalanceInr: 0,
     } as User,
   ];
 
@@ -48,7 +72,10 @@ describe('LeaderboardResetService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LeaderboardResetService,
-        { provide: getRepositoryToken(LeaderboardArchive), useValue: archiveRepo },
+        {
+          provide: getRepositoryToken(LeaderboardArchive),
+          useValue: archiveRepo,
+        },
         { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: LeaderboardRedisService, useValue: redisService },
       ],
@@ -70,14 +97,31 @@ describe('LeaderboardResetService', () => {
 
       expect(archiveRepo.save).toHaveBeenCalledWith(
         expect.arrayContaining([
-          expect.objectContaining({ cycle: 'monthly', userId: 'user-1', points: 800, rank: 1 }),
-          expect.objectContaining({ cycle: 'monthly', userId: 'user-2', points: 600, rank: 2 }),
-          expect.objectContaining({ cycle: 'monthly', userId: 'user-3', points: 300, rank: 3 }),
+          expect.objectContaining({
+            cycle: 'monthly',
+            userId: 'user-1',
+            points: 800,
+            rank: 1,
+          }),
+          expect.objectContaining({
+            cycle: 'monthly',
+            userId: 'user-2',
+            points: 600,
+            rank: 2,
+          }),
+          expect.objectContaining({
+            cycle: 'monthly',
+            userId: 'user-3',
+            points: 300,
+            rank: 3,
+          }),
         ]),
       );
 
       expect(userRepo.update).toHaveBeenCalledWith({}, { monthlyPoints: 0 });
-      expect(redisService.removeLeaderboard).toHaveBeenCalledWith('leaderboard:global:monthly');
+      expect(redisService.removeLeaderboard).toHaveBeenCalledWith(
+        'leaderboard:global:monthly',
+      );
       expect(result).toEqual({ archived: 3, reset: 3 });
     });
 
@@ -88,14 +132,31 @@ describe('LeaderboardResetService', () => {
 
       expect(archiveRepo.save).toHaveBeenCalledWith(
         expect.arrayContaining([
-          expect.objectContaining({ cycle: 'weekly', userId: 'user-1', points: 200, rank: 1 }),
-          expect.objectContaining({ cycle: 'weekly', userId: 'user-2', points: 150, rank: 2 }),
-          expect.objectContaining({ cycle: 'weekly', userId: 'user-3', points: 50, rank: 3 }),
+          expect.objectContaining({
+            cycle: 'weekly',
+            userId: 'user-1',
+            points: 200,
+            rank: 1,
+          }),
+          expect.objectContaining({
+            cycle: 'weekly',
+            userId: 'user-2',
+            points: 150,
+            rank: 2,
+          }),
+          expect.objectContaining({
+            cycle: 'weekly',
+            userId: 'user-3',
+            points: 50,
+            rank: 3,
+          }),
         ]),
       );
 
       expect(userRepo.update).toHaveBeenCalledWith({}, { weeklyPoints: 0 });
-      expect(redisService.removeLeaderboard).toHaveBeenCalledWith('leaderboard:global:weekly');
+      expect(redisService.removeLeaderboard).toHaveBeenCalledWith(
+        'leaderboard:global:weekly',
+      );
       expect(result).toEqual({ archived: 3, reset: 3 });
     });
 
@@ -139,9 +200,20 @@ describe('LeaderboardResetService', () => {
   describe('getArchives', () => {
     it('should return paginated archives for a cycle', async () => {
       const mockArchives = [
-        { id: 'a1', cycle: 'monthly', userId: 'user-1', points: 800, rank: 1, snapshotDate: new Date(), createdAt: new Date() } as LeaderboardArchive,
+        {
+          id: 'a1',
+          cycle: 'monthly',
+          userId: 'user-1',
+          points: 800,
+          rank: 1,
+          snapshotDate: new Date(),
+          createdAt: new Date(),
+        } as LeaderboardArchive,
       ];
-      (archiveRepo.findAndCount as jest.Mock).mockResolvedValue([mockArchives, 1]);
+      (archiveRepo.findAndCount as jest.Mock).mockResolvedValue([
+        mockArchives,
+        1,
+      ]);
 
       const result = await service.getArchives('monthly', 1, 20);
 

@@ -1,7 +1,11 @@
 import { Injectable, OnApplicationBootstrap, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
-import { Contest, ContestType, ContestStatus } from '../contests/entities/contest.entity';
+import {
+  Contest,
+  ContestType,
+  ContestStatus,
+} from '../contests/entities/contest.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { User, UserLevel, UserRole } from '../users/entities/user.entity';
 import { Reward } from '../rewards/entities/reward.entity';
@@ -77,7 +81,9 @@ export class SeedService implements OnApplicationBootstrap {
   async onApplicationBootstrap(): Promise<void> {
     const count = await this.contestRepository.count();
     if (count > 0) {
-      this.logger.log(`Backfilling any missing data for ${count} existing contests...`);
+      this.logger.log(
+        `Backfilling any missing data for ${count} existing contests...`,
+      );
       await this._upsertSeedData();
     } else {
       this.logger.log('Seeding mock contests...');
@@ -98,7 +104,8 @@ export class SeedService implements OnApplicationBootstrap {
           startTime: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
           endTime: new Date(now.getTime() + 35 * 24 * 60 * 60 * 1000),
           status: ContestStatus.RUNNING,
-          rules: '1. Entry fee is non-refundable.\n2. Winner will be selected via a lucky draw at the end of the contest period.\n3. Participants must have a valid KYC to claim the prize.\n4. The mega prize apartment is located in Mumbai and the winner must be 18+.\n5. Dream11 reserves the right to modify or cancel the contest.',
+          rules:
+            '1. Entry fee is non-refundable.\n2. Winner will be selected via a lucky draw at the end of the contest period.\n3. Participants must have a valid KYC to claim the prize.\n4. The mega prize apartment is located in Mumbai and the winner must be 18+.\n5. Dream11 reserves the right to modify or cancel the contest.',
         },
         {
           title: 'Weekend Villa Clash',
@@ -113,7 +120,8 @@ export class SeedService implements OnApplicationBootstrap {
           startTime: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
           endTime: new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000),
           status: ContestStatus.RUNNING,
-          rules: '1. Entry fee is non-refundable.\n2. The winner gets a 3-day, 2-night stay at a premium villa.\n3. Travel and accommodation are covered by Dream11.\n4. Valid KYC must be completed before claiming.\n5. Contest is open to Indian residents only.',
+          rules:
+            '1. Entry fee is non-refundable.\n2. The winner gets a 3-day, 2-night stay at a premium villa.\n3. Travel and accommodation are covered by Dream11.\n4. Valid KYC must be completed before claiming.\n5. Contest is open to Indian residents only.',
         },
         {
           title: 'Starter Dream Cottage',
@@ -128,7 +136,8 @@ export class SeedService implements OnApplicationBootstrap {
           startTime: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
           endTime: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
           status: ContestStatus.RUNNING,
-          rules: '1. Entry fee is non-refundable.\n2. The winner receives a weekend stay at a mountain cottage.\n3. Transportation is not included.\n4. Must be 18+ to participate.\n5. Only one entry per user.',
+          rules:
+            '1. Entry fee is non-refundable.\n2. The winner receives a weekend stay at a mountain cottage.\n3. Transportation is not included.\n4. Must be 18+ to participate.\n5. Only one entry per user.',
         },
         {
           title: 'Luxury Penthouse Showdown',
@@ -143,7 +152,8 @@ export class SeedService implements OnApplicationBootstrap {
           startTime: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
           endTime: new Date(now.getTime() + 44 * 24 * 60 * 60 * 1000),
           status: ContestStatus.UPCOMING,
-          rules: '1. Contest starts on the scheduled date.\n2. The sea-facing penthouse is located in North Goa.\n3. Winner must complete KYC within 7 days of announcement.\n4. All applicable taxes will be borne by the winner.\n5. Dream11 employees are not eligible to participate.',
+          rules:
+            '1. Contest starts on the scheduled date.\n2. The sea-facing penthouse is located in North Goa.\n3. Winner must complete KYC within 7 days of announcement.\n4. All applicable taxes will be borne by the winner.\n5. Dream11 employees are not eligible to participate.',
         },
         {
           title: 'Beach Villa Bonanza',
@@ -158,7 +168,8 @@ export class SeedService implements OnApplicationBootstrap {
           startTime: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
           endTime: new Date(now.getTime() + 40 * 24 * 60 * 60 * 1000),
           status: ContestStatus.RUNNING,
-          rules: '1. Entry fee is non-refundable.\n2. Winner gets a beachfront villa in Kerala valued at ₹2.5 Cr.\n3. The prize will be transferred after legal formalities.\n4. Must have a valid PAN card and KYC.\n5. Multiple entries allowed, but only one prize per winner.',
+          rules:
+            '1. Entry fee is non-refundable.\n2. Winner gets a beachfront villa in Kerala valued at ₹2.5 Cr.\n3. The prize will be transferred after legal formalities.\n4. Must have a valid PAN card and KYC.\n5. Multiple entries allowed, but only one prize per winner.',
         },
         {
           title: 'Champions Private League',
@@ -173,7 +184,8 @@ export class SeedService implements OnApplicationBootstrap {
           startTime: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
           endTime: new Date(now.getTime() + 29 * 24 * 60 * 60 * 1000),
           status: ContestStatus.RUNNING,
-          rules: '1. Private league — invite only.\n2. Entry fee is non-refundable.\n3. The championship trophy will be awarded at a ceremony.\n4. Participants must maintain fair play standards.\n5. Dream11 reserves the right to disqualify any participant for misconduct.',
+          rules:
+            '1. Private league — invite only.\n2. Entry fee is non-refundable.\n3. The championship trophy will be awarded at a ceremony.\n4. Participants must maintain fair play standards.\n5. Dream11 reserves the right to disqualify any participant for misconduct.',
         },
       ];
 
@@ -203,7 +215,9 @@ export class SeedService implements OnApplicationBootstrap {
   }
 
   private async _ensureCompletedContest(): Promise<void> {
-    const existing = await this.contestRepository.findOne({ where: { status: ContestStatus.COMPLETED } });
+    const existing = await this.contestRepository.findOne({
+      where: { status: ContestStatus.COMPLETED },
+    });
     if (existing) return;
 
     const now = new Date();
@@ -221,34 +235,55 @@ export class SeedService implements OnApplicationBootstrap {
       startTime: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000),
       endTime: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
       status: ContestStatus.COMPLETED,
-      rules: '1. Entry fee is non-refundable.\n2. This contest has been completed.\n3. Winners will be contacted via registered mobile number.\n4. Prize distribution within 7 working days.\n5. All decisions are final.',
+      rules:
+        '1. Entry fee is non-refundable.\n2. This contest has been completed.\n3. Winners will be contacted via registered mobile number.\n4. Prize distribution within 7 working days.\n5. All decisions are final.',
     });
 
     await this.contestRepository.save(contest);
 
-    const memberNames = ['Aarav Sharma', 'Priya Patel', 'Rahul Verma', 'Sneha Reddy', 'Vikram Singh'];
+    const memberNames = [
+      'Aarav Sharma',
+      'Priya Patel',
+      'Rahul Verma',
+      'Sneha Reddy',
+      'Vikram Singh',
+    ];
     const memberPoints = [1200, 950, 780, 540, 310];
 
     for (let i = 0; i < memberNames.length; i++) {
-      let user = await this.userRepository.findOne({ where: { phoneNumber: `+9190000000${i}` } });
+      let user = await this.userRepository.findOne({
+        where: { phoneNumber: `+9190000000${i}` },
+      });
       if (!user) {
-          user = this.userRepository.create({
-            fullName: memberNames[i],
-            phoneNumber: `+9190000000${i}`,
-            walletBalanceInr: i < 3 ? 10000 : 5000,
-            pointsBalance: 0,
-            lifetimePoints: memberPoints[i],
-            weeklyPoints: Math.round(memberPoints[i] * 0.2),
-            monthlyPoints: Math.round(memberPoints[i] * 0.5),
-            currentTier: this.getTierForPoints(memberPoints[i]),
-            isActive: true,
-            deviceId: `seed-device-${i}`,
-            state: ['Maharashtra', 'Karnataka', 'Delhi', 'Uttar Pradesh', 'Tamil Nadu'][i],
-            bankAccountNumber: ['XXXXXXXXXX1234', 'XXXXXXXXXX5678', 'XXXXXXXXXX9012', 'XXXXXXXXXX3456', 'XXXXXXXXXX7890'][i],
-            bankIfsc: 'SBIN0001234',
-            bankName: 'State Bank of India',
-            upiId: `user${i}@paytm`,
-          });
+        user = this.userRepository.create({
+          fullName: memberNames[i],
+          phoneNumber: `+9190000000${i}`,
+          walletBalanceInr: i < 3 ? 10000 : 5000,
+          pointsBalance: 0,
+          lifetimePoints: memberPoints[i],
+          weeklyPoints: Math.round(memberPoints[i] * 0.2),
+          monthlyPoints: Math.round(memberPoints[i] * 0.5),
+          currentTier: this.getTierForPoints(memberPoints[i]),
+          isActive: true,
+          deviceId: `seed-device-${i}`,
+          state: [
+            'Maharashtra',
+            'Karnataka',
+            'Delhi',
+            'Uttar Pradesh',
+            'Tamil Nadu',
+          ][i],
+          bankAccountNumber: [
+            'XXXXXXXXXX1234',
+            'XXXXXXXXXX5678',
+            'XXXXXXXXXX9012',
+            'XXXXXXXXXX3456',
+            'XXXXXXXXXX7890',
+          ][i],
+          bankIfsc: 'SBIN0001234',
+          bankName: 'State Bank of India',
+          upiId: `user${i}@paytm`,
+        });
         await this.userRepository.save(user);
       }
 
@@ -261,11 +296,15 @@ export class SeedService implements OnApplicationBootstrap {
       await this.contestMemberRepository.save(member);
     }
 
-    this.logger.log(`Seeded completed contest "${contest.title}" with ${memberNames.length} members`);
+    this.logger.log(
+      `Seeded completed contest "${contest.title}" with ${memberNames.length} members`,
+    );
   }
 
   private async _seedMoreCompletedContests(): Promise<void> {
-    const existing = await this.contestRepository.find({ where: { status: ContestStatus.COMPLETED } });
+    const existing = await this.contestRepository.find({
+      where: { status: ContestStatus.COMPLETED },
+    });
     if (existing.length >= 3) {
       this.logger.log('Additional completed contests already exist — skipping');
       return;
@@ -275,7 +314,7 @@ export class SeedService implements OnApplicationBootstrap {
     const moreContests: Partial<Contest>[] = [
       {
         title: 'Dream Villa Championship',
-        type: ContestType.NORMAL as any,
+        type: ContestType.NORMAL,
         entryFeeInr: 149.0,
         pointsToJoin: 300,
         maxSlots: 100,
@@ -287,11 +326,12 @@ export class SeedService implements OnApplicationBootstrap {
         startTime: new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000),
         endTime: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000),
         status: ContestStatus.COMPLETED,
-        rules: '1. Entry fee is non-refundable.\n2. This contest has been completed.\n3. Winners will be contacted via registered mobile number.\n4. Prize distribution within 7 working days.\n5. All decisions are final.',
+        rules:
+          '1. Entry fee is non-refundable.\n2. This contest has been completed.\n3. Winners will be contacted via registered mobile number.\n4. Prize distribution within 7 working days.\n5. All decisions are final.',
       },
       {
         title: 'Premier League Showdown',
-        type: ContestType.MEGA as any,
+        type: ContestType.MEGA,
         entryFeeInr: 199.0,
         pointsToJoin: 500,
         maxSlots: 500,
@@ -303,7 +343,8 @@ export class SeedService implements OnApplicationBootstrap {
         startTime: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000),
         endTime: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000),
         status: ContestStatus.COMPLETED,
-        rules: '1. Entry fee is non-refundable.\n2. This mega contest has been completed.\n3. Top 3 winners will receive cash prizes.\n4. Winners must complete KYC within 7 days.\n5. All decisions are final.',
+        rules:
+          '1. Entry fee is non-refundable.\n2. This mega contest has been completed.\n3. Top 3 winners will receive cash prizes.\n4. Winners must complete KYC within 7 days.\n5. All decisions are final.',
       },
     ];
 
@@ -327,7 +368,9 @@ export class SeedService implements OnApplicationBootstrap {
       for (let i = 0; i < names.length; i++) {
         const phoneNumber = `+9191000000${idx * 3 + i}`;
         const globalIdx = 5 + idx * 3 + i;
-        let user = await this.userRepository.findOne({ where: { phoneNumber } });
+        let user = await this.userRepository.findOne({
+          where: { phoneNumber },
+        });
         if (!user) {
           user = this.userRepository.create({
             fullName: names[i],
@@ -340,7 +383,16 @@ export class SeedService implements OnApplicationBootstrap {
             currentTier: this.getTierForPoints(points[i]),
             isActive: true,
             deviceId: `seed-device-extra-${idx}-${i}`,
-            state: ['Maharashtra', 'Karnataka', 'Delhi', 'Uttar Pradesh', 'Tamil Nadu', 'Gujarat', 'Rajasthan', 'West Bengal'][globalIdx % 8],
+            state: [
+              'Maharashtra',
+              'Karnataka',
+              'Delhi',
+              'Uttar Pradesh',
+              'Tamil Nadu',
+              'Gujarat',
+              'Rajasthan',
+              'West Bengal',
+            ][globalIdx % 8],
           });
           await this.userRepository.save(user);
         }
@@ -349,13 +401,17 @@ export class SeedService implements OnApplicationBootstrap {
           contestId: contest.id,
           userId: user.id,
           pointsEarned: points[i],
-          joinedAt: new Date(now.getTime() - (50 + idx * 10 + i) * 24 * 60 * 60 * 1000),
+          joinedAt: new Date(
+            now.getTime() - (50 + idx * 10 + i) * 24 * 60 * 60 * 1000,
+          ),
         });
         await this.contestMemberRepository.save(member);
       }
     }
 
-    this.logger.log(`Seeded ${moreContests.length} additional completed contests with winners`);
+    this.logger.log(
+      `Seeded ${moreContests.length} additional completed contests with winners`,
+    );
   }
 
   private async _seedRewards(): Promise<void> {
@@ -368,7 +424,8 @@ export class SeedService implements OnApplicationBootstrap {
     const rewards: Partial<Reward>[] = [
       {
         title: '₹100 Amazon Gift Card',
-        description: 'Redeem for any product on Amazon.in. Instant digital delivery to your email.',
+        description:
+          'Redeem for any product on Amazon.in. Instant digital delivery to your email.',
         imageUrl: null,
         pointsRequired: 500,
         stock: 100,
@@ -378,7 +435,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: '₹500 Flipkart Voucher',
-        description: 'Shop anything on Flipkart with this digital gift voucher. Valid for 6 months.',
+        description:
+          'Shop anything on Flipkart with this digital gift voucher. Valid for 6 months.',
         imageUrl: null,
         pointsRequired: 2000,
         stock: 50,
@@ -388,7 +446,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: '₹1000 Myntra Voucher',
-        description: 'Fashion & lifestyle shopping voucher for Myntra. Valid on all products.',
+        description:
+          'Fashion & lifestyle shopping voucher for Myntra. Valid on all products.',
         imageUrl: null,
         pointsRequired: 3500,
         stock: 30,
@@ -398,7 +457,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: 'Dream11 Premium Cap',
-        description: 'Official Dream11 premium cotton cap with embroidered logo. One size fits all.',
+        description:
+          'Official Dream11 premium cotton cap with embroidered logo. One size fits all.',
         imageUrl: null,
         pointsRequired: 800,
         stock: 20,
@@ -408,7 +468,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: 'Dream11 Branded T-Shirt',
-        description: 'Premium quality black t-shirt with Dream11 signature print. Available in M, L, XL.',
+        description:
+          'Premium quality black t-shirt with Dream11 signature print. Available in M, L, XL.',
         imageUrl: null,
         pointsRequired: 1200,
         stock: 15,
@@ -418,7 +479,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: 'Dream11 Limited Edition Hoodie',
-        description: 'Exclusive limited edition fleece hoodie. Only 10 ever produced. Collectors item.',
+        description:
+          'Exclusive limited edition fleece hoodie. Only 10 ever produced. Collectors item.',
         imageUrl: null,
         pointsRequired: 2500,
         stock: 10,
@@ -428,7 +490,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: '1 Month Dream11 Premium',
-        description: 'Unlock premium contests, exclusive rewards, and priority support for 1 month.',
+        description:
+          'Unlock premium contests, exclusive rewards, and priority support for 1 month.',
         imageUrl: null,
         pointsRequired: 1500,
         stock: null,
@@ -438,7 +501,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: '3 Month Dream11 Premium',
-        description: 'Premium subscription for 3 months. Best value for dedicated players.',
+        description:
+          'Premium subscription for 3 months. Best value for dedicated players.',
         imageUrl: null,
         pointsRequired: 3500,
         stock: null,
@@ -448,7 +512,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: '1 Year Dream11 Premium',
-        description: 'Full year of Dream11 Premium. All benefits unlocked for 12 months.',
+        description:
+          'Full year of Dream11 Premium. All benefits unlocked for 12 months.',
         imageUrl: null,
         pointsRequired: 8000,
         stock: null,
@@ -458,7 +523,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: 'Exclusive Dream11 Trophy Replica',
-        description: 'Gold-plated miniature replica of the Dream11 Championship Trophy. Numbered edition.',
+        description:
+          'Gold-plated miniature replica of the Dream11 Championship Trophy. Numbered edition.',
         imageUrl: null,
         pointsRequired: 5000,
         stock: 5,
@@ -468,7 +534,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: 'VIP Contest Direct Entry Pass',
-        description: 'Direct entry to any VIP contest of your choice for one year. Skip the queue!',
+        description:
+          'Direct entry to any VIP contest of your choice for one year. Skip the queue!',
         imageUrl: null,
         pointsRequired: 10000,
         stock: 3,
@@ -485,7 +552,9 @@ export class SeedService implements OnApplicationBootstrap {
   private async _seedAchievements(): Promise<void> {
     const count = await this.achievementRepository.count();
     if (count > 0) {
-      this.logger.log(`Achievements already seeded (${count} existing) — skipping`);
+      this.logger.log(
+        `Achievements already seeded (${count} existing) — skipping`,
+      );
       return;
     }
 
@@ -586,7 +655,8 @@ export class SeedService implements OnApplicationBootstrap {
     const banners: Partial<Banner>[] = [
       {
         title: 'Mega Dream Contest',
-        subtitle: 'Win a 3 BHK Luxury Apartment in Mumbai! Entry starts at just ₹49.',
+        subtitle:
+          'Win a 3 BHK Luxury Apartment in Mumbai! Entry starts at just ₹49.',
         imageUrl: null,
         link: '/mega-contests',
         linkLabel: 'JOIN NOW',
@@ -616,7 +686,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: 'Complete Your KYC',
-        subtitle: 'Verify your account to unlock all features and win big prizes!',
+        subtitle:
+          'Verify your account to unlock all features and win big prizes!',
         imageUrl: null,
         link: '/home',
         linkLabel: 'VERIFY',
@@ -626,7 +697,8 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         title: 'Premium Membership',
-        subtitle: 'Go premium for exclusive contests, rewards & priority support.',
+        subtitle:
+          'Go premium for exclusive contests, rewards & priority support.',
         imageUrl: null,
         link: '/rewards',
         linkLabel: 'LEARN MORE',
@@ -642,32 +714,227 @@ export class SeedService implements OnApplicationBootstrap {
 
   private async _seedPrizeHomes(): Promise<void> {
     const imageByTitle: Record<string, string> = {
-      '3 BHK Luxury Apartment': 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
-      'Premium Villa': 'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=400&h=300&fit=crop',
-      'Beachfront Villa': 'https://images.unsplash.com/photo-1499793983690-e29f59e2f1ad?w=400&h=300&fit=crop',
-      'Mountain Cottage': 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=400&h=300&fit=crop',
-      'Sea-facing Penthouse': 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=300&fit=crop',
-      'Luxury Villa in Lonavala': 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop',
-      'Studio Apartment in Bandra': 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
-      'Farmhouse in Pune': 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=400&h=300&fit=crop',
+      '3 BHK Luxury Apartment':
+        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
+      'Premium Villa':
+        'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=400&h=300&fit=crop',
+      'Beachfront Villa':
+        'https://images.unsplash.com/photo-1499793983690-e29f59e2f1ad?w=400&h=300&fit=crop',
+      'Mountain Cottage':
+        'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=400&h=300&fit=crop',
+      'Sea-facing Penthouse':
+        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=300&fit=crop',
+      'Luxury Villa in Lonavala':
+        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop',
+      'Studio Apartment in Bandra':
+        'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
+      'Farmhouse in Pune':
+        'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=400&h=300&fit=crop',
     };
 
     const count = await this.prizeHomeRepository.count();
     if (count === 0) {
       const homes: Partial<PrizeHome>[] = [
-        { title: '3 BHK Luxury Apartment', description: 'A stunning 3-bedroom luxury apartment in the heart of Mumbai. Features modern interiors, panoramic city views, and world-class amenities including a swimming pool, gym, and 24/7 security.', imageUrl: imageByTitle['3 BHK Luxury Apartment'], city: 'Mumbai', state: 'Maharashtra', location: 'Bandra West, Mumbai', valueInr: 12000000, bedrooms: 3, bathrooms: 3, area: '1650 sq ft', features: ['Swimming Pool', 'Gym', '24/7 Security', 'Power Backup', 'Parking', 'Club House'], type: 'apartment', emoji: '\u{1F3E0}', sortOrder: 1, isActive: true },
-        { title: 'Premium Villa', description: 'A beautiful premium villa in North Goa with private pool, garden, and modern architecture. Perfect for weekend getaways and luxury living.', imageUrl: imageByTitle['Premium Villa'], city: 'Goa', state: 'Goa', location: 'North Goa, Near Calangute Beach', valueInr: 8500000, bedrooms: 4, bathrooms: 4, area: '2800 sq ft', features: ['Private Pool', 'Garden', 'Outdoor BBQ', 'Parking', 'Servants Quarter'], type: 'villa', emoji: '\u{1F3E1}', sortOrder: 2, isActive: true },
-        { title: 'Beachfront Villa', description: 'Exclusive beachfront villa in Kerala with direct beach access. Enjoy stunning sunsets, coconut groves, and traditional Kerala architecture blended with modern luxury.', imageUrl: imageByTitle['Beachfront Villa'], city: 'Kerala', state: 'Kerala', location: 'Kovalam Beach, Kerala', valueInr: 25000000, bedrooms: 5, bathrooms: 5, area: '4200 sq ft', features: ['Beach Access', 'Infinity Pool', 'Spa Room', 'Home Theater', 'Rooftop Terrace'], type: 'villa', emoji: '\u{1F3D6}\uFE0F', sortOrder: 3, isActive: true },
-        { title: 'Mountain Cottage', description: 'A cozy mountain cottage in Manali surrounded by pine forests and snow-capped peaks. Perfect for those seeking peace and natural beauty.', imageUrl: imageByTitle['Mountain Cottage'], city: 'Manali', state: 'Himachal Pradesh', location: 'Old Manali, Himachal Pradesh', valueInr: 4500000, bedrooms: 2, bathrooms: 2, area: '1200 sq ft', features: ['Fireplace', 'Mountain View', 'Wooden Deck', 'Garden', 'Parking'], type: 'cottage', emoji: '\u{1F3D4}\uFE0F', sortOrder: 4, isActive: true },
-        { title: 'Sea-facing Penthouse', description: 'A magnificent sea-facing penthouse in North Goa with 360-degree ocean views. Features a private rooftop pool, smart home automation, and premium finishes throughout.', imageUrl: imageByTitle['Sea-facing Penthouse'], city: 'Goa', state: 'Goa', location: 'Calangute, North Goa', valueInr: 38000000, bedrooms: 4, bathrooms: 4, area: '3500 sq ft', features: ['Rooftop Pool', 'Smart Home', 'Ocean View', 'Private Elevator', 'Wine Cellar', 'Home Automation'], type: 'penthouse', emoji: '\u{1F30A}', sortOrder: 5, isActive: true },
-        { title: 'Luxury Villa in Lonavala', description: 'A luxurious villa in the hill station of Lonavala with panoramic valley views, private infinity pool, and lush green surroundings. Ideal for weekend escapes from Mumbai/Pune.', imageUrl: imageByTitle['Luxury Villa in Lonavala'], city: 'Lonavala', state: 'Maharashtra', location: 'Lonavala, Maharashtra', valueInr: 15000000, bedrooms: 4, bathrooms: 4, area: '3000 sq ft', features: ['Infinity Pool', 'Valley View', 'Landscaped Garden', 'Outdoor Jacuzzi', 'BBQ Area'], type: 'villa', emoji: '\u{1F3E1}', sortOrder: 6, isActive: true },
-        { title: 'Studio Apartment in Bandra', description: 'A modern studio apartment in Bandra, Mumbai. Perfect for young professionals with easy access to business districts and nightlife.', imageUrl: imageByTitle['Studio Apartment in Bandra'], city: 'Mumbai', state: 'Maharashtra', location: 'Bandra West, Mumbai', valueInr: 3500000, bedrooms: 1, bathrooms: 1, area: '550 sq ft', features: ['Modular Kitchen', 'Gym Access', 'Rooftop Lounge', 'Security'], type: 'apartment', emoji: '\u{1F3E0}', sortOrder: 7, isActive: true },
-        { title: 'Farmhouse in Pune', description: 'A sprawling farmhouse on the outskirts of Pune with organic farm, private lake, and ample outdoor space for entertaining.', imageUrl: imageByTitle['Farmhouse in Pune'], city: 'Pune', state: 'Maharashtra', location: 'Mulshi, Pune', valueInr: 22000000, bedrooms: 5, bathrooms: 5, area: '5000 sq ft', features: ['Private Lake', 'Organic Farm', 'Swimming Pool', 'Tennis Court', 'Gazebo'], type: 'farmhouse', emoji: '\u{1F3E1}', sortOrder: 8, isActive: true },
+        {
+          title: '3 BHK Luxury Apartment',
+          description:
+            'A stunning 3-bedroom luxury apartment in the heart of Mumbai. Features modern interiors, panoramic city views, and world-class amenities including a swimming pool, gym, and 24/7 security.',
+          imageUrl: imageByTitle['3 BHK Luxury Apartment'],
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          location: 'Bandra West, Mumbai',
+          valueInr: 12000000,
+          bedrooms: 3,
+          bathrooms: 3,
+          area: '1650 sq ft',
+          features: [
+            'Swimming Pool',
+            'Gym',
+            '24/7 Security',
+            'Power Backup',
+            'Parking',
+            'Club House',
+          ],
+          type: 'apartment',
+          emoji: '\u{1F3E0}',
+          sortOrder: 1,
+          isActive: true,
+        },
+        {
+          title: 'Premium Villa',
+          description:
+            'A beautiful premium villa in North Goa with private pool, garden, and modern architecture. Perfect for weekend getaways and luxury living.',
+          imageUrl: imageByTitle['Premium Villa'],
+          city: 'Goa',
+          state: 'Goa',
+          location: 'North Goa, Near Calangute Beach',
+          valueInr: 8500000,
+          bedrooms: 4,
+          bathrooms: 4,
+          area: '2800 sq ft',
+          features: [
+            'Private Pool',
+            'Garden',
+            'Outdoor BBQ',
+            'Parking',
+            'Servants Quarter',
+          ],
+          type: 'villa',
+          emoji: '\u{1F3E1}',
+          sortOrder: 2,
+          isActive: true,
+        },
+        {
+          title: 'Beachfront Villa',
+          description:
+            'Exclusive beachfront villa in Kerala with direct beach access. Enjoy stunning sunsets, coconut groves, and traditional Kerala architecture blended with modern luxury.',
+          imageUrl: imageByTitle['Beachfront Villa'],
+          city: 'Kerala',
+          state: 'Kerala',
+          location: 'Kovalam Beach, Kerala',
+          valueInr: 25000000,
+          bedrooms: 5,
+          bathrooms: 5,
+          area: '4200 sq ft',
+          features: [
+            'Beach Access',
+            'Infinity Pool',
+            'Spa Room',
+            'Home Theater',
+            'Rooftop Terrace',
+          ],
+          type: 'villa',
+          emoji: '\u{1F3D6}\uFE0F',
+          sortOrder: 3,
+          isActive: true,
+        },
+        {
+          title: 'Mountain Cottage',
+          description:
+            'A cozy mountain cottage in Manali surrounded by pine forests and snow-capped peaks. Perfect for those seeking peace and natural beauty.',
+          imageUrl: imageByTitle['Mountain Cottage'],
+          city: 'Manali',
+          state: 'Himachal Pradesh',
+          location: 'Old Manali, Himachal Pradesh',
+          valueInr: 4500000,
+          bedrooms: 2,
+          bathrooms: 2,
+          area: '1200 sq ft',
+          features: [
+            'Fireplace',
+            'Mountain View',
+            'Wooden Deck',
+            'Garden',
+            'Parking',
+          ],
+          type: 'cottage',
+          emoji: '\u{1F3D4}\uFE0F',
+          sortOrder: 4,
+          isActive: true,
+        },
+        {
+          title: 'Sea-facing Penthouse',
+          description:
+            'A magnificent sea-facing penthouse in North Goa with 360-degree ocean views. Features a private rooftop pool, smart home automation, and premium finishes throughout.',
+          imageUrl: imageByTitle['Sea-facing Penthouse'],
+          city: 'Goa',
+          state: 'Goa',
+          location: 'Calangute, North Goa',
+          valueInr: 38000000,
+          bedrooms: 4,
+          bathrooms: 4,
+          area: '3500 sq ft',
+          features: [
+            'Rooftop Pool',
+            'Smart Home',
+            'Ocean View',
+            'Private Elevator',
+            'Wine Cellar',
+            'Home Automation',
+          ],
+          type: 'penthouse',
+          emoji: '\u{1F30A}',
+          sortOrder: 5,
+          isActive: true,
+        },
+        {
+          title: 'Luxury Villa in Lonavala',
+          description:
+            'A luxurious villa in the hill station of Lonavala with panoramic valley views, private infinity pool, and lush green surroundings. Ideal for weekend escapes from Mumbai/Pune.',
+          imageUrl: imageByTitle['Luxury Villa in Lonavala'],
+          city: 'Lonavala',
+          state: 'Maharashtra',
+          location: 'Lonavala, Maharashtra',
+          valueInr: 15000000,
+          bedrooms: 4,
+          bathrooms: 4,
+          area: '3000 sq ft',
+          features: [
+            'Infinity Pool',
+            'Valley View',
+            'Landscaped Garden',
+            'Outdoor Jacuzzi',
+            'BBQ Area',
+          ],
+          type: 'villa',
+          emoji: '\u{1F3E1}',
+          sortOrder: 6,
+          isActive: true,
+        },
+        {
+          title: 'Studio Apartment in Bandra',
+          description:
+            'A modern studio apartment in Bandra, Mumbai. Perfect for young professionals with easy access to business districts and nightlife.',
+          imageUrl: imageByTitle['Studio Apartment in Bandra'],
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          location: 'Bandra West, Mumbai',
+          valueInr: 3500000,
+          bedrooms: 1,
+          bathrooms: 1,
+          area: '550 sq ft',
+          features: [
+            'Modular Kitchen',
+            'Gym Access',
+            'Rooftop Lounge',
+            'Security',
+          ],
+          type: 'apartment',
+          emoji: '\u{1F3E0}',
+          sortOrder: 7,
+          isActive: true,
+        },
+        {
+          title: 'Farmhouse in Pune',
+          description:
+            'A sprawling farmhouse on the outskirts of Pune with organic farm, private lake, and ample outdoor space for entertaining.',
+          imageUrl: imageByTitle['Farmhouse in Pune'],
+          city: 'Pune',
+          state: 'Maharashtra',
+          location: 'Mulshi, Pune',
+          valueInr: 22000000,
+          bedrooms: 5,
+          bathrooms: 5,
+          area: '5000 sq ft',
+          features: [
+            'Private Lake',
+            'Organic Farm',
+            'Swimming Pool',
+            'Tennis Court',
+            'Gazebo',
+          ],
+          type: 'farmhouse',
+          emoji: '\u{1F3E1}',
+          sortOrder: 8,
+          isActive: true,
+        },
       ];
       await this.prizeHomeRepository.save(homes);
       this.logger.log(`Seeded ${homes.length} prize homes successfully`);
     } else {
-      const nullImageHomes = await this.prizeHomeRepository.find({ where: { imageUrl: IsNull() } });
+      const nullImageHomes = await this.prizeHomeRepository.find({
+        where: { imageUrl: IsNull() },
+      });
       for (const home of nullImageHomes) {
         const url = imageByTitle[home.title];
         if (url) {
@@ -676,9 +943,13 @@ export class SeedService implements OnApplicationBootstrap {
         }
       }
       if (nullImageHomes.length === 0) {
-        this.logger.log(`All ${count} prize homes already have images — no update needed`);
+        this.logger.log(
+          `All ${count} prize homes already have images — no update needed`,
+        );
       } else {
-        this.logger.log(`Updated ${nullImageHomes.length} prize homes with image URLs`);
+        this.logger.log(
+          `Updated ${nullImageHomes.length} prize homes with image URLs`,
+        );
       }
     }
   }
@@ -686,7 +957,9 @@ export class SeedService implements OnApplicationBootstrap {
   private async _seedTransactions(): Promise<void> {
     const count = await this.transactionRepo.count();
     if (count > 0) {
-      this.logger.log(`Transactions already seeded (${count} existing) — skipping`);
+      this.logger.log(
+        `Transactions already seeded (${count} existing) — skipping`,
+      );
       return;
     }
 
@@ -831,7 +1104,9 @@ export class SeedService implements OnApplicationBootstrap {
   }
 
   private async _seedReferralCodes(): Promise<void> {
-    const users = await this.userRepository.find({ where: { referralCode: IsNull() } });
+    const users = await this.userRepository.find({
+      where: { referralCode: IsNull() },
+    });
     if (users.length === 0) {
       this.logger.log('All users already have referral codes');
       return;
@@ -841,7 +1116,9 @@ export class SeedService implements OnApplicationBootstrap {
       let exists: User | null;
       do {
         code = randomBytes(4).toString('hex').toUpperCase();
-        exists = await this.userRepository.findOne({ where: { referralCode: code } });
+        exists = await this.userRepository.findOne({
+          where: { referralCode: code },
+        });
       } while (exists);
       user.referralCode = code;
     }
@@ -856,7 +1133,9 @@ export class SeedService implements OnApplicationBootstrap {
       return;
     }
 
-    const users = await this.userRepository.find({ order: { createdAt: 'ASC' } });
+    const users = await this.userRepository.find({
+      order: { createdAt: 'ASC' },
+    });
     if (users.length < 3) return;
 
     const referral = this.referralRepo.create({
@@ -889,14 +1168,16 @@ export class SeedService implements OnApplicationBootstrap {
       {
         userId: users[0].id,
         subject: 'How do I withdraw my winnings?',
-        message: 'I have won a contest but cannot find the withdraw option. Can you help me with the steps to withdraw my cash winnings?',
+        message:
+          'I have won a contest but cannot find the withdraw option. Can you help me with the steps to withdraw my cash winnings?',
         category: 'payment',
         status: 'resolved',
       },
       {
         userId: users[0].id,
         subject: 'KYC documents not uploading',
-        message: 'I am trying to upload my Aadhaar card but the upload keeps failing. I have tried multiple times with different images.',
+        message:
+          'I am trying to upload my Aadhaar card but the upload keeps failing. I have tried multiple times with different images.',
         category: 'kyc',
         status: 'in_progress',
       },
@@ -906,7 +1187,8 @@ export class SeedService implements OnApplicationBootstrap {
       tickets.push({
         userId: users[1].id,
         subject: 'App crashing on startup',
-        message: 'The app crashes immediately after the splash screen. I have reinstalled but the issue persists.',
+        message:
+          'The app crashes immediately after the splash screen. I have reinstalled but the issue persists.',
         category: 'technical',
         status: 'open',
       });
@@ -945,9 +1227,13 @@ export class SeedService implements OnApplicationBootstrap {
   }
 
   private async _backfillUserPoints(): Promise<void> {
-    const users = await this.userRepository.find({ where: { weeklyPoints: IsNull() } });
+    const users = await this.userRepository.find({
+      where: { weeklyPoints: IsNull() },
+    });
     if (users.length === 0) {
-      this.logger.log('All users already have weekly/monthly points — skipping backfill');
+      this.logger.log(
+        'All users already have weekly/monthly points — skipping backfill',
+      );
       return;
     }
     for (const user of users) {
@@ -955,7 +1241,9 @@ export class SeedService implements OnApplicationBootstrap {
       user.monthlyPoints = Math.round(user.lifetimePoints * 0.5);
     }
     await this.userRepository.save(users);
-    this.logger.log(`Backfilled weekly/monthly points for ${users.length} users`);
+    this.logger.log(
+      `Backfilled weekly/monthly points for ${users.length} users`,
+    );
   }
 
   private async _seedWithdrawals(): Promise<void> {
@@ -1040,7 +1328,9 @@ export class SeedService implements OnApplicationBootstrap {
     ];
 
     await this.withdrawalRepo.save(withdrawals);
-    this.logger.log(`Seeded ${withdrawals.length} sample withdrawals with varied statuses`);
+    this.logger.log(
+      `Seeded ${withdrawals.length} sample withdrawals with varied statuses`,
+    );
   }
 
   private async _seedPolls(): Promise<void> {
@@ -1053,7 +1343,15 @@ export class SeedService implements OnApplicationBootstrap {
     const polls: Partial<Poll>[] = [
       {
         question: 'Which room is most important in your dream home?',
-        options: ['Living Room', 'Kitchen', 'Master Bedroom', 'Home Office', 'Gym', 'Garden', 'Game Room'],
+        options: [
+          'Living Room',
+          'Kitchen',
+          'Master Bedroom',
+          'Home Office',
+          'Gym',
+          'Garden',
+          'Game Room',
+        ],
         totalVotes: 0,
         activeFrom: new Date(now.getTime() - 24 * 60 * 60 * 1000),
         activeTo: new Date(now.getTime() + 24 * 60 * 60 * 1000),
@@ -1061,7 +1359,14 @@ export class SeedService implements OnApplicationBootstrap {
       },
       {
         question: 'What style of home do you prefer?',
-        options: ['Modern', 'Mediterranean', 'Victorian', 'Minimalist', 'Rustic', 'Contemporary'],
+        options: [
+          'Modern',
+          'Mediterranean',
+          'Victorian',
+          'Minimalist',
+          'Rustic',
+          'Contemporary',
+        ],
         totalVotes: 0,
         activeFrom: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
         activeTo: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
@@ -1076,7 +1381,10 @@ export class SeedService implements OnApplicationBootstrap {
     const existing = await this.chatRepo.count();
     if (existing > 0) return;
 
-    const users = await this.userRepository.find({ take: 5, order: { createdAt: 'ASC' } });
+    const users = await this.userRepository.find({
+      take: 5,
+      order: { createdAt: 'ASC' },
+    });
     if (users.length < 2) return;
 
     const user1 = users[0];
@@ -1093,8 +1401,14 @@ export class SeedService implements OnApplicationBootstrap {
 
     // Create participants for direct chat
     const directParticipants = [
-      this.chatParticipantRepo.create({ chatId: directChat.id, userId: user1.id }),
-      this.chatParticipantRepo.create({ chatId: directChat.id, userId: user2.id }),
+      this.chatParticipantRepo.create({
+        chatId: directChat.id,
+        userId: user1.id,
+      }),
+      this.chatParticipantRepo.create({
+        chatId: directChat.id,
+        userId: user2.id,
+      }),
     ];
     await this.chatParticipantRepo.save(directParticipants);
 
@@ -1107,21 +1421,65 @@ export class SeedService implements OnApplicationBootstrap {
 
     // Create participants for group chat
     const groupParticipants = [
-      this.chatParticipantRepo.create({ chatId: groupChat.id, userId: user1.id }),
-      this.chatParticipantRepo.create({ chatId: groupChat.id, userId: user2.id }),
-      this.chatParticipantRepo.create({ chatId: groupChat.id, userId: user3.id }),
-      this.chatParticipantRepo.create({ chatId: groupChat.id, userId: user4.id }),
+      this.chatParticipantRepo.create({
+        chatId: groupChat.id,
+        userId: user1.id,
+      }),
+      this.chatParticipantRepo.create({
+        chatId: groupChat.id,
+        userId: user2.id,
+      }),
+      this.chatParticipantRepo.create({
+        chatId: groupChat.id,
+        userId: user3.id,
+      }),
+      this.chatParticipantRepo.create({
+        chatId: groupChat.id,
+        userId: user4.id,
+      }),
     ];
     await this.chatParticipantRepo.save(groupParticipants);
 
     // Messages for direct chat (user1 and user2 chatting)
     const directMessages = [
-      { chatId: directChat.id, senderId: user1.id, content: 'Hey! Ready for the mega contest tonight?', type: 'text' },
-      { chatId: directChat.id, senderId: user2.id, content: 'Absolutely! I have been practicing all week 💪', type: 'text' },
-      { chatId: directChat.id, senderId: user1.id, content: 'Nice! What is your prediction for the first match?', type: 'text' },
-      { chatId: directChat.id, senderId: user2.id, content: 'I think Team A will dominate. Their batting lineup is strong.', type: 'text' },
-      { chatId: directChat.id, senderId: user1.id, content: 'Good point. I am going with Team B though — their bowling is 🔥', type: 'text' },
-      { chatId: directChat.id, senderId: user2.id, content: 'Bold move! May the best team win 🏆', type: 'text' },
+      {
+        chatId: directChat.id,
+        senderId: user1.id,
+        content: 'Hey! Ready for the mega contest tonight?',
+        type: 'text',
+      },
+      {
+        chatId: directChat.id,
+        senderId: user2.id,
+        content: 'Absolutely! I have been practicing all week 💪',
+        type: 'text',
+      },
+      {
+        chatId: directChat.id,
+        senderId: user1.id,
+        content: 'Nice! What is your prediction for the first match?',
+        type: 'text',
+      },
+      {
+        chatId: directChat.id,
+        senderId: user2.id,
+        content:
+          'I think Team A will dominate. Their batting lineup is strong.',
+        type: 'text',
+      },
+      {
+        chatId: directChat.id,
+        senderId: user1.id,
+        content:
+          'Good point. I am going with Team B though — their bowling is 🔥',
+        type: 'text',
+      },
+      {
+        chatId: directChat.id,
+        senderId: user2.id,
+        content: 'Bold move! May the best team win 🏆',
+        type: 'text',
+      },
     ];
     await this.chatMessageRepo.save(
       directMessages.map((m) => this.chatMessageRepo.create(m)),
@@ -1129,20 +1487,63 @@ export class SeedService implements OnApplicationBootstrap {
 
     // Messages for group chat
     const groupMessages = [
-      { chatId: groupChat.id, senderId: user1.id, content: 'Welcome to Dream Home Champions group! 🏡', type: 'text' },
-      { chatId: groupChat.id, senderId: user2.id, content: 'Thanks! Excited to be here!', type: 'text' },
-      { chatId: groupChat.id, senderId: user3.id, content: 'When is the next contest starting?', type: 'text' },
-      { chatId: groupChat.id, senderId: user1.id, content: 'There is one starting at 8 PM tonight. 50 slots left!', type: 'text' },
-      { chatId: groupChat.id, senderId: user4.id, content: 'Count me in! I am inviting my friends too.', type: 'text' },
-      { chatId: groupChat.id, senderId: user2.id, content: 'The prize pool is looking huge this week 🎯', type: 'text' },
-      { chatId: groupChat.id, senderId: user3.id, content: 'Let us all coordinate our picks in the group before the match.', type: 'text' },
-      { chatId: groupChat.id, senderId: user1.id, content: 'Great idea! I will share my analysis later.', type: 'text' },
+      {
+        chatId: groupChat.id,
+        senderId: user1.id,
+        content: 'Welcome to Dream Home Champions group! 🏡',
+        type: 'text',
+      },
+      {
+        chatId: groupChat.id,
+        senderId: user2.id,
+        content: 'Thanks! Excited to be here!',
+        type: 'text',
+      },
+      {
+        chatId: groupChat.id,
+        senderId: user3.id,
+        content: 'When is the next contest starting?',
+        type: 'text',
+      },
+      {
+        chatId: groupChat.id,
+        senderId: user1.id,
+        content: 'There is one starting at 8 PM tonight. 50 slots left!',
+        type: 'text',
+      },
+      {
+        chatId: groupChat.id,
+        senderId: user4.id,
+        content: 'Count me in! I am inviting my friends too.',
+        type: 'text',
+      },
+      {
+        chatId: groupChat.id,
+        senderId: user2.id,
+        content: 'The prize pool is looking huge this week 🎯',
+        type: 'text',
+      },
+      {
+        chatId: groupChat.id,
+        senderId: user3.id,
+        content:
+          'Let us all coordinate our picks in the group before the match.',
+        type: 'text',
+      },
+      {
+        chatId: groupChat.id,
+        senderId: user1.id,
+        content: 'Great idea! I will share my analysis later.',
+        type: 'text',
+      },
     ];
     await this.chatMessageRepo.save(
       groupMessages.map((m) => this.chatMessageRepo.create(m)),
     );
 
-    this.logger.log(`Seeded ${directMessages.length + groupMessages.length} chat messages in ${existing + 2} chats`);
+    this.logger.log(
+      `Seeded ${directMessages.length + groupMessages.length} chat messages in ${existing + 2} chats`,
+    );
   }
 
   private async _seedPosts(): Promise<void> {
@@ -1160,13 +1561,13 @@ export class SeedService implements OnApplicationBootstrap {
 
     const now = new Date();
     const postContents = [
-      'Just joined the Mega Dream Home Contest! Can\'t wait to win that luxury apartment in Mumbai 🏆',
+      "Just joined the Mega Dream Home Contest! Can't wait to win that luxury apartment in Mumbai 🏆",
       'My streak is at 30 days! Feeling unstoppable. Who else is on a roll? 🔥',
-      'Check out today\'s prize home in the gallery — the sea-facing penthouse in Goa is unreal! 🌊',
+      "Check out today's prize home in the gallery — the sea-facing penthouse in Goa is unreal! 🌊",
       'Finally reached Platinum tier! The 1.5x multiplier is going to be huge for my points 💪',
-      'Who else is playing the Weekend Villa Clash? Let\'s go!',
+      "Who else is playing the Weekend Villa Clash? Let's go!",
       'Just won 25 points on the Daily Spin! Lucky day today 🍀',
-      'Voted on today\'s poll — kitchen is definitely the most important room in a dream home 🏠',
+      "Voted on today's poll — kitchen is definitely the most important room in a dream home 🏠",
       '3 more days until the Luxury Penthouse Showdown ends. Feeling confident!',
       'Invite code: DREAM11VIP — use it to earn bonus points when you join!',
       'Just redeemed 2000 points for a reward in the catalog. Love this platform! 🎁',
@@ -1179,7 +1580,9 @@ export class SeedService implements OnApplicationBootstrap {
         userId: user.id,
         content: postContents[i],
         isActive: true,
-        createdAt: new Date(now.getTime() - (postContents.length - i) * 60 * 60 * 1000),
+        createdAt: new Date(
+          now.getTime() - (postContents.length - i) * 60 * 60 * 1000,
+        ),
       });
       posts.push(post);
     }
@@ -1189,7 +1592,10 @@ export class SeedService implements OnApplicationBootstrap {
     const likes: Like[] = [];
     for (let i = 0; i < posts.length; i++) {
       const likers = users.filter((_, idx) => idx !== i % users.length);
-      const likeCount = Math.min(likers.length, Math.floor(Math.random() * 4) + 1);
+      const likeCount = Math.min(
+        likers.length,
+        Math.floor(Math.random() * 4) + 1,
+      );
       for (let j = 0; j < likeCount; j++) {
         const existingLike = likes.find(
           (l) => l.postId === posts[i].id && l.userId === likers[j].id,
@@ -1218,7 +1624,7 @@ export class SeedService implements OnApplicationBootstrap {
       'Count me in!',
       'Lucky! I got 15 on my spin today',
       'Agreed! Kitchen is everything!',
-      'You\'ve got this!',
+      "You've got this!",
       'Thanks for the code!',
       'Nice! Which one did you get?',
     ];
@@ -1240,7 +1646,9 @@ export class SeedService implements OnApplicationBootstrap {
 
   private async _seedAdminUser(): Promise<void> {
     // Check if a user with this phone already exists — upgrade to admin
-    let admin = await this.userRepository.findOne({ where: { phoneNumber: '+919999999998' } });
+    let admin = await this.userRepository.findOne({
+      where: { phoneNumber: '+919999999998' },
+    });
     if (admin) {
       if (admin.role !== UserRole.ADMIN) {
         admin.role = UserRole.ADMIN;
@@ -1252,7 +1660,9 @@ export class SeedService implements OnApplicationBootstrap {
       return;
     }
 
-    const existingAdmin = await this.userRepository.findOne({ where: { role: UserRole.ADMIN } });
+    const existingAdmin = await this.userRepository.findOne({
+      where: { role: UserRole.ADMIN },
+    });
     if (existingAdmin) {
       this.logger.log('Admin user already exists — skipping');
       return;
@@ -1273,17 +1683,25 @@ export class SeedService implements OnApplicationBootstrap {
       referralCode: 'ADMIN001',
     });
     await this.userRepository.save(admin);
-    this.logger.log(`Seeded admin user: ${admin.fullName} (${admin.phoneNumber})`);
+    this.logger.log(
+      `Seeded admin user: ${admin.fullName} (${admin.phoneNumber})`,
+    );
   }
 
   private async _upsertSeedData(): Promise<void> {
     const rulesByTitle: Record<string, string> = {
-      'Mega Dream Home Contest': '1. Entry fee is non-refundable.\n2. Winner will be selected via a lucky draw at the end of the contest period.\n3. Participants must have a valid KYC to claim the prize.\n4. The mega prize apartment is located in Mumbai and the winner must be 18+.\n5. Dream11 reserves the right to modify or cancel the contest.',
-      'Weekend Villa Clash': '1. Entry fee is non-refundable.\n2. The winner gets a 3-day, 2-night stay at a premium villa.\n3. Travel and accommodation are covered by Dream11.\n4. Valid KYC must be completed before claiming.\n5. Contest is open to Indian residents only.',
-      'Starter Dream Cottage': '1. Entry fee is non-refundable.\n2. The winner receives a weekend stay at a mountain cottage.\n3. Transportation is not included.\n4. Must be 18+ to participate.\n5. Only one entry per user.',
-      'Luxury Penthouse Showdown': '1. Contest starts on the scheduled date.\n2. The sea-facing penthouse is located in North Goa.\n3. Winner must complete KYC within 7 days of announcement.\n4. All applicable taxes will be borne by the winner.\n5. Dream11 employees are not eligible to participate.',
-      'Beach Villa Bonanza': '1. Entry fee is non-refundable.\n2. Winner gets a beachfront villa in Kerala valued at ₹2.5 Cr.\n3. The prize will be transferred after legal formalities.\n4. Must have a valid PAN card and KYC.\n5. Multiple entries allowed, but only one prize per winner.',
-      'Champions Private League': '1. Private league — invite only.\n2. Entry fee is non-refundable.\n3. The championship trophy will be awarded at a ceremony.\n4. Participants must maintain fair play standards.\n5. Dream11 reserves the right to disqualify any participant for misconduct.',
+      'Mega Dream Home Contest':
+        '1. Entry fee is non-refundable.\n2. Winner will be selected via a lucky draw at the end of the contest period.\n3. Participants must have a valid KYC to claim the prize.\n4. The mega prize apartment is located in Mumbai and the winner must be 18+.\n5. Dream11 reserves the right to modify or cancel the contest.',
+      'Weekend Villa Clash':
+        '1. Entry fee is non-refundable.\n2. The winner gets a 3-day, 2-night stay at a premium villa.\n3. Travel and accommodation are covered by Dream11.\n4. Valid KYC must be completed before claiming.\n5. Contest is open to Indian residents only.',
+      'Starter Dream Cottage':
+        '1. Entry fee is non-refundable.\n2. The winner receives a weekend stay at a mountain cottage.\n3. Transportation is not included.\n4. Must be 18+ to participate.\n5. Only one entry per user.',
+      'Luxury Penthouse Showdown':
+        '1. Contest starts on the scheduled date.\n2. The sea-facing penthouse is located in North Goa.\n3. Winner must complete KYC within 7 days of announcement.\n4. All applicable taxes will be borne by the winner.\n5. Dream11 employees are not eligible to participate.',
+      'Beach Villa Bonanza':
+        '1. Entry fee is non-refundable.\n2. Winner gets a beachfront villa in Kerala valued at ₹2.5 Cr.\n3. The prize will be transferred after legal formalities.\n4. Must have a valid PAN card and KYC.\n5. Multiple entries allowed, but only one prize per winner.',
+      'Champions Private League':
+        '1. Private league — invite only.\n2. Entry fee is non-refundable.\n3. The championship trophy will be awarded at a ceremony.\n4. Participants must maintain fair play standards.\n5. Dream11 reserves the right to disqualify any participant for misconduct.',
     };
 
     const existing = await this.contestRepository.findBy({ rules: IsNull() });
@@ -1295,7 +1713,9 @@ export class SeedService implements OnApplicationBootstrap {
       }
     }
     if (existing.length === 0) {
-      this.logger.log('  All contests already have rules — nothing to backfill');
+      this.logger.log(
+        '  All contests already have rules — nothing to backfill',
+      );
     }
   }
 }

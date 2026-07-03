@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Param, Query, Body, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { FeedService } from './feed.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { AddCommentDto } from './dto/add-comment.dto';
@@ -18,17 +29,21 @@ export class FeedController {
     @Query('limit') limit?: string,
   ) {
     const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit || '20', 10) || 20));
+    const limitNum = Math.min(
+      50,
+      Math.max(1, parseInt(limit || '20', 10) || 20),
+    );
     return this.feedService.getPosts(user.id, pageNum, limitNum);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createPost(
-    @GetUser() user: User,
-    @Body() dto: CreatePostDto,
-  ) {
-    const post = await this.feedService.createPost(user.id, dto.content, dto.imageUrl);
+  async createPost(@GetUser() user: User, @Body() dto: CreatePostDto) {
+    const post = await this.feedService.createPost(
+      user.id,
+      dto.content,
+      dto.imageUrl,
+    );
     return { message: 'Post created successfully', post };
   }
 
@@ -48,7 +63,11 @@ export class FeedController {
     @Param('id', ParseUUIDPipe) postId: string,
     @Body() dto: AddCommentDto,
   ) {
-    const comment = await this.feedService.addComment(user.id, postId, dto.content);
+    const comment = await this.feedService.addComment(
+      user.id,
+      postId,
+      dto.content,
+    );
     return { message: 'Comment added successfully', comment };
   }
 
@@ -59,7 +78,10 @@ export class FeedController {
     @Query('limit') limit?: string,
   ) {
     const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit || '20', 10) || 20));
+    const limitNum = Math.min(
+      50,
+      Math.max(1, parseInt(limit || '20', 10) || 20),
+    );
     return this.feedService.getComments(postId, pageNum, limitNum);
   }
 }

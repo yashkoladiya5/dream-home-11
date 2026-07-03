@@ -30,9 +30,16 @@ export class SupportController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     if (file) {
-      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      const allowedMimeTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/jpg',
+        'application/pdf',
+      ];
       if (!allowedMimeTypes.includes(file.mimetype)) {
-        throw new BadRequestException('Only image (jpg, jpeg, png) and pdf files are allowed');
+        throw new BadRequestException(
+          'Only image (jpg, jpeg, png) and pdf files are allowed',
+        );
       }
 
       if (file.size > 5 * 1024 * 1024) {

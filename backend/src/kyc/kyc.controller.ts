@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, UseGuards, HttpCode, HttpStatus, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extname } from 'path';
@@ -36,7 +47,12 @@ export class KycController {
     @Body('panNumber') panNumber: string,
     @Body('fullName') fullName: string,
   ) {
-    const kyc = await this.kycService.submitKyc(user.id, aadhaarNumber, panNumber, fullName);
+    const kyc = await this.kycService.submitKyc(
+      user.id,
+      aadhaarNumber,
+      panNumber,
+      fullName,
+    );
     return {
       id: kyc.id,
       status: kyc.status,
@@ -65,7 +81,9 @@ export class KycController {
   ) {
     const validTypes = ['aadhaar_front', 'aadhaar_back', 'pan_card', 'selfie'];
     if (!validTypes.includes(documentType)) {
-      throw new BadRequestException(`Invalid document type. Must be one of: ${validTypes.join(', ')}`);
+      throw new BadRequestException(
+        `Invalid document type. Must be one of: ${validTypes.join(', ')}`,
+      );
     }
 
     if (!file) {
@@ -74,7 +92,9 @@ export class KycController {
 
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Only image files (jpg, jpeg, png) are allowed');
+      throw new BadRequestException(
+        'Only image files (jpg, jpeg, png) are allowed',
+      );
     }
 
     const allowedExtensions = ['.jpg', '.jpeg', '.png'];

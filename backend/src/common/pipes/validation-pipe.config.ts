@@ -1,4 +1,8 @@
-import { ValidationPipe, ValidationError, BadRequestException } from '@nestjs/common';
+import {
+  ValidationPipe,
+  ValidationError,
+  BadRequestException,
+} from '@nestjs/common';
 
 export function createValidationPipe(): ValidationPipe {
   return new ValidationPipe({
@@ -11,7 +15,9 @@ export function createValidationPipe(): ValidationPipe {
     },
     exceptionFactory: (errors: ValidationError[]) => {
       const fields = errors.reduce<Record<string, string[]>>((acc, err) => {
-        const constraints = err.constraints ? Object.values(err.constraints) : [];
+        const constraints = err.constraints
+          ? Object.values(err.constraints)
+          : [];
         if (constraints.length > 0) {
           acc[err.property] = constraints;
         }

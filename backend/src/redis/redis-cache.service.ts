@@ -10,9 +10,7 @@ export const BANNER_TTL = 900;
 
 @Injectable()
 export class RedisCacheService {
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async get<T>(key: string): Promise<T | null> {
     const raw = await this.redis.get(key);
@@ -25,7 +23,8 @@ export class RedisCacheService {
   }
 
   async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
-    const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+    const serialized =
+      typeof value === 'string' ? value : JSON.stringify(value);
     if (ttlSeconds !== undefined && ttlSeconds > 0) {
       await this.redis.setex(key, ttlSeconds, serialized);
     } else {
@@ -40,7 +39,13 @@ export class RedisCacheService {
   async delPattern(pattern: string): Promise<void> {
     let cursor = '0';
     do {
-      const result = await this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+      const result = await this.redis.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100,
+      );
       cursor = result[0];
       const keys = result[1];
       if (keys.length > 0) {
@@ -49,7 +54,11 @@ export class RedisCacheService {
     } while (cursor !== '0');
   }
 
-  async wrap<T>(key: string, ttlSeconds: number, fn: () => Promise<T>): Promise<T> {
+  async wrap<T>(
+    key: string,
+    ttlSeconds: number,
+    fn: () => Promise<T>,
+  ): Promise<T> {
     const cached = await this.get<T>(key);
     if (cached !== null) return cached;
 

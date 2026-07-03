@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Referral, ReferralStatus } from './entities/referral.entity';
@@ -35,8 +40,13 @@ export class ReferralService {
     return code;
   }
 
-  async applyReferral(currentUser: User, code: string): Promise<{ success: boolean; message: string; pointsAwarded: number }> {
-    const referrer = await this.userRepo.findOne({ where: { referralCode: code } });
+  async applyReferral(
+    currentUser: User,
+    code: string,
+  ): Promise<{ success: boolean; message: string; pointsAwarded: number }> {
+    const referrer = await this.userRepo.findOne({
+      where: { referralCode: code },
+    });
     if (!referrer) {
       throw new NotFoundException('Invalid referral code');
     }
@@ -45,12 +55,16 @@ export class ReferralService {
       throw new BadRequestException('You cannot refer yourself');
     }
 
-    const existing = await this.referralRepo.findOne({ where: { refereeId: currentUser.id } });
+    const existing = await this.referralRepo.findOne({
+      where: { refereeId: currentUser.id },
+    });
     if (existing) {
       throw new BadRequestException('You have already used a referral code');
     }
 
-    const alreadyReferred = await this.referralRepo.findOne({ where: { referrerId: referrer.id, refereeId: currentUser.id } });
+    const alreadyReferred = await this.referralRepo.findOne({
+      where: { referrerId: referrer.id, refereeId: currentUser.id },
+    });
     if (alreadyReferred) {
       throw new BadRequestException('This referral has already been processed');
     }
@@ -76,8 +90,10 @@ export class ReferralService {
         throw new NotFoundException('Referrer not found');
       }
 
-      referrerLock.pointsBalance = Number(referrerLock.pointsBalance) + pointsAwarded;
-      referrerLock.lifetimePoints = Number(referrerLock.lifetimePoints) + pointsAwarded;
+      referrerLock.pointsBalance =
+        Number(referrerLock.pointsBalance) + pointsAwarded;
+      referrerLock.lifetimePoints =
+        Number(referrerLock.lifetimePoints) + pointsAwarded;
 
       if (referrerLock.lifetimePoints >= 5000) {
         referrerLock.currentTier = UserLevel.PLATINUM;
@@ -114,7 +130,8 @@ export class ReferralService {
           type: 'referral',
           cashAmount: 0,
           pointsAmount: pointsAwarded,
-          pointsBalanceBefore: Number(referrerLock.pointsBalance) - pointsAwarded,
+          pointsBalanceBefore:
+            Number(referrerLock.pointsBalance) - pointsAwarded,
           pointsBalanceAfter: Number(referrerLock.pointsBalance),
           description: `Referral reward for inviting a friend`,
           referenceType: 'referral',
@@ -123,7 +140,11 @@ export class ReferralService {
       );
 
       await queryRunner.commitTransaction();
-      return { success: true, message: 'Referral applied successfully', pointsAwarded };
+      return {
+        success: true,
+        message: 'Referral applied successfully',
+        pointsAwarded,
+      };
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
@@ -143,30 +164,44 @@ export class ReferralService {
 
     const code = await this.ensureReferralCode(user);
 
-    const referrals = await this.referralRepo.find({ where: { referrerId: userId } });
+    const referrals = await this.referralRepo.find({
+      where: { referrerId: userId },
+    });
     const totalReferred = referrals.length;
-    const totalRewardsEarned = referrals.reduce((sum, r) => sum + r.signupReward + r.kycReward, 0);
-    const totalKycCompleted = referrals.filter(r => r.status === ReferralStatus.SETTLED).length;
+    const totalRewardsEarned = referrals.reduce(
+      (sum, r) => sum + r.signupReward + r.kycReward,
+      0,
+    );
+    const totalKycCompleted = referrals.filter(
+      (r) => r.status === ReferralStatus.SETTLED,
+    ).length;
 
-    return { referralCode: code, totalReferred, totalRewardsEarned, totalKycCompleted };
+    return {
+      referralCode: code,
+      totalReferred,
+      totalRewardsEarned,
+      totalKycCompleted,
+    };
   }
 
-  async getReferralHistory(userId: string): Promise<{
-    refereeName: string | null;
-    refereeAvatarUrl: string | null;
-    status: string;
-    signupReward: number;
-    kycReward: number;
-    createdAt: Date;
-    settledAt: Date | null;
-  }[]> {
+  async getReferralHistory(userId: string): Promise<
+    {
+      refereeName: string | null;
+      refereeAvatarUrl: string | null;
+      status: string;
+      signupReward: number;
+      kycReward: number;
+      createdAt: Date;
+      settledAt: Date | null;
+    }[]
+  > {
     const referrals = await this.referralRepo.find({
       where: { referrerId: userId },
       relations: { referee: true },
       order: { createdAt: 'DESC' },
     });
 
-    return referrals.map(r => ({
+    return referrals.map((r) => ({
       refereeName: r.referee?.fullName ?? null,
       refereeAvatarUrl: r.referee?.avatarUrl ?? null,
       status: r.status,
@@ -203,8 +238,10 @@ export class ReferralService {
         throw new NotFoundException('Referrer not found for KYC bonus');
       }
 
-      referrerLock.pointsBalance = Number(referrerLock.pointsBalance) + kycReward;
-      referrerLock.lifetimePoints = Number(referrerLock.lifetimePoints) + kycReward;
+      referrerLock.pointsBalance =
+        Number(referrerLock.pointsBalance) + kycReward;
+      referrerLock.lifetimePoints =
+        Number(referrerLock.lifetimePoints) + kycReward;
 
       if (referrerLock.lifetimePoints >= 5000) {
         referrerLock.currentTier = UserLevel.PLATINUM;
@@ -236,10 +273,15 @@ export class ReferralService {
       );
 
       await queryRunner.commitTransaction();
-      this.logger.log(`KYC referral bonus of ${kycReward} awarded to ${referral.referrerId} for referee ${refereeId}`);
+      this.logger.log(
+        `KYC referral bonus of ${kycReward} awarded to ${referral.referrerId} for referee ${refereeId}`,
+      );
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      this.logger.error(`Failed to process KYC referral for referee ${refereeId}`, err);
+      this.logger.error(
+        `Failed to process KYC referral for referee ${refereeId}`,
+        err,
+      );
     } finally {
       await queryRunner.release();
     }

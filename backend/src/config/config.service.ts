@@ -38,11 +38,24 @@ export class ConfigService implements OnApplicationBootstrap {
       await this.refreshConfig();
     }
     const allowedFields: (keyof SystemConfig)[] = [
-      'appName', 'appVersion', 'apiVersion', 'environment',
-      'maintenanceMode', 'minAppVersionAndroid', 'minAppVersionIos',
-      'maxWithdrawalAmount', 'minWithdrawalAmount',
-      'dailySpinEnabled', 'pollsEnabled', 'feedEnabled', 'chatEnabled', 'referralEnabled',
-      'maxDailyPosts', 'maxDailySpins', 'supportEmail', 'restrictedStates',
+      'appName',
+      'appVersion',
+      'apiVersion',
+      'environment',
+      'maintenanceMode',
+      'minAppVersionAndroid',
+      'minAppVersionIos',
+      'maxWithdrawalAmount',
+      'minWithdrawalAmount',
+      'dailySpinEnabled',
+      'pollsEnabled',
+      'feedEnabled',
+      'chatEnabled',
+      'referralEnabled',
+      'maxDailyPosts',
+      'maxDailySpins',
+      'supportEmail',
+      'restrictedStates',
     ];
     const filtered: Partial<SystemConfig> = {};
     for (const key of allowedFields) {
@@ -53,7 +66,7 @@ export class ConfigService implements OnApplicationBootstrap {
     if (Object.keys(filtered).length === 0) {
       return this.getConfig();
     }
-    await this.configRepo.update(this.config!.id, filtered as any);
+    await this.configRepo.update(this.config!.id, filtered);
     await this.refreshConfig();
     return { ...this.config! };
   }

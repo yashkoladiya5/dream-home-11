@@ -1,0 +1,320 @@
+{
+  "title": "Dream Home 11 - Business KPIs",
+  "uid": "dreamhome11-business",
+  "tags": ["dreamhome11", "business", "kpi"],
+  "timezone": "browser",
+  "editable": true,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": { "from": "now-7d", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "env",
+        "type": "constant",
+        "label": "Environment",
+        "query": "production",
+        "current": { "text": "production", "value": "production" },
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Daily Active Users (DAU)",
+      "description": "Unique active users per day over the last 7 days",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(increase(http_requests_total{status=~\"2..\",environment=\"$env\"}[1d])) by (day)",
+          "legendFormat": "DAU"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "showPoints": "never" }
+        }
+      }
+    },
+    {
+      "title": "New Registrations",
+      "description": "Daily new user registrations over the last 30 days",
+      "type": "bar",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(increase(users_registered_total{environment=\"$env\"}[1d]))",
+          "legendFormat": "Registrations"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "title": "Contests Joined",
+      "description": "Daily contest joins broken down by contest type",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(increase(contests_joined_total{environment=\"$env\"}[1d])) by (contest_type)",
+          "legendFormat": "{{contest_type}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "showPoints": "never" }
+        }
+      }
+    },
+    {
+      "title": "Total Points Awarded",
+      "description": "Daily sum of points awarded to users",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(increase(points_awarded_total{environment=\"$env\"}[1d]))",
+          "legendFormat": "Points"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "fillOpacity": 30 }
+        }
+      },
+      "options": { "fillOpacity": 30 }
+    },
+    {
+      "title": "Revenue (Deposits)",
+      "description": "Daily deposit amount in INR from payment gateway",
+      "type": "bar",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(increase(payment_deposits_total{environment=\"$env\",currency=\"INR\"}[1d]))",
+          "legendFormat": "Deposits"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR"
+        }
+      }
+    },
+    {
+      "title": "Withdrawal Requests",
+      "description": "Daily withdrawal count and total amount",
+      "type": "bar",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(increase(withdrawal_requests_total{environment=\"$env\"}[1d]))",
+          "legendFormat": "Count"
+        },
+        {
+          "expr": "sum(increase(withdrawal_amount_total{environment=\"$env\",currency=\"INR\"}[1d]))",
+          "legendFormat": "Amount"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "title": "Contest Fill Rate",
+      "description": "Percentage of contests that filled all available slots",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 6, "w": 4, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(contests_filled_total{environment=\"$env\"}) / sum(contests_created_total{environment=\"$env\"}) * 100",
+          "legendFormat": "Fill Rate"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "red" },
+              { "value": 50, "color": "yellow" },
+              { "value": 80, "color": "green" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "title": "KYC Completion Rate",
+      "description": "Percentage of registered users with verified KYC",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 6, "w": 4, "x": 16, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(users_kyc_verified_total{environment=\"$env\"}) / sum(users_registered_total{environment=\"$env\"}) * 100",
+          "legendFormat": "KYC Rate"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "red" },
+              { "value": 40, "color": "yellow" },
+              { "value": 70, "color": "green" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "title": "Top Referrers",
+      "description": "Top 10 users by referral count",
+      "type": "table",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "expr": "topk(10, user_referrals_total{environment=\"$env\"})",
+          "legendFormat": "{{user_id}}",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "displayName": "Referral Count"
+        }
+      },
+      "options": {
+        "sortBy": [
+          { "displayName": "Value", "desc": true }
+        ]
+      }
+    },
+    {
+      "title": "Active Contests",
+      "description": "Current number of running contests",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 14 },
+      "targets": [
+        {
+          "expr": "active_contests{environment=\"$env\"}",
+          "legendFormat": "Active"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "background", "fixedColor": "green" }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "title": "Pending Withdrawals",
+      "description": "Count and total amount of pending withdrawal requests",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 14 },
+      "targets": [
+        {
+          "expr": "pending_withdrawal_count{environment=\"$env\"}",
+          "legendFormat": "Count"
+        },
+        {
+          "expr": "pending_withdrawal_amount{environment=\"$env\",currency=\"INR\"}",
+          "legendFormat": "Total Amount"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "background", "fixedColor": "orange" }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "title": "User Tier Distribution",
+      "description": "Breakdown of users by tier (Bronze/Silver/Gold/Platinum)",
+      "type": "pie-chart",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 14 },
+      "targets": [
+        {
+          "expr": "sum(users_by_tier{environment=\"$env\"}) by (tier)",
+          "legendFormat": "{{tier}}",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["sum"],
+          "limit": 4
+        },
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "list", "placement": "right" },
+        "pieType": "pie"
+      }
+    }
+  ]
+}

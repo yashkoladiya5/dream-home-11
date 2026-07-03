@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Patch, Body, Query, UseGuards, HttpCode, HttpStatus, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -42,8 +54,14 @@ export class UsersController {
     @Query('limit') limit?: string,
   ) {
     const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10) || 20));
-    return this.usersService.getUserCompensations(user.id, { page: pageNum, limit: limitNum });
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit || '20', 10) || 20),
+    );
+    return this.usersService.getUserCompensations(user.id, {
+      page: pageNum,
+      limit: limitNum,
+    });
   }
 
   @Get('contests/home')
@@ -52,13 +70,13 @@ export class UsersController {
     return this.usersService.getMyHomeContests(user.id);
   }
 
-
-
   @Patch('profile')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false }))
+  @UsePipes(
+    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false }),
+  )
   async updateProfile(
     @GetUser() user: User,
     @Body() dto: UpdateProfileDto,
@@ -99,8 +117,10 @@ export class UsersController {
     @Query('limit') limit?: string,
   ) {
     const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit || '20', 10) || 20));
+    const limitNum = Math.min(
+      50,
+      Math.max(1, parseInt(limit || '20', 10) || 20),
+    );
     return this.usersService.searchUsers(query || '', pageNum, limitNum);
   }
 }
-

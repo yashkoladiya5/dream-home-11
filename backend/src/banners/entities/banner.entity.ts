@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity('banners')
 export class Banner {
@@ -20,7 +25,12 @@ export class Banner {
   @Column({ name: 'link_label', type: 'varchar', length: 100, nullable: true })
   linkLabel: string | null;
 
-  @Column({ name: 'background_color', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'background_color',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   backgroundColor: string | null;
 
   @Column({ name: 'sort_order', type: 'integer', default: 0 })

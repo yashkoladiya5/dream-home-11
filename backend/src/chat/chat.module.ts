@@ -10,7 +10,11 @@ import { ChatMessage } from './entities/chat-message.entity';
 import { ChatParticipant } from './entities/chat-participant.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Chat, ChatMessage, ChatParticipant]), UsersModule, AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([Chat, ChatMessage, ChatParticipant]),
+    UsersModule,
+    AuthModule,
+  ],
   providers: [ChatGateway, ChatHistoryService],
   controllers: [ChatHistoryController],
   exports: [ChatGateway, ChatHistoryService, TypeOrmModule],

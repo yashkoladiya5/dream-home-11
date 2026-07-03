@@ -34,6 +34,11 @@ import { RedisCacheService } from './redis-cache.service';
     RedisThrottlerStorageService,
     RedisCacheService,
   ],
-  exports: [REDIS_CLIENT, RedisLogger, RedisThrottlerStorageService, RedisCacheService],
+  exports: [
+    REDIS_CLIENT,
+    RedisLogger,
+    RedisThrottlerStorageService,
+    RedisCacheService,
+  ],
 })
 export class RedisModule {}

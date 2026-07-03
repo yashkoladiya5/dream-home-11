@@ -13,7 +13,9 @@ export class StreakCronService {
     this.logger.log('Running midnight streak check...');
     try {
       const penaltyCount = await this.streakService.applyMissedDayPenalties();
-      this.logger.log(`Streak check complete. Applied penalties to ${penaltyCount} users.`);
+      this.logger.log(
+        `Streak check complete. Applied penalties to ${penaltyCount} users.`,
+      );
     } catch (error) {
       this.logger.error('Failed to run midnight streak check', error);
     }

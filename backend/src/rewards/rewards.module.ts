@@ -8,7 +8,11 @@ import { PointsModule } from '../points/points.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Reward, RewardRedemption]), PointsModule, UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([Reward, RewardRedemption]),
+    PointsModule,
+    UsersModule,
+  ],
   controllers: [RewardsController],
   providers: [RewardsService],
   exports: [RewardsService, TypeOrmModule],

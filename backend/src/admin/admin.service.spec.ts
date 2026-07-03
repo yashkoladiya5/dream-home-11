@@ -24,10 +24,20 @@ describe('AdminService', () => {
 
   const mockCompensationService = {
     findContestWithMembers: jest.fn(),
-    processCompensation: jest.fn().mockResolvedValue({ processed: 0, totalPoints: 0 }),
-    processPendingCompensations: jest.fn().mockResolvedValue({ contestsProcessed: 0, membersCompensated: 0, totalPointsAwarded: 0 }),
-    getCompensationLogs: jest.fn().mockResolvedValue({ logs: [], total: 0, page: 1, limit: 20 }),
-    getCompensationStats: jest.fn().mockResolvedValue({ total: 0, pending: 0, totalPoints: 0 }),
+    processCompensation: jest
+      .fn()
+      .mockResolvedValue({ processed: 0, totalPoints: 0 }),
+    processPendingCompensations: jest.fn().mockResolvedValue({
+      contestsProcessed: 0,
+      membersCompensated: 0,
+      totalPointsAwarded: 0,
+    }),
+    getCompensationLogs: jest
+      .fn()
+      .mockResolvedValue({ logs: [], total: 0, page: 1, limit: 20 }),
+    getCompensationStats: jest
+      .fn()
+      .mockResolvedValue({ total: 0, pending: 0, totalPoints: 0 }),
   };
 
   const mockNotificationsService = {
@@ -76,12 +86,16 @@ describe('AdminService', () => {
       createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
       find: jest.fn().mockResolvedValue([]),
     };
-    withdrawalRepo = { createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder) };
+    withdrawalRepo = {
+      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    };
     configRepo = {
       find: jest.fn().mockResolvedValue([]),
       findOne: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockImplementation((d) => d || {}),
-      save: jest.fn().mockImplementation((c) => Promise.resolve({ id: 'config-1', ...c })),
+      save: jest
+        .fn()
+        .mockImplementation((c) => Promise.resolve({ id: 'config-1', ...c })),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
     };
     supportTicketRepo = {
@@ -98,7 +112,10 @@ describe('AdminService', () => {
         { provide: getRepositoryToken(Transaction), useValue: transactionRepo },
         { provide: getRepositoryToken(Withdrawal), useValue: withdrawalRepo },
         { provide: getRepositoryToken(SystemConfig), useValue: configRepo },
-        { provide: getRepositoryToken(SupportTicket), useValue: supportTicketRepo },
+        {
+          provide: getRepositoryToken(SupportTicket),
+          useValue: supportTicketRepo,
+        },
         { provide: CompensationService, useValue: mockCompensationService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: SmsService, useValue: mockSmsService },
@@ -115,7 +132,20 @@ describe('AdminService', () => {
   describe('getUsers', () => {
     it('should return paginated users', async () => {
       const mockUsers = [
-        { id: '1', fullName: 'John Doe', phoneNumber: '+911234567890', role: UserRole.USER, isActive: true, createdAt: new Date(), kyc: null, email: null, currentTier: 'bronze', state: null, walletBalanceInr: 0, pointsBalance: 0 },
+        {
+          id: '1',
+          fullName: 'John Doe',
+          phoneNumber: '+911234567890',
+          role: UserRole.USER,
+          isActive: true,
+          createdAt: new Date(),
+          kyc: null,
+          email: null,
+          currentTier: 'bronze',
+          state: null,
+          walletBalanceInr: 0,
+          pointsBalance: 0,
+        },
       ];
       userRepo.findAndCount.mockResolvedValue([mockUsers, 1]);
 
@@ -150,7 +180,13 @@ describe('AdminService', () => {
 
   describe('getUserById', () => {
     it('should return user with aggregations', async () => {
-      const mockUser = { id: '1', fullName: 'John', phoneNumber: '+911234567890', kyc: { status: 'approved' }, isActive: true };
+      const mockUser = {
+        id: '1',
+        fullName: 'John',
+        phoneNumber: '+911234567890',
+        kyc: { status: 'approved' },
+        isActive: true,
+      };
       userRepo.findOne.mockResolvedValue(mockUser);
 
       const result = await service.getUserById('1');
@@ -160,23 +196,35 @@ describe('AdminService', () => {
 
     it('should throw NotFoundException for missing user', async () => {
       userRepo.findOne.mockResolvedValue(null);
-      await expect(service.getUserById('nonexistent')).rejects.toThrow('User not found');
+      await expect(service.getUserById('nonexistent')).rejects.toThrow(
+        'User not found',
+      );
     });
   });
 
   describe('updateUser', () => {
     it('should update allowed fields', async () => {
-      const user = { id: '1', fullName: 'Old Name', role: UserRole.USER, isActive: true };
+      const user = {
+        id: '1',
+        fullName: 'Old Name',
+        role: UserRole.USER,
+        isActive: true,
+      };
       userRepo.findOne.mockResolvedValue(user);
 
-      const result = await service.updateUser('1', { fullName: 'New Name', role: UserRole.ADMIN });
+      const result = await service.updateUser('1', {
+        fullName: 'New Name',
+        role: UserRole.ADMIN,
+      });
       expect(result.fullName).toBe('New Name');
       expect(result.role).toBe(UserRole.ADMIN);
     });
 
     it('should throw NotFoundException for missing user', async () => {
       userRepo.findOne.mockResolvedValue(null);
-      await expect(service.updateUser('nonexistent', {})).rejects.toThrow('User not found');
+      await expect(service.updateUser('nonexistent', {})).rejects.toThrow(
+        'User not found',
+      );
     });
   });
 
@@ -199,7 +247,10 @@ describe('AdminService', () => {
 
   describe('getContests', () => {
     it('should return paginated contests', async () => {
-      contestRepo.findAndCount.mockResolvedValue([[{ id: 'c1', title: 'Test Contest' }], 1]);
+      contestRepo.findAndCount.mockResolvedValue([
+        [{ id: 'c1', title: 'Test Contest' }],
+        1,
+      ]);
       const result = await service.getContests({});
       expect(result.contests).toHaveLength(1);
       expect(result.total).toBe(1);
@@ -218,13 +269,18 @@ describe('AdminService', () => {
 
     it('should throw NotFoundException', async () => {
       contestRepo.findOne.mockResolvedValue(null);
-      await expect(service.getContestById('none')).rejects.toThrow('Contest not found');
+      await expect(service.getContestById('none')).rejects.toThrow(
+        'Contest not found',
+      );
     });
   });
 
   describe('KYC Management', () => {
     it('should return paginated KYC submissions', async () => {
-      kycRepo.findAndCount.mockResolvedValue([[{ id: 'k1', status: 'pending' }], 1]);
+      kycRepo.findAndCount.mockResolvedValue([
+        [{ id: 'k1', status: 'pending' }],
+        1,
+      ]);
       const result = await service.getKycSubmissions({});
       expect(result.submissions).toHaveLength(1);
     });
@@ -247,25 +303,40 @@ describe('AdminService', () => {
 
   describe('updateSystemConfig', () => {
     it('should update existing config', async () => {
-      configRepo.find.mockResolvedValue([{ id: 'cfg-1', maintenanceMode: false }]);
-      configRepo.findOne.mockResolvedValue({ id: 'cfg-1', maintenanceMode: true });
+      configRepo.find.mockResolvedValue([
+        { id: 'cfg-1', maintenanceMode: false },
+      ]);
+      configRepo.findOne.mockResolvedValue({
+        id: 'cfg-1',
+        maintenanceMode: true,
+      });
 
-      const result = await service.updateSystemConfig({ maintenanceMode: true });
+      const result = await service.updateSystemConfig({
+        maintenanceMode: true,
+      });
       expect(result!.maintenanceMode).toBe(true);
     });
 
     it('should create config if none exists', async () => {
       configRepo.find.mockResolvedValue([]);
-      configRepo.findOne.mockResolvedValue({ id: 'cfg-new', maintenanceMode: false });
+      configRepo.findOne.mockResolvedValue({
+        id: 'cfg-new',
+        maintenanceMode: false,
+      });
 
-      const result = await service.updateSystemConfig({ maintenanceMode: false });
+      const result = await service.updateSystemConfig({
+        maintenanceMode: false,
+      });
       expect(result).toBeDefined();
     });
   });
 
   describe('getSupportTickets', () => {
     it('should return paginated tickets', async () => {
-      supportTicketRepo.findAndCount.mockResolvedValue([[{ id: 't1', subject: 'Help' }], 1]);
+      supportTicketRepo.findAndCount.mockResolvedValue([
+        [{ id: 't1', subject: 'Help' }],
+        1,
+      ]);
       const result = await service.getSupportTickets({});
       expect(result.tickets).toHaveLength(1);
     });

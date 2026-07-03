@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  Index,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('transactions')
@@ -19,16 +27,34 @@ export class Transaction {
   @Column({ type: 'varchar', length: 30, nullable: false })
   type: string; // deposit, entry_fee, withdrawal, redemption, points_earned, points_bonus, referral
 
-  @Column({ name: 'cash_amount', type: 'numeric', precision: 10, scale: 2, default: 0 })
+  @Column({
+    name: 'cash_amount',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    default: 0,
+  })
   cashAmount: number;
 
   @Column({ name: 'points_amount', type: 'integer', default: 0 })
   pointsAmount: number;
 
-  @Column({ name: 'cash_balance_before', type: 'numeric', precision: 10, scale: 2, nullable: true })
+  @Column({
+    name: 'cash_balance_before',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   cashBalanceBefore: number;
 
-  @Column({ name: 'cash_balance_after', type: 'numeric', precision: 10, scale: 2, nullable: true })
+  @Column({
+    name: 'cash_balance_after',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   cashBalanceAfter: number;
 
   @Column({ name: 'points_balance_before', type: 'integer', nullable: true })
@@ -40,7 +66,12 @@ export class Transaction {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ name: 'reference_type', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'reference_type',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   referenceType: string;
 
   @Column({ name: 'reference_id', type: 'uuid', nullable: true })

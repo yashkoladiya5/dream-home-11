@@ -30,9 +30,17 @@ export class LeaderboardResetService {
     await this.freezeAndReset('weekly');
   }
 
-  async freezeAndReset(cycle: 'weekly' | 'monthly'): Promise<{ archived: number; reset: number }> {
-    const pointsField = cycle === 'monthly' ? 'monthlyPoints' as const : 'weeklyPoints' as const;
-    const redisKey = cycle === 'monthly' ? LeaderboardRedisService.MONTHLY_KEY : LeaderboardRedisService.WEEKLY_KEY;
+  async freezeAndReset(
+    cycle: 'weekly' | 'monthly',
+  ): Promise<{ archived: number; reset: number }> {
+    const pointsField =
+      cycle === 'monthly'
+        ? ('monthlyPoints' as const)
+        : ('weeklyPoints' as const);
+    const redisKey =
+      cycle === 'monthly'
+        ? LeaderboardRedisService.MONTHLY_KEY
+        : LeaderboardRedisService.WEEKLY_KEY;
 
     const users = await this.userRepo.find({
       where: { isActive: true },
@@ -84,10 +92,14 @@ export class LeaderboardResetService {
 
     if (snapshotDate) {
       const date = new Date(snapshotDate);
-      const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const start = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+      );
       const end = new Date(start);
       end.setDate(end.getDate() + 1);
-      where.snapshotDate = MoreThanOrEqual(start) as any;
+      where.snapshotDate = MoreThanOrEqual(start);
     }
 
     const [archives, total] = await this.archiveRepo.findAndCount({

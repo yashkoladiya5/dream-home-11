@@ -1,5 +1,13 @@
 import {
-  Controller, Get, Patch, Post, Param, Body, Query, UseGuards, Req,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AdminService } from './admin.service';
@@ -36,7 +44,8 @@ export class AdminController {
   async getUsers(@Query() query: QueryUsersDto) {
     return this.adminService.getUsers({
       ...query,
-      isActive: query.isActive !== undefined ? query.isActive === 'true' : undefined,
+      isActive:
+        query.isActive !== undefined ? query.isActive === 'true' : undefined,
     });
   }
 
@@ -46,7 +55,12 @@ export class AdminController {
   }
 
   @Patch('users/:id')
-  async updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto, @GetUser() admin: User, @Req() req: any) {
+  async updateUser(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.updateUser(id, dto as any);
     await this.auditService.log({
       adminId: admin.id,
@@ -76,7 +90,11 @@ export class AdminController {
 
   @Patch('kyc/:id/approve')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async approveKyc(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
+  async approveKyc(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.approveKyc(id);
     await this.auditService.log({
       adminId: admin.id,
@@ -90,7 +108,12 @@ export class AdminController {
 
   @Patch('kyc/:id/reject')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async rejectKyc(@Param('id') id: string, @Body() dto: RejectKycDto, @GetUser() admin: User, @Req() req: any) {
+  async rejectKyc(
+    @Param('id') id: string,
+    @Body() dto: RejectKycDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.rejectKyc(id, dto.reason);
     await this.auditService.log({
       adminId: admin.id,
@@ -105,7 +128,11 @@ export class AdminController {
 
   @Patch('config')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updateConfig(@Body() dto: Record<string, any>, @GetUser() admin: User, @Req() req: any) {
+  async updateConfig(
+    @Body() dto: Record<string, any>,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.updateSystemConfig(dto);
     await this.auditService.log({
       adminId: admin.id,
@@ -118,14 +145,24 @@ export class AdminController {
 
   @Get('support-tickets')
   async getSupportTickets(
-    @Query() query: { page?: number; limit?: number; status?: string; category?: string },
+    @Query()
+    query: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      category?: string;
+    },
   ) {
     return this.adminService.getSupportTickets(query);
   }
 
   @Post('contests/:id/compensate')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
-  async compensateContest(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
+  async compensateContest(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.compensateContest(id);
     await this.auditService.log({
       adminId: admin.id,
@@ -175,12 +212,20 @@ export class AdminController {
     @GetUser() admin: User,
     @Req() req: any,
   ) {
-    const result = await this.adminService.broadcastPush(dto.title, dto.message, dto.tier);
+    const result = await this.adminService.broadcastPush(
+      dto.title,
+      dto.message,
+      dto.tier,
+    );
     await this.auditService.log({
       adminId: admin.id,
       action: AuditAction.BROADCAST_NOTIFICATION,
       targetType: 'broadcast',
-      metadata: { title: dto.title, tier: dto.tier || 'all', sentCount: result.sent },
+      metadata: {
+        title: dto.title,
+        tier: dto.tier || 'all',
+        sentCount: result.sent,
+      },
       ipAddress: req.ip,
     });
     return result;
@@ -205,7 +250,9 @@ export class AdminController {
   }
 
   @Get('audit-logs')
-  async getAuditLogs(@Query() query: { page?: number; limit?: number; action?: string }) {
+  async getAuditLogs(
+    @Query() query: { page?: number; limit?: number; action?: string },
+  ) {
     return this.auditService.getLogs(query);
   }
 }

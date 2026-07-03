@@ -6,10 +6,7 @@ import { SupportController } from './support.controller';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([SupportTicket]),
-    UsersModule,
-  ],
+  imports: [TypeOrmModule.forFeature([SupportTicket]), UsersModule],
   controllers: [SupportController],
   providers: [SupportService],
   exports: [SupportService],

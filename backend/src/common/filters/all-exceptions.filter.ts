@@ -1,4 +1,10 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { Response, Request } from 'express';
 import { PinoLoggerService } from '../logger/pino-logger.service';
 
@@ -21,9 +27,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      message = typeof exceptionResponse === 'string'
-        ? exceptionResponse
-        : (exceptionResponse as any).message || exceptionResponse;
+      message =
+        typeof exceptionResponse === 'string'
+          ? exceptionResponse
+          : (exceptionResponse as any).message || exceptionResponse;
     }
 
     const isProduction = process.env.NODE_ENV === 'production';
@@ -46,7 +53,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     };
 
     if (!isProduction) {
-      errorResponse.stack = exception instanceof Error ? exception.stack : undefined;
+      errorResponse.stack =
+        exception instanceof Error ? exception.stack : undefined;
     }
 
     this.pinoLogger.error(

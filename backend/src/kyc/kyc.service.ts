@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Kyc, KycStatus } from './entities/kyc.entity';
@@ -21,7 +26,12 @@ export class KycService {
     private readonly auditService: AuditService,
   ) {}
 
-  async submitKyc(userId: string, aadhaarNumber: string, panNumber: string, fullName: string): Promise<Kyc> {
+  async submitKyc(
+    userId: string,
+    aadhaarNumber: string,
+    panNumber: string,
+    fullName: string,
+  ): Promise<Kyc> {
     const existing = await this.kycRepository.findOne({ where: { userId } });
     if (existing) {
       throw new ConflictException('KYC already submitted for this user');
@@ -49,7 +59,9 @@ export class KycService {
     return saved;
   }
 
-  async getKycStatus(userId: string): Promise<{ status: KycStatus; verifiedAt: Date | null }> {
+  async getKycStatus(
+    userId: string,
+  ): Promise<{ status: KycStatus; verifiedAt: Date | null }> {
     const kyc = await this.kycRepository.findOne({ where: { userId } });
     if (!kyc) {
       throw new NotFoundException('KYC not found');

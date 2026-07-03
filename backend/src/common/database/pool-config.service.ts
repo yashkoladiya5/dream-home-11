@@ -24,7 +24,11 @@ export class PoolConfigService {
     };
   }
 
-  logPoolStatus(totalCount: number, idleCount: number, waitingCount: number): void {
+  logPoolStatus(
+    totalCount: number,
+    idleCount: number,
+    waitingCount: number,
+  ): void {
     console.log(
       `[DB Pool] total: ${totalCount}, idle: ${idleCount}, waiting: ${waitingCount}`,
     );

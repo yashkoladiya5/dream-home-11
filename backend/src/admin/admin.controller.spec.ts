@@ -18,16 +18,30 @@ describe('AdminController', () => {
 
   const mockAdminService = {
     getDashboardStats: jest.fn().mockResolvedValue({ totalUsers: 100 }),
-    getUsers: jest.fn().mockResolvedValue({ users: [], total: 0, page: 1, limit: 20 }),
+    getUsers: jest
+      .fn()
+      .mockResolvedValue({ users: [], total: 0, page: 1, limit: 20 }),
     getUserById: jest.fn().mockResolvedValue({ id: '1', fullName: 'Test' }),
-    updateUser: jest.fn().mockImplementation((id, dto) => Promise.resolve({ id, ...dto })),
-    getContests: jest.fn().mockResolvedValue({ contests: [], total: 0, page: 1, limit: 20 }),
+    updateUser: jest
+      .fn()
+      .mockImplementation((id, dto) => Promise.resolve({ id, ...dto })),
+    getContests: jest
+      .fn()
+      .mockResolvedValue({ contests: [], total: 0, page: 1, limit: 20 }),
     getContestById: jest.fn().mockResolvedValue({ id: 'c1', title: 'Test' }),
-    getKycSubmissions: jest.fn().mockResolvedValue({ submissions: [], total: 0, page: 1, limit: 20 }),
+    getKycSubmissions: jest
+      .fn()
+      .mockResolvedValue({ submissions: [], total: 0, page: 1, limit: 20 }),
     approveKyc: jest.fn().mockResolvedValue({ id: 'k1', status: 'approved' }),
-    rejectKyc: jest.fn().mockResolvedValue({ id: 'k1', status: 'rejected', rejectionReason: 'Invalid' }),
+    rejectKyc: jest.fn().mockResolvedValue({
+      id: 'k1',
+      status: 'rejected',
+      rejectionReason: 'Invalid',
+    }),
     updateSystemConfig: jest.fn().mockResolvedValue({ maintenanceMode: true }),
-    getSupportTickets: jest.fn().mockResolvedValue({ tickets: [], total: 0, page: 1, limit: 20 }),
+    getSupportTickets: jest
+      .fn()
+      .mockResolvedValue({ tickets: [], total: 0, page: 1, limit: 20 }),
   };
 
   beforeEach(async () => {
@@ -75,7 +89,12 @@ describe('AdminController', () => {
 
   describe('PATCH /api/v1/admin/users/:id', () => {
     it('should update user', async () => {
-      const result = await controller.updateUser('1', { fullName: 'Updated' }, mockAdmin, mockReq);
+      const result = await controller.updateUser(
+        '1',
+        { fullName: 'Updated' },
+        mockAdmin,
+        mockReq,
+      );
       expect(result.fullName).toBe('Updated');
     });
   });
@@ -110,14 +129,23 @@ describe('AdminController', () => {
 
   describe('PATCH /api/v1/admin/kyc/:id/reject', () => {
     it('should reject KYC', async () => {
-      const result = await controller.rejectKyc('k1', { reason: 'Invalid' }, mockAdmin, mockReq);
+      const result = await controller.rejectKyc(
+        'k1',
+        { reason: 'Invalid' },
+        mockAdmin,
+        mockReq,
+      );
       expect(result.status).toBe('rejected');
     });
   });
 
   describe('PATCH /api/v1/admin/config', () => {
     it('should update system config', async () => {
-      const result = await controller.updateConfig({ maintenanceMode: true }, mockAdmin, mockReq);
+      const result = await controller.updateConfig(
+        { maintenanceMode: true },
+        mockAdmin,
+        mockReq,
+      );
       expect(result!.maintenanceMode).toBe(true);
     });
   });

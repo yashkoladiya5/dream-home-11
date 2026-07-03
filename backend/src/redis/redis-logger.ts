@@ -1,4 +1,10 @@
-import { Inject, Injectable, OnModuleInit, Logger, Optional } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  OnModuleInit,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { REDIS_CLIENT } from './redis.constants';
 import Redis from 'ioredis';
 
@@ -15,7 +21,9 @@ export class RedisLogger implements OnModuleInit {
       await this.redis.ping();
       this.logger.log('Redis ping successful');
     } catch (err) {
-      this.logger.warn(`Redis connection failed: ${(err as Error).message}. Leaderboard features will be degraded.`);
+      this.logger.warn(
+        `Redis connection failed: ${(err as Error).message}. Leaderboard features will be degraded.`,
+      );
     }
   }
 }

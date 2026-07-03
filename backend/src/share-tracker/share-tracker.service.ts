@@ -14,7 +14,11 @@ export class ShareTrackerService {
     private readonly pointsEngineService: PointsEngineService,
   ) {}
 
-  async logShare(userId: string, contestId: string | null, shareChannel: string): Promise<Share> {
+  async logShare(
+    userId: string,
+    contestId: string | null,
+    shareChannel: string,
+  ): Promise<Share> {
     const inviteCode = this.generateInviteCode();
     const share = this.shareRepo.create({
       userId,
@@ -25,7 +29,13 @@ export class ShareTrackerService {
       inviteCode,
     });
     const saved = await this.shareRepo.save(share);
-    await this.pointsEngineService.logPointAction(userId, 'share_contest', SHARE_POINTS, 1.0, SHARE_POINTS);
+    await this.pointsEngineService.logPointAction(
+      userId,
+      'share_contest',
+      SHARE_POINTS,
+      1.0,
+      SHARE_POINTS,
+    );
     return saved;
   }
 
@@ -36,7 +46,11 @@ export class ShareTrackerService {
     });
   }
 
-  async getShareStats(userId: string): Promise<{ totalShares: number; totalPoints: number; inviteCode: string | null }> {
+  async getShareStats(userId: string): Promise<{
+    totalShares: number;
+    totalPoints: number;
+    inviteCode: string | null;
+  }> {
     const shares = await this.shareRepo.find({ where: { userId } });
     const totalShares = shares.length;
     const totalPoints = shares.reduce((sum, s) => sum + s.pointsAwarded, 0);

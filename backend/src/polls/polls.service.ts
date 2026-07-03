@@ -55,9 +55,8 @@ export class PollsService {
 
     const results = poll.options.map((option, idx) => {
       const count = votes.filter((v) => v.selectedOption === idx).length;
-      const percentage = totalVotes > 0
-        ? Math.round((count / totalVotes) * 100)
-        : 0;
+      const percentage =
+        totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
       return { option, count, percentage };
     });
 

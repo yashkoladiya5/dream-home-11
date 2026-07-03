@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatMessage } from './entities/chat-message.entity';
@@ -37,7 +41,12 @@ export class ChatHistoryService {
     chatId: string,
     page: number = 1,
     limit: number = 30,
-  ): Promise<{ messages: ChatMessage[]; total: number; page: number; limit: number }> {
+  ): Promise<{
+    messages: ChatMessage[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const skip = (page - 1) * limit;
     const [messages, total] = await this.chatMessageRepo.findAndCount({
       where: { chatId },
@@ -58,7 +67,9 @@ export class ChatHistoryService {
     return participations.map((p) => p.chat);
   }
 
-  async getUserChatsWithDetails(userId: string): Promise<ChatListResponseDto[]> {
+  async getUserChatsWithDetails(
+    userId: string,
+  ): Promise<ChatListResponseDto[]> {
     const participations = await this.chatParticipantRepo.find({
       where: { userId },
       relations: { chat: true },
@@ -108,7 +119,10 @@ export class ChatHistoryService {
     return enrichedChats;
   }
 
-  async getChatDetail(chatId: string, userId: string): Promise<ChatDetailResponseDto> {
+  async getChatDetail(
+    chatId: string,
+    userId: string,
+  ): Promise<ChatDetailResponseDto> {
     const chat = await this.chatRepo.findOne({
       where: { id: chatId },
     });

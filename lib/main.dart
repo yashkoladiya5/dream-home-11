@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'core/network/connectivity_state.dart';
 import 'core/performance/app_startup.dart';
 import 'core/router/app_router.dart';
+import 'core/router/deep_links.dart';
 import 'core/theme/app_theme.dart';
 import 'features/config/presentation/widgets/config_gate.dart';
 import 'features/notifications/services/notification_handler.dart';
@@ -22,6 +23,8 @@ bool isFirebaseInitialized = false;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  DeepLinkConfig.configure();
 
   final startupService = AppStartupService();
   startupService.completePhase0();

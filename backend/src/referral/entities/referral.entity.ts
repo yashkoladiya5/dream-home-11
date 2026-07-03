@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum ReferralStatus {
@@ -41,6 +48,10 @@ export class Referral {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @Column({ name: 'settled_at', type: 'timestamp with time zone', nullable: true })
+  @Column({
+    name: 'settled_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
   settledAt: Date;
 }

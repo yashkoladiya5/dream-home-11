@@ -1,0 +1,236 @@
+{
+  "version": "1.0.0",
+  "generated": "2025-01-01T00:00:00Z",
+  "basePath": "assets",
+  "assets": {
+    "icons": {
+      "app_icon": {
+        "path": "assets/icons/app_icon/v1/app_icon.png",
+        "type": "image/png",
+        "hash": "a1b2c3d4e5f6a7b8",
+        "width": 512,
+        "height": 512
+      },
+      "app_icon_android": {
+        "path": "assets/icons/app_icon/v1/app_icon_android.png",
+        "type": "image/png",
+        "hash": "b2c3d4e5f6a7b8c9",
+        "width": 1024,
+        "height": 1024
+      },
+      "app_icon_ios": {
+        "path": "assets/icons/app_icon/v1/app_icon_ios.png",
+        "type": "image/png",
+        "hash": "c3d4e5f6a7b8c9d0",
+        "width": 1024,
+        "height": 1024
+      }
+    },
+    "logos": {
+      "logo_horizontal": {
+        "path": "assets/logos/primary/v1/logo_horizontal.png",
+        "type": "image/png",
+        "hash": "d4e5f6a7b8c9d0e1",
+        "width": 512,
+        "height": 128
+      },
+      "logo_square": {
+        "path": "assets/logos/primary/v1/logo_square.png",
+        "type": "image/png",
+        "hash": "e5f6a7b8c9d0e1f2",
+        "width": 512,
+        "height": 512
+      },
+      "logo_horizontal_svg": {
+        "path": "assets/logos/primary/v1/logo_horizontal.svg",
+        "type": "image/svg+xml",
+        "hash": "f6a7b8c9d0e1f2a3",
+        "width": 512,
+        "height": 128
+      },
+      "logo_square_svg": {
+        "path": "assets/logos/primary/v1/logo_square.svg",
+        "type": "image/svg+xml",
+        "hash": "a7b8c9d0e1f2a3b4",
+        "width": 512,
+        "height": 512
+      }
+    },
+    "branding": {
+      "brand_mark": {
+        "path": "assets/branding/mark/v1/brand_mark.png",
+        "type": "image/png",
+        "hash": "b8c9d0e1f2a3b4c5",
+        "width": 256,
+        "height": 256
+      },
+      "brand_mark_svg": {
+        "path": "assets/branding/mark/v1/brand_mark.svg",
+        "type": "image/svg+xml",
+        "hash": "c9d0e1f2a3b4c5d6",
+        "width": 256,
+        "height": 256
+      },
+      "social_share": {
+        "path": "assets/branding/social/v1/social_share.png",
+        "type": "image/png",
+        "hash": "d0e1f2a3b4c5d6e7",
+        "width": 1200,
+        "height": 630
+      },
+      "favicon": {
+        "path": "assets/branding/favicon/v1/favicon.ico",
+        "type": "image/x-icon",
+        "hash": "e1f2a3b4c5d6e7f8",
+        "width": 32,
+        "height": 32
+      }
+    },
+    "banners": {
+      "banner_home_small": {
+        "path": "assets/banners/home/v1/banner_home_small.png",
+        "type": "image/png",
+        "hash": "f2a3b4c5d6e7f8a9",
+        "width": 360,
+        "height": 180
+      },
+      "banner_home_medium": {
+        "path": "assets/banners/home/v1/banner_home_medium.png",
+        "type": "image/png",
+        "hash": "a3b4c5d6e7f8a9b0",
+        "width": 720,
+        "height": 360
+      },
+      "banner_home_large": {
+        "path": "assets/banners/home/v1/banner_home_large.png",
+        "type": "image/png",
+        "hash": "b4c5d6e7f8a9b0c1",
+        "width": 1440,
+        "height": 720
+      },
+      "banner_contest_small": {
+        "path": "assets/banners/contest/v1/banner_contest_small.png",
+        "type": "image/png",
+        "hash": "c5d6e7f8a9b0c1d2",
+        "width": 360,
+        "height": 180
+      },
+      "banner_contest_medium": {
+        "path": "assets/banners/contest/v1/banner_contest_medium.png",
+        "type": "image/png",
+        "hash": "d6e7f8a9b0c1d2e3",
+        "width": 720,
+        "height": 360
+      },
+      "banner_contest_large": {
+        "path": "assets/banners/contest/v1/banner_contest_large.png",
+        "type": "image/png",
+        "hash": "e7f8a9b0c1d2e3f4",
+        "width": 1440,
+        "height": 720
+      },
+      "banner_promo_small": {
+        "path": "assets/banners/promo/v1/banner_promo_small.png",
+        "type": "image/png",
+        "hash": "f8a9b0c1d2e3f4a5",
+        "width": 360,
+        "height": 180
+      },
+      "banner_promo_medium": {
+        "path": "assets/banners/promo/v1/banner_promo_medium.png",
+        "type": "image/png",
+        "hash": "a9b0c1d2e3f4a5b6",
+        "width": 720,
+        "height": 360
+      },
+      "banner_promo_large": {
+        "path": "assets/banners/promo/v1/banner_promo_large.png",
+        "type": "image/png",
+        "hash": "b0c1d2e3f4a5b6c7",
+        "width": 1440,
+        "height": 720
+      }
+    },
+    "placeholders": {
+      "loading_placeholder": {
+        "path": "assets/placeholders/loading/v1/loading_placeholder.png",
+        "type": "image/png",
+        "hash": "c1d2e3f4a5b6c7d8",
+        "width": 64,
+        "height": 64
+      },
+      "error_illustration": {
+        "path": "assets/placeholders/error/v1/error_illustration.png",
+        "type": "image/png",
+        "hash": "d2e3f4a5b6c7d8e9",
+        "width": 400,
+        "height": 400
+      },
+      "empty_state_illustration": {
+        "path": "assets/placeholders/empty/v1/empty_state_illustration.png",
+        "type": "image/png",
+        "hash": "e3f4a5b6c7d8e9f0",
+        "width": 400,
+        "height": 400
+      },
+      "no_network_illustration": {
+        "path": "assets/placeholders/network/v1/no_network_illustration.png",
+        "type": "image/png",
+        "hash": "f4a5b6c7d8e9f0a1",
+        "width": 400,
+        "height": 400
+      },
+      "avatar_placeholder": {
+        "path": "assets/placeholders/avatar/v1/avatar_placeholder.png",
+        "type": "image/png",
+        "hash": "a5b6c7d8e9f0a1b2",
+        "width": 80,
+        "height": 80
+      },
+      "team_placeholder": {
+        "path": "assets/placeholders/team/v1/team_placeholder.png",
+        "type": "image/png",
+        "hash": "b6c7d8e9f0a1b2c3",
+        "width": 150,
+        "height": 150
+      }
+    },
+    "illustrations": {
+      "trophy_illustration": {
+        "path": "assets/illustrations/trophy/v1/trophy_illustration.png",
+        "type": "image/png",
+        "hash": "c7d8e9f0a1b2c3d4",
+        "width": 300,
+        "height": 300
+      },
+      "winner_podium": {
+        "path": "assets/illustrations/podium/v1/winner_podium.png",
+        "type": "image/png",
+        "hash": "d8e9f0a1b2c3d4e5",
+        "width": 600,
+        "height": 400
+      },
+      "onboarding_1": {
+        "path": "assets/illustrations/onboarding/v1/onboarding_1.png",
+        "type": "image/png",
+        "hash": "e9f0a1b2c3d4e5f6",
+        "width": 360,
+        "height": 360
+      },
+      "onboarding_2": {
+        "path": "assets/illustrations/onboarding/v1/onboarding_2.png",
+        "type": "image/png",
+        "hash": "f0a1b2c3d4e5f6a7",
+        "width": 360,
+        "height": 360
+      },
+      "onboarding_3": {
+        "path": "assets/illustrations/onboarding/v1/onboarding_3.png",
+        "type": "image/png",
+        "hash": "a1b2c3d4e5f6a7b8",
+        "width": 360,
+        "height": 360
+      }
+    }
+  }
+}

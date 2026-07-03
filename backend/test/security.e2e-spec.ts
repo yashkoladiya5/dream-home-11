@@ -1,5 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, HttpStatus, Controller, Get, Module } from '@nestjs/common';
+import {
+  INestApplication,
+  HttpStatus,
+  Controller,
+  Get,
+  Module,
+} from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -86,7 +92,9 @@ function createMockRepo() {
     create: jest.fn().mockImplementation((e: any) => e || {}),
     update: jest.fn().mockResolvedValue({ affected: 1, generatedMaps: [] }),
     delete: jest.fn().mockResolvedValue({ affected: 1 }),
-    insert: jest.fn().mockResolvedValue({ identifiers: [{ id: 'mock' }], generatedMaps: [] }),
+    insert: jest
+      .fn()
+      .mockResolvedValue({ identifiers: [{ id: 'mock' }], generatedMaps: [] }),
     upsert: jest.fn().mockResolvedValue({ identifiers: [], generatedMaps: [] }),
     softDelete: jest.fn().mockResolvedValue({ affected: 1 }),
     restore: jest.fn().mockResolvedValue({ affected: 1 }),
@@ -99,11 +107,37 @@ function createMockRepo() {
 }
 
 const ALL_ENTITIES = [
-  User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder,
-  NotificationLog, Share, Reward, RewardRedemption, Banner, Achievement,
-  UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod,
-  Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, Chat,
-  ChatMessage, ChatParticipant, SupportTicket, SystemConfig, CompensationLog,
+  User,
+  Kyc,
+  Contest,
+  ContestMember,
+  PointLog,
+  FcmToken,
+  Reminder,
+  NotificationLog,
+  Share,
+  Reward,
+  RewardRedemption,
+  Banner,
+  Achievement,
+  UserAchievement,
+  PrizeHome,
+  Transaction,
+  Payment,
+  SavedPaymentMethod,
+  Withdrawal,
+  Post,
+  Like,
+  Comment,
+  Poll,
+  PollVote,
+  Referral,
+  Chat,
+  ChatMessage,
+  ChatParticipant,
+  SupportTicket,
+  SystemConfig,
+  CompensationLog,
   AuditLog,
 ];
 
@@ -111,47 +145,43 @@ const ALL_ENTITIES = [
 //  Rate-limit test helper module
 // ============================================================
 
-  @Controller('_rate_test')
-  class RateTestController {
-    @Get()
-    get() {
-      return { ok: true };
-    }
+@Controller('_rate_test')
+class RateTestController {
+  @Get()
+  get() {
+    return { ok: true };
   }
+}
 
-  @Module({
-    imports: [
-      ThrottlerModule.forRoot({
-        throttlers: [{ ttl: 3000, limit: 3 }],
-      }),
-    ],
-    controllers: [RateTestController],
-    providers: [
-      { provide: APP_GUARD, useClass: ThrottlerGuard },
-    ],
-  })
-  class RateLimitTestModule {}
+@Module({
+  imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 3000, limit: 3 }],
+    }),
+  ],
+  controllers: [RateTestController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+})
+class RateLimitTestModule {}
 
-  @Controller('_rate_test_otp')
-  class RateTestOtpController {
-    @Get()
-    requestOtp() {
-      return { success: true, message: 'OTP sent' };
-    }
+@Controller('_rate_test_otp')
+class RateTestOtpController {
+  @Get()
+  requestOtp() {
+    return { success: true, message: 'OTP sent' };
   }
+}
 
-  @Module({
-    imports: [
-      ThrottlerModule.forRoot({
-        throttlers: [{ ttl: 60000, limit: 5 }],
-      }),
-    ],
-    controllers: [RateTestOtpController],
-    providers: [
-      { provide: APP_GUARD, useClass: ThrottlerGuard },
-    ],
-  })
-  class RateLimitOtpTestModule {}
+@Module({
+  imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60000, limit: 5 }],
+    }),
+  ],
+  controllers: [RateTestOtpController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+})
+class RateLimitOtpTestModule {}
 
 // ============================================================
 //  Main test suite
@@ -236,7 +266,10 @@ describe('Security E2E', () => {
       multi: jest.fn(() => ({
         incr: jest.fn(),
         pttl: jest.fn(),
-        exec: jest.fn().mockResolvedValue([[null, 1], [null, -1]]),
+        exec: jest.fn().mockResolvedValue([
+          [null, 1],
+          [null, -1],
+        ]),
       })),
       incr: jest.fn().mockResolvedValue(1),
       pttl: jest.fn().mockResolvedValue(-1),
@@ -253,14 +286,18 @@ describe('Security E2E', () => {
     };
 
     let builder = Test.createTestingModule({ imports: [AppModule] })
-      .overrideProvider(DataSource).useValue(mockDataSource as any)
-      .overrideProvider(REDIS_CLIENT).useValue(mockRedisClient as any);
+      .overrideProvider(DataSource)
+      .useValue(mockDataSource as any)
+      .overrideProvider(REDIS_CLIENT)
+      .useValue(mockRedisClient as any);
 
     const repoMocks: Record<string, ReturnType<typeof createMockRepo>> = {};
     for (const entity of ALL_ENTITIES) {
       const mock = createMockRepo();
       repoMocks[(entity as any).name || String(entity)] = mock;
-      builder = builder.overrideProvider(getRepositoryToken(entity)).useValue(mock);
+      builder = builder
+        .overrideProvider(getRepositoryToken(entity))
+        .useValue(mock);
     }
 
     mockUserRepo = repoMocks['User'];
@@ -284,7 +321,10 @@ describe('Security E2E', () => {
 
     jwtService = moduleFixture.get<JwtService>(JwtService);
     userToken = jwtService.sign({ sub: USER_ID, phoneNumber: '+911234567890' });
-    adminToken = jwtService.sign({ sub: ADMIN_ID, phoneNumber: '+919999999999' });
+    adminToken = jwtService.sign({
+      sub: ADMIN_ID,
+      phoneNumber: '+919999999999',
+    });
   });
 
   afterAll(async () => {
@@ -307,12 +347,16 @@ describe('Security E2E', () => {
       ['POST', '/api/v1/admin/notifications/broadcast'],
     ];
 
-    it.each(endpoints)('%s %s returns 401 without Authorization header', async (method, url) => {
-      const req = method === 'GET'
-        ? request(app.getHttpServer()).get(url)
-        : request(app.getHttpServer()).post(url).send({});
-      await req.expect(HttpStatus.UNAUTHORIZED);
-    });
+    it.each(endpoints)(
+      '%s %s returns 401 without Authorization header',
+      async (method, url) => {
+        const req =
+          method === 'GET'
+            ? request(app.getHttpServer()).get(url)
+            : request(app.getHttpServer()).post(url).send({});
+        await req.expect(HttpStatus.UNAUTHORIZED);
+      },
+    );
   });
 
   // ============================================================
@@ -336,7 +380,11 @@ describe('Security E2E', () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/points/action')
         .set('Authorization', `Bearer ${userToken}`)
-        .send({ action: 'daily_login', pointsBalance: 99999, walletBalanceInr: 99999 })
+        .send({
+          action: 'daily_login',
+          pointsBalance: 99999,
+          walletBalanceInr: 99999,
+        })
         .expect(201);
 
       // Response should not reflect arbitrary balance values from the request
@@ -385,7 +433,7 @@ describe('Security E2E', () => {
         aadhaarBackUrl: null,
         panCardUrl: null,
         selfieUrl: null,
-      } as unknown as Kyc);
+      });
 
       const res = await request(app.getHttpServer())
         .get('/api/v1/kyc/details')
@@ -443,22 +491,25 @@ describe('Security E2E', () => {
       "' OR '1'='1",
       "'; DROP TABLE users; --",
       "' UNION SELECT * FROM users --",
-      "1; SELECT * FROM users WHERE 1=1 --",
+      '1; SELECT * FROM users WHERE 1=1 --',
       "admin' --",
       "' OR 1=1 --",
       "1' ORDER BY 1--",
     ];
 
-    it.each(injections)('should handle SQL-like string "%s" without crashing', async (injection) => {
-      mockUserRepo.findAndCount.mockResolvedValue([[], 0]);
+    it.each(injections)(
+      'should handle SQL-like string "%s" without crashing',
+      async (injection) => {
+        mockUserRepo.findAndCount.mockResolvedValue([[], 0]);
 
-      const res = await request(app.getHttpServer())
-        .get(`/api/v1/users/search?q=${encodeURIComponent(injection)}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .expect(HttpStatus.OK);
+        const res = await request(app.getHttpServer())
+          .get(`/api/v1/users/search?q=${encodeURIComponent(injection)}`)
+          .set('Authorization', `Bearer ${userToken}`)
+          .expect(HttpStatus.OK);
 
-      expect(res.status).toBe(200);
-    });
+        expect(res.status).toBe(200);
+      },
+    );
   });
 
   // ============================================================
@@ -486,9 +537,7 @@ describe('Security E2E', () => {
 
       // First 3 requests should pass
       for (let i = 0; i < 3; i++) {
-        await request(httpServer)
-          .get('/_rate_test')
-          .expect(HttpStatus.OK);
+        await request(httpServer).get('/_rate_test').expect(HttpStatus.OK);
       }
 
       // 4th request should be blocked
@@ -513,7 +562,10 @@ describe('Security E2E', () => {
     it('should reject base64-like junk token', async () => {
       await request(app.getHttpServer())
         .get('/api/v1/users/me')
-        .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0')
+        .set(
+          'Authorization',
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0',
+        )
         .expect(HttpStatus.UNAUTHORIZED);
     });
 
@@ -534,7 +586,7 @@ describe('Security E2E', () => {
       await request(app.getHttpServer())
         .get('/api/v1/contests/not-a-uuid')
         .set('Authorization', `Bearer ${userToken}`)
-        .expect(r => {
+        .expect((r) => {
           // Should not return 500 — any other status is acceptable
           expect(r.status).not.toBe(HttpStatus.INTERNAL_SERVER_ERROR);
         });
@@ -544,8 +596,12 @@ describe('Security E2E', () => {
       await request(app.getHttpServer())
         .get('/api/v1/users/profile/../admin/dashboard')
         .set('Authorization', `Bearer ${userToken}`)
-        .expect(r => {
-          expect([HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN, HttpStatus.NOT_FOUND]).toContain(r.status);
+        .expect((r) => {
+          expect([
+            HttpStatus.UNAUTHORIZED,
+            HttpStatus.FORBIDDEN,
+            HttpStatus.NOT_FOUND,
+          ]).toContain(r.status);
         });
     });
 
@@ -553,7 +609,7 @@ describe('Security E2E', () => {
       await request(app.getHttpServer())
         .get('/api/v1/contests/../../../etc/passwd')
         .set('Authorization', `Bearer ${userToken}`)
-        .expect(r => {
+        .expect((r) => {
           expect([
             HttpStatus.BAD_REQUEST,
             HttpStatus.UNAUTHORIZED,
@@ -574,7 +630,7 @@ describe('Security E2E', () => {
         .post('/api/v1/contests/some-contest-id/join')
         .set('Authorization', `Bearer ${userToken}`)
         .send({ amount: -1 })
-        .expect(r => {
+        .expect((r) => {
           expect(r.status).not.toBe(HttpStatus.INTERNAL_SERVER_ERROR);
         });
     });
@@ -584,7 +640,7 @@ describe('Security E2E', () => {
         .post('/api/v1/contests/some-contest-id/join')
         .set('Authorization', `Bearer ${userToken}`)
         .send({ amount: 999999999 })
-        .expect(r => {
+        .expect((r) => {
           expect(r.status).not.toBe(HttpStatus.INTERNAL_SERVER_ERROR);
         });
     });
@@ -599,11 +655,8 @@ describe('Security E2E', () => {
           panNumber: largeString,
           fullName: largeString,
         })
-        .expect(r => {
-          expect([
-            HttpStatus.OK,
-            HttpStatus.BAD_REQUEST,
-          ]).toContain(r.status);
+        .expect((r) => {
+          expect([HttpStatus.OK, HttpStatus.BAD_REQUEST]).toContain(r.status);
         });
     });
   });
@@ -633,9 +686,7 @@ describe('Security E2E', () => {
 
       // First 5 requests should pass
       for (let i = 0; i < 5; i++) {
-        await request(httpServer)
-          .get('/_rate_test_otp')
-          .expect(HttpStatus.OK);
+        await request(httpServer).get('/_rate_test_otp').expect(HttpStatus.OK);
       }
 
       // 6th request should be blocked

@@ -51,15 +51,26 @@ describe('AuthController', () => {
       success: true,
       message: 'OTP requested successfully',
     }),
-    verifyOtp: jest.fn().mockImplementation((idToken: string, _deviceId?: string, _otpCode?: string, _referralCode?: string) => {
-      if (idToken.startsWith('mock-token-')) {
-        return Promise.resolve({
-          token: 'mock-jwt-token-xyz',
-          user: mockUser,
-        });
-      }
-      return Promise.reject(new Error('Firebase token verification failed'));
-    }),
+    verifyOtp: jest
+      .fn()
+      .mockImplementation(
+        (
+          idToken: string,
+          _deviceId?: string,
+          _otpCode?: string,
+          _referralCode?: string,
+        ) => {
+          if (idToken.startsWith('mock-token-')) {
+            return Promise.resolve({
+              token: 'mock-jwt-token-xyz',
+              user: mockUser,
+            });
+          }
+          return Promise.reject(
+            new Error('Firebase token verification failed'),
+          );
+        },
+      ),
   };
 
   beforeEach(async () => {

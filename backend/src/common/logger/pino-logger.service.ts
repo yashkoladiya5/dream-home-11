@@ -49,7 +49,10 @@ export class PinoLoggerService implements LoggerService {
   }
 
   log(message: any, ...optionalParams: any[]) {
-    this.logger.info({ requestId: this.getRequestId(), context: optionalParams[0] }, message);
+    this.logger.info(
+      { requestId: this.getRequestId(), context: optionalParams[0] },
+      message,
+    );
   }
 
   error(message: any, ...optionalParams: any[]) {
@@ -62,14 +65,23 @@ export class PinoLoggerService implements LoggerService {
   }
 
   warn(message: any, ...optionalParams: any[]) {
-    this.logger.warn({ requestId: this.getRequestId(), context: optionalParams[0] }, message);
+    this.logger.warn(
+      { requestId: this.getRequestId(), context: optionalParams[0] },
+      message,
+    );
   }
 
   debug(message: any, ...optionalParams: any[]) {
-    this.logger.debug({ requestId: this.getRequestId(), context: optionalParams[0] }, message);
+    this.logger.debug(
+      { requestId: this.getRequestId(), context: optionalParams[0] },
+      message,
+    );
   }
 
   verbose(message: any, ...optionalParams: any[]) {
-    this.logger.trace({ requestId: this.getRequestId(), context: optionalParams[0] }, message);
+    this.logger.trace(
+      { requestId: this.getRequestId(), context: optionalParams[0] },
+      message,
+    );
   }
 }

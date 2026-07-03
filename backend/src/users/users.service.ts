@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, ILike } from 'typeorm';
 import { User, UserLevel } from './entities/user.entity';
@@ -28,7 +32,13 @@ export class UsersService {
   async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { phoneNumber },
-      select: { id: true, phoneNumber: true, fullName: true, isActive: true, referralCode: true },
+      select: {
+        id: true,
+        phoneNumber: true,
+        fullName: true,
+        isActive: true,
+        referralCode: true,
+      },
     });
   }
 
@@ -37,8 +47,15 @@ export class UsersService {
       where: { id },
       relations: { kyc: true },
       select: {
-        id: true, phoneNumber: true, fullName: true, walletBalanceInr: true,
-        pointsBalance: true, lifetimePoints: true, currentTier: true, avatarUrl: true, isActive: true,
+        id: true,
+        phoneNumber: true,
+        fullName: true,
+        walletBalanceInr: true,
+        pointsBalance: true,
+        lifetimePoints: true,
+        currentTier: true,
+        avatarUrl: true,
+        isActive: true,
         kyc: { status: true, aadhaarNumber: true, panNumber: true },
       },
     });
@@ -82,20 +99,20 @@ export class UsersService {
     user.walletBalanceInr = balanceBefore + amount;
     const saved = await this.userRepository.save(user);
 
-    await this.transactionRepo.save(this.transactionRepo.create({
-      userId,
-      type: 'deposit',
-      cashAmount: amount,
-      cashBalanceBefore: balanceBefore,
-      cashBalanceAfter: Number(saved.walletBalanceInr),
-      description: `Deposit of \u20B9${amount}`,
-      status: 'completed',
-    }));
+    await this.transactionRepo.save(
+      this.transactionRepo.create({
+        userId,
+        type: 'deposit',
+        cashAmount: amount,
+        cashBalanceBefore: balanceBefore,
+        cashBalanceAfter: Number(saved.walletBalanceInr),
+        description: `Deposit of \u20B9${amount}`,
+        status: 'completed',
+      }),
+    );
 
     return saved;
   }
-
-
 
   async awardPoints(userId: string, points: number): Promise<User> {
     const user = await this.findById(userId);
@@ -132,7 +149,8 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    if (data.bankAccountNumber !== undefined) user.bankAccountNumber = data.bankAccountNumber;
+    if (data.bankAccountNumber !== undefined)
+      user.bankAccountNumber = data.bankAccountNumber;
     if (data.bankIfsc !== undefined) user.bankIfsc = data.bankIfsc;
     if (data.bankName !== undefined) user.bankName = data.bankName;
     if (data.upiId !== undefined) user.upiId = data.upiId;
@@ -187,8 +205,11 @@ export class UsersService {
     const user = await this.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
-    const { tier, multiplier } = this.pointsEngineService.getTierInfo(user.lifetimePoints);
-    const { nextTier, nextMultiplier, pointsToNextTier } = this.pointsEngineService.getNextTierInfo(user.lifetimePoints);
+    const { tier, multiplier } = this.pointsEngineService.getTierInfo(
+      user.lifetimePoints,
+    );
+    const { nextTier, nextMultiplier, pointsToNextTier } =
+      this.pointsEngineService.getNextTierInfo(user.lifetimePoints);
 
     return {
       currentTier: tier,
@@ -201,11 +222,16 @@ export class UsersService {
   }
 
   async getUserStats(userId: string) {
-    const memberEntries = await this.contestMemberRepository.find({ where: { userId } });
-    const contestIds = memberEntries.map(m => m.contestId);
+    const memberEntries = await this.contestMemberRepository.find({
+      where: { userId },
+    });
+    const contestIds = memberEntries.map((m) => m.contestId);
 
     const totalContestsJoined = memberEntries.length;
-    const totalPointsEarned = memberEntries.reduce((sum, m) => sum + m.pointsEarned, 0);
+    const totalPointsEarned = memberEntries.reduce(
+      (sum, m) => sum + m.pointsEarned,
+      0,
+    );
 
     if (totalContestsJoined === 0) {
       return {
@@ -232,14 +258,15 @@ export class UsersService {
     // Build a map: contestId -> member[]
     const membersByContest = new Map<string, typeof allMembers>();
     for (const m of allMembers) {
-      if (!membersByContest.has(m.contestId)) membersByContest.set(m.contestId, []);
+      if (!membersByContest.has(m.contestId))
+        membersByContest.set(m.contestId, []);
       membersByContest.get(m.contestId)!.push(m);
     }
 
     // Calculate stats from the map
     for (const contestId of contestIds) {
       const contestMembers = membersByContest.get(contestId) || [];
-      const rank = contestMembers.findIndex(m => m.userId === userId) + 1;
+      const rank = contestMembers.findIndex((m) => m.userId === userId) + 1;
       totalRanks += rank || 1;
       if (rank > 0 && rank < bestRank) bestRank = rank;
       if (rank === 1) wonCount++;
@@ -253,8 +280,10 @@ export class UsersService {
       0,
     );
 
-    const averageRank = Math.round((totalRanks / totalContestsJoined) * 10) / 10;
-    const winRate = Math.round((wonCount / totalContestsJoined) * 100 * 10) / 10;
+    const averageRank =
+      Math.round((totalRanks / totalContestsJoined) * 10) / 10;
+    const winRate =
+      Math.round((wonCount / totalContestsJoined) * 100 * 10) / 10;
 
     return {
       totalContestsJoined,
@@ -276,18 +305,23 @@ export class UsersService {
 
     if (members.length === 0) return { contests: [] };
 
-    const contestIds = members.map(m => m.contestId);
+    const contestIds = members.map((m) => m.contestId);
 
     // Batch rank calculation using window function
     const rankResults = await this.contestMemberRepository
       .createQueryBuilder('cm')
       .select('cm.contestId', 'contestId')
-      .addSelect('RANK() OVER (PARTITION BY cm.contestId ORDER BY cm.pointsEarned DESC)', 'rank')
+      .addSelect(
+        'RANK() OVER (PARTITION BY cm.contestId ORDER BY cm.pointsEarned DESC)',
+        'rank',
+      )
       .where('cm.userId = :userId', { userId })
       .andWhere('cm.contestId IN (:...contestIds)', { contestIds })
       .getRawMany();
 
-    const rankMap = new Map(rankResults.map(r => [r.contestId, parseInt(r.rank)]));
+    const rankMap = new Map(
+      rankResults.map((r) => [r.contestId, parseInt(r.rank)]),
+    );
 
     const contests = members.map((member) => {
       const myPoints = member.pointsEarned;
@@ -307,17 +341,22 @@ export class UsersService {
 
     if (members.length === 0) return { contests: [] };
 
-    const contestIds = members.map(m => m.contestId);
+    const contestIds = members.map((m) => m.contestId);
 
     // Batch rank calculation using window function
     const rankResults = await this.contestMemberRepository
       .createQueryBuilder('cm')
       .select('cm.contestId', 'contestId')
-      .addSelect('RANK() OVER (PARTITION BY cm.contestId ORDER BY cm.pointsEarned DESC)', 'rank')
+      .addSelect(
+        'RANK() OVER (PARTITION BY cm.contestId ORDER BY cm.pointsEarned DESC)',
+        'rank',
+      )
       .where('cm.userId = :userId', { userId })
       .andWhere('cm.contestId IN (:...contestIds)', { contestIds })
       .getRawMany();
-    const rankMap = new Map(rankResults.map(r => [r.contestId, parseInt(r.rank)]));
+    const rankMap = new Map(
+      rankResults.map((r) => [r.contestId, parseInt(r.rank)]),
+    );
 
     // Batch total members count per contest
     const memberCounts = await this.contestMemberRepository
@@ -327,7 +366,9 @@ export class UsersService {
       .where('cm.contestId IN (:...contestIds)', { contestIds })
       .groupBy('cm.contestId')
       .getRawMany();
-    const totalMembersMap = new Map(memberCounts.map(m => [m.contestId, parseInt(m.count)]));
+    const totalMembersMap = new Map(
+      memberCounts.map((m) => [m.contestId, parseInt(m.count)]),
+    );
 
     // Batch first place points per contest
     const firstPlaceResults = await this.contestMemberRepository
@@ -337,7 +378,9 @@ export class UsersService {
       .where('cm.contestId IN (:...contestIds)', { contestIds })
       .groupBy('cm.contestId')
       .getRawMany();
-    const firstPlaceMap = new Map(firstPlaceResults.map(r => [r.contestId, parseInt(r.maxPoints)]));
+    const firstPlaceMap = new Map(
+      firstPlaceResults.map((r) => [r.contestId, parseInt(r.maxPoints)]),
+    );
 
     const contests = members.map((member) => {
       const contest = member.contest;
@@ -356,7 +399,10 @@ export class UsersService {
         const end = new Date(contest.endTime).getTime();
         const total = end - start;
         const elapsed = now - start;
-        progressPercentage = total > 0 ? Math.min(100, Math.max(0, Math.round((elapsed / total) * 100))) : 0;
+        progressPercentage =
+          total > 0
+            ? Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)))
+            : 0;
       } else if (contest.status === 'completed') {
         progressPercentage = 100;
       }
@@ -389,21 +435,30 @@ export class UsersService {
     const filtered = contests
       .filter((c): c is NonNullable<typeof c> => c !== null)
       .sort((a, b) => {
-        const statusOrder: Record<string, number> = { running: 0, upcoming: 1, completed: 2, cancelled: 3 };
+        const statusOrder: Record<string, number> = {
+          running: 0,
+          upcoming: 1,
+          completed: 2,
+          cancelled: 3,
+        };
         const aOrder = statusOrder[a.status] ?? 99;
         const bOrder = statusOrder[b.status] ?? 99;
         if (aOrder !== bOrder) return aOrder - bOrder;
-        return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+        return (
+          new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+        );
       });
 
     return { contests: filtered };
   }
 
-  async searchUsers(query: string, page: number = 1, limit: number = 20): Promise<{ users: Partial<User>[]; total: number }> {
+  async searchUsers(
+    query: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{ users: Partial<User>[]; total: number }> {
     const [users, total] = await this.userRepository.findAndCount({
-      where: [
-        { fullName: ILike(`%${query.trim()}%`) },
-      ],
+      where: [{ fullName: ILike(`%${query.trim()}%`) }],
       select: {
         id: true,
         fullName: true,
@@ -419,7 +474,10 @@ export class UsersService {
     return { users, total };
   }
 
-  async getUserCompensations(userId: string, query: { page?: number; limit?: number }) {
+  async getUserCompensations(
+    userId: string,
+    query: { page?: number; limit?: number },
+  ) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;
@@ -449,4 +507,3 @@ export class UsersService {
     };
   }
 }
-

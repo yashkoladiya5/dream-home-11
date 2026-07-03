@@ -36,7 +36,9 @@ describe('ConfigService', () => {
     currentConfig = { ...defaultConfig };
 
     mockRepo = {
-      find: jest.fn().mockImplementation(() => Promise.resolve([currentConfig])),
+      find: jest
+        .fn()
+        .mockImplementation(() => Promise.resolve([currentConfig])),
       create: jest.fn().mockReturnValue(defaultConfig),
       save: jest.fn().mockResolvedValue(defaultConfig),
       update: jest.fn().mockImplementation(async (_id, updates) => {
@@ -91,14 +93,14 @@ describe('ConfigService', () => {
         createdAt: new Date(0),
         updatedAt: new Date(0),
         maintenanceMode: true,
-      } as any);
+      });
       const callArgs = mockRepo.update.mock.calls[0][1];
       expect(callArgs.id).toBeUndefined();
       expect(callArgs.maintenanceMode).toBe(true);
     });
 
     it('should return current config if no valid fields provided', async () => {
-      const result = await service.updateConfig({} as any);
+      const result = await service.updateConfig({});
       expect(result).toBeDefined();
       expect(mockRepo.update).not.toHaveBeenCalled();
     });

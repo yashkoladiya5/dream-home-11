@@ -1,0 +1,321 @@
+{
+  "apiVersion": 1,
+  "groups": [
+    {
+      "orgId": 1,
+      "name": "dreamhome11-api-alerts",
+      "folder": "Dream Home 11 Alerts",
+      "interval": "30s",
+      "rules": [
+        {
+          "uid": "dreamhome11-high-error-rate",
+          "title": "API High Error Rate",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "sum(rate(http_requests_duration_seconds_count{status_code=~\"5..\"}[5m])) / sum(rate(http_requests_duration_seconds_count[5m]))",
+                "intervalMs": 30000,
+                "maxDataPoints": 100,
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "reduce",
+                "expression": "A",
+                "reducer": "last",
+                "settings": { "mode": "value" },
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "math",
+                "expression": "$B > 0.05",
+                "refId": "C"
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "5m",
+          "annotations": {
+            "summary": "API error rate exceeded 5%",
+            "description": "HTTP 5xx error rate is {{ $values.B }} over the last 5 minutes.",
+            "runbook_url": "https://wiki.dreamhome11.com/runbooks/high-error-rate"
+          },
+          "labels": {
+            "severity": "critical",
+            "team": "backend",
+            "notification": "slack"
+          },
+          "isPaused": false
+        },
+        {
+          "uid": "dreamhome11-high-latency",
+          "title": "API High Latency",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+                "intervalMs": 30000,
+                "maxDataPoints": 100,
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "reduce",
+                "expression": "A",
+                "reducer": "last",
+                "settings": { "mode": "value" },
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "math",
+                "expression": "$B > 3",
+                "refId": "C"
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "5m",
+          "annotations": {
+            "summary": "P99 API latency exceeded 3s",
+            "description": "P99 latency is {{ $values.B }}s over the last 5 minutes.",
+            "runbook_url": "https://wiki.dreamhome11.com/runbooks/high-latency"
+          },
+          "labels": {
+            "severity": "warning",
+            "team": "backend",
+            "notification": "slack"
+          },
+          "isPaused": false
+        },
+        {
+          "uid": "dreamhome11-db-connections",
+          "title": "Database Connections High",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "pg_stat_activity_count / pg_settings_max_connections",
+                "intervalMs": 30000,
+                "maxDataPoints": 100,
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "reduce",
+                "expression": "A",
+                "reducer": "last",
+                "settings": { "mode": "value" },
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "math",
+                "expression": "$B > 0.80",
+                "refId": "C"
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "5m",
+          "annotations": {
+            "summary": "Database connection pool above 80%",
+            "description": "Database connection pool is at {{ $values.B }}% of max.",
+            "runbook_url": "https://wiki.dreamhome11.com/runbooks/database-connections"
+          },
+          "labels": {
+            "severity": "warning",
+            "team": "backend",
+            "notification": "slack"
+          },
+          "isPaused": false
+        },
+        {
+          "uid": "dreamhome11-low-disk-space",
+          "title": "Low Disk Space",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}",
+                "intervalMs": 60000,
+                "maxDataPoints": 100,
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "reduce",
+                "expression": "A",
+                "reducer": "last",
+                "settings": { "mode": "value" },
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "math",
+                "expression": "$B < 0.10",
+                "refId": "C"
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "5m",
+          "annotations": {
+            "summary": "Disk space below 10%",
+            "description": "Available disk space is {{ $values.B }}%.",
+            "runbook_url": "https://wiki.dreamhome11.com/runbooks/low-disk-space"
+          },
+          "labels": {
+            "severity": "critical",
+            "team": "infrastructure",
+            "notification": "email"
+          },
+          "isPaused": false
+        },
+        {
+          "uid": "dreamhome11-cert-expiry",
+          "title": "Certificate Expiry Soon",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 86400, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "certificate_expiry_days",
+                "intervalMs": 300000,
+                "maxDataPoints": 100,
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 86400, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "reduce",
+                "expression": "A",
+                "reducer": "min",
+                "settings": { "mode": "value" },
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 86400, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "math",
+                "expression": "$B < 30",
+                "refId": "C"
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "1h",
+          "annotations": {
+            "summary": "SSL certificate expiring in less than 30 days",
+            "description": "SSL certificate expires in {{ $values.B }} days.",
+            "runbook_url": "https://wiki.dreamhome11.com/runbooks/certificate-renewal"
+          },
+          "labels": {
+            "severity": "warning",
+            "team": "infrastructure",
+            "notification": "email"
+          },
+          "isPaused": false
+        }
+      ]
+    }
+  ],
+  "contactPoints": {
+    "slack": {
+      "uid": "slack-webhook-production",
+      "name": "Slack Production Alerts",
+      "type": "slack",
+      "settings": {
+        "url": "${SLACK_WEBHOOK_URL}",
+        "recipient": "#alerts-production"
+      }
+    },
+    "email": {
+      "uid": "email-production",
+      "name": "Email Production Alerts",
+      "type": "email",
+      "settings": {
+        "addresses": "ops@dreamhome11.com",
+        "singleEmail": false
+      }
+    }
+  },
+  "notificationPolicies": [
+    {
+      "matcher": "severity=critical",
+      "contact_point": "slack",
+      "group_by": ["alertname", "team"],
+      "group_wait": "30s",
+      "group_interval": "5m",
+      "repeat_interval": "1h"
+    },
+    {
+      "matcher": "notification=email",
+      "contact_point": "email",
+      "group_by": ["alertname"],
+      "group_wait": "1m",
+      "group_interval": "10m",
+      "repeat_interval": "24h"
+    }
+  ]
+}

@@ -32,6 +32,6 @@ export class ConfigController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async updateConfig(@Body() dto: UpdateConfigDto) {
-    return this.configService.updateConfig(dto as any);
+    return this.configService.updateConfig(dto);
   }
 }

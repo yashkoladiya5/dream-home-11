@@ -1,4 +1,11 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Response, Request } from 'express';
 
 const statusText: Record<number, string> = {
@@ -27,13 +34,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      message = typeof exceptionResponse === 'string'
-        ? exceptionResponse
-        : (exceptionResponse as any).message || exceptionResponse;
+      message =
+        typeof exceptionResponse === 'string'
+          ? exceptionResponse
+          : (exceptionResponse as any).message || exceptionResponse;
     }
 
     if (status === HttpStatus.TOO_MANY_REQUESTS) {
-      this.logger.warn(`Rate limit exceeded: ${request.ip} - ${request.method} ${request.url}`);
+      this.logger.warn(
+        `Rate limit exceeded: ${request.ip} - ${request.method} ${request.url}`,
+      );
     }
 
     this.logger.error(`${request.method} ${request.url} - ${status}`);

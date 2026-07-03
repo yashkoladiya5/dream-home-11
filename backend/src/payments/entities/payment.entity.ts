@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('payments')
 export class Payment {
@@ -23,7 +29,13 @@ export class Payment {
   @Column({ length: 50, name: 'payment_method', nullable: true })
   paymentMethod?: string;
 
-  @Column({ type: 'numeric', precision: 10, scale: 2, name: 'bonus_points', default: 0 })
+  @Column({
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    name: 'bonus_points',
+    default: 0,
+  })
   bonusPoints: number;
 
   @Column({ name: 'signature', nullable: true })

@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { PaymentMethodsService } from './payment-methods.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -23,7 +34,13 @@ export class PaymentMethodsController {
   @HttpCode(HttpStatus.CREATED)
   async create(
     @GetUser() user: User,
-    @Body() body: { category: string; label: string; displayValue: string; providerName?: string },
+    @Body()
+    body: {
+      category: string;
+      label: string;
+      displayValue: string;
+      providerName?: string;
+    },
   ) {
     return this.service.create(user.id, body);
   }

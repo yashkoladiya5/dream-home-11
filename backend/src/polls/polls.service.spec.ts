@@ -113,7 +113,11 @@ describe('PollsService', () => {
 
   describe('getUserVote', () => {
     it('should return the user vote when it exists', async () => {
-      mockVoteRepo.findOne.mockResolvedValue({ selectedOption: 1, userId: 'user-1', pollId: 'poll-1' });
+      mockVoteRepo.findOne.mockResolvedValue({
+        selectedOption: 1,
+        userId: 'user-1',
+        pollId: 'poll-1',
+      });
 
       const result = await service.getUserVote('user-1', 'poll-1');
 
@@ -151,15 +155,29 @@ describe('PollsService', () => {
       expect(result.poll).toEqual(mockPoll);
       expect(result.totalVotes).toBe(5);
       expect(result.results).toHaveLength(3);
-      expect(result.results[0]).toEqual({ option: 'Option A', count: 2, percentage: 40 });
-      expect(result.results[1]).toEqual({ option: 'Option B', count: 2, percentage: 40 });
-      expect(result.results[2]).toEqual({ option: 'Option C', count: 1, percentage: 20 });
+      expect(result.results[0]).toEqual({
+        option: 'Option A',
+        count: 2,
+        percentage: 40,
+      });
+      expect(result.results[1]).toEqual({
+        option: 'Option B',
+        count: 2,
+        percentage: 40,
+      });
+      expect(result.results[2]).toEqual({
+        option: 'Option C',
+        count: 1,
+        percentage: 20,
+      });
     });
 
     it('should throw NotFoundException when poll does not exist', async () => {
       mockPollRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getPollResults('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getPollResults('invalid-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -168,7 +186,11 @@ describe('PollsService', () => {
       mockPollRepo.findOne.mockResolvedValue({ ...mockPoll, totalVotes: 0 });
       mockUsersService.findById.mockResolvedValue({ ...mockUser });
       mockVoteRepo.findOne.mockResolvedValue(null);
-      mockVoteRepo.create.mockReturnValue({ userId: 'user-1', pollId: 'poll-1', selectedOption: 1 });
+      mockVoteRepo.create.mockReturnValue({
+        userId: 'user-1',
+        pollId: 'poll-1',
+        selectedOption: 1,
+      });
       mockVoteRepo.save.mockResolvedValue({});
       mockPollRepo.save.mockResolvedValue({});
       mockUsersService.updateUser.mockResolvedValue({});
@@ -188,7 +210,11 @@ describe('PollsService', () => {
         expect.objectContaining({ pointsBalance: 220, lifetimePoints: 520 }),
       );
       expect(mockPointsEngineService.logPointAction).toHaveBeenCalledWith(
-        'user-1', 'daily_poll_vote', 20, 1.0, 20,
+        'user-1',
+        'daily_poll_vote',
+        20,
+        1.0,
+        20,
       );
       expect(mockTransactionsService.logTransaction).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -208,32 +234,52 @@ describe('PollsService', () => {
       };
       mockPollRepo.findOne.mockResolvedValue(expiredPoll);
 
-      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow(BadRequestException);
-      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow('not currently active');
+      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow(
+        'not currently active',
+      );
     });
 
     it('should throw BadRequestException when invalid option selected', async () => {
       mockPollRepo.findOne.mockResolvedValue(mockPoll);
 
-      await expect(service.vote('user-1', 'poll-1', 5)).rejects.toThrow(BadRequestException);
-      await expect(service.vote('user-1', 'poll-1', -1)).rejects.toThrow(BadRequestException);
+      await expect(service.vote('user-1', 'poll-1', 5)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.vote('user-1', 'poll-1', -1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when already voted', async () => {
       mockPollRepo.findOne.mockResolvedValue(mockPoll);
       mockUsersService.findById.mockResolvedValue(mockUser);
-      mockVoteRepo.findOne.mockResolvedValue({ selectedOption: 1, userId: 'user-1', pollId: 'poll-1' });
+      mockVoteRepo.findOne.mockResolvedValue({
+        selectedOption: 1,
+        userId: 'user-1',
+        pollId: 'poll-1',
+      });
 
-      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow(BadRequestException);
-      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow('already voted');
+      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow(
+        'already voted',
+      );
     });
 
     it('should throw NotFoundException when user not found', async () => {
       mockPollRepo.findOne.mockResolvedValue(mockPoll);
       mockUsersService.findById.mockResolvedValue(null);
 
-      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow(NotFoundException);
-      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow('User not found');
+      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.vote('user-1', 'poll-1', 1)).rejects.toThrow(
+        'User not found',
+      );
     });
   });
 });
