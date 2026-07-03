@@ -26,6 +26,7 @@ class _PerformanceOverlayToggleState extends ConsumerState<PerformanceOverlayTog
         setState(() => _visible = !_visible);
       },
       child: Stack(
+        alignment: Alignment.topRight,
         children: [
           widget.child,
           if (kDebugMode && _visible)

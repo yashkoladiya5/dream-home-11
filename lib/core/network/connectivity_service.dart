@@ -8,6 +8,12 @@ final connectivityProvider = StreamProvider<bool>((ref) {
   return service.onConnectivityChanged;
 });
 
+final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
+  final service = ConnectivityService();
+  ref.onDispose(() => service.dispose());
+  return service;
+});
+
 class ConnectivityService {
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _subscription;

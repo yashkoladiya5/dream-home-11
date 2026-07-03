@@ -1,0 +1,103 @@
+name: Deploy Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to production
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            set -e
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            echo ">>> Creating database backup..."
+            docker-compose -f docker-compose.prod.yml exec -T db \
+              pg_dump -U postgres dream_home_11 > /tmp/db_backup_${TIMESTAMP}.sql
+
+            echo ">>> Pulling latest images..."
+            docker-compose -f docker-compose.prod.yml pull
+
+            echo ">>> Running database migrations..."
+            docker-compose -f docker-compose.prod.yml run --rm app \
+              npx typeorm migration:run
+
+            echo ">>> Performing rolling restart..."
+            docker-compose -f docker-compose.prod.yml up -d --scale app=3
+
+            echo ">>> Running post-deploy seed scripts..."
+            docker-compose -f docker-compose.prod.yml run --rm app \
+              npm run seed:prod || true
+
+            echo ">>> Verifying all replicas are healthy..."
+            for i in $(seq 1 12); do
+              replicas=$(docker-compose -f docker-compose.prod.yml ps app \
+                | grep -c "Up")
+              if [ "$replicas" -ge 3 ]; then
+                echo "All 3 replicas are healthy and running."
+                break
+              fi
+              if [ "$i" -eq 12 ]; then
+                echo "ERROR: Expected 3 replicas, found $replicas"
+                exit 1
+              fi
+              echo "Waiting for replicas to become healthy... attempt $i/12"
+              sleep 10
+            done
+
+  notify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send Slack deployment notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "Production deployment completed successfully",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🚀 Production Deployment Complete"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:* ✅ Success"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:* `${{ github.event.release.tag_name || github.ref_name }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:* Production"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Release Notes:* ${{ github.event.release.html_url || 'N/A' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow Run:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }' "$SLACK_WEBHOOK_URL"

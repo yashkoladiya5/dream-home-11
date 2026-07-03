@@ -42,8 +42,12 @@ class AppImageCacheManager {
   }
 
   static Future<int> cacheSize() async {
-    final file = await _manager.getFileFromCache('_size_check_');
-    if (file == null) return 0;
-    return _manager is CacheManager ? 0 : 0;
+    try {
+      final cacheDir = await _manager.getFileFromCache('_size_check_');
+      return cacheDir?.file.lengthSync() ?? 0;
+    } catch (e) {
+      debugPrint('[AppImageCacheManager] Error getting cache size: $e');
+      return 0;
+    }
   }
 }

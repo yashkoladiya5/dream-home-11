@@ -4,17 +4,20 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../analytics/sentry_config.dart';
+import '../analytics/sentry_dio_interceptor.dart';
+import 'api_config.dart';
+import 'certificate_pinning.dart';
+import 'connectivity_service.dart';
+import 'offline_request_queue.dart';
 
 final apiClientProvider = Provider<Dio>((ref) {
-  String baseUrl = 'http://localhost:3000';
-  if (!kIsWeb && Platform.isAndroid) {
-    baseUrl = 'http://10.0.2.2:3000';
-  }
+  SentryConfig.configure();
 
   final options = BaseOptions(
-    baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
+    baseUrl: ApiConfig.baseUrl,
+    connectTimeout: ApiConfig.connectTimeout,
+    receiveTimeout: ApiConfig.receiveTimeout,
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -23,20 +26,17 @@ final apiClientProvider = Provider<Dio>((ref) {
 
   final dio = Dio(options);
 
-  // SSL pinning for production builds using proper PlatformAdapter
-  if (!kIsWeb && kReleaseMode) {
+  // SSL pinning for production/release builds
+  if (!kIsWeb && kReleaseMode && ApiConfig.enableSslPinning) {
+    dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: CertificatePinning.createPinnedHttpClient,
+    );
+  } else if (!kIsWeb && kReleaseMode) {
+    // Release but pinning not required (staging)
     dio.httpClientAdapter = IOHttpClientAdapter(
       createHttpClient: () {
         final client = HttpClient(context: SecurityContext(withTrustedRoots: false));
-        client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-          // SHA-256 certificate pinning
-          // In production, pin the actual server certificate fingerprint(s)
-          // For now, we reject all untrusted certificates in release mode
-          // To pin a specific cert, compute its SHA-256 fingerprint and compare:
-          //   final fingerprint = sha256.convert(cert.sha256).toString();
-          //   return pinnedFingerprints.contains(fingerprint);
-          return false;
-        };
+        client.badCertificateCallback = (cert, host, port) => false;
         return client;
       },
     );
@@ -56,6 +56,26 @@ final apiClientProvider = Provider<Dio>((ref) {
     ),
   );
 
+  // Offline request queue interceptor
+  final offlineQueue = ref.read(offlineRequestQueueProvider);
+  final connectivityService = ref.read(connectivityServiceProvider);
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        try {
+          final isOnline = await connectivityService.checkConnectivity();
+          if (!isOnline) {
+            offlineQueue.enqueue(QueuedRequest(options: options, handler: handler));
+            return;
+          }
+        } catch (e) {
+          debugPrint('[ApiClient] Connectivity check failed: $e');
+        }
+        handler.next(options);
+      },
+    ),
+  );
+
   // Logging only in debug mode
   if (!kReleaseMode) {
     dio.interceptors.add(LogInterceptor(
@@ -63,6 +83,9 @@ final apiClientProvider = Provider<Dio>((ref) {
       responseBody: true,
     ));
   }
+
+  // Sentry error tracking interceptor
+  dio.interceptors.add(SentryDioInterceptor());
 
   return dio;
 });

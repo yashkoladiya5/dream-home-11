@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/offline_banner.dart';
+import '../../../../core/widgets/error_boundary.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/navigation_drawer.dart';
 import '../widgets/contest_tab.dart';
@@ -24,7 +25,11 @@ class _NavItem {
 const _navItems = [
   _NavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
   _NavItem(Icons.emoji_events_outlined, Icons.emoji_events_rounded, 'Contest'),
-  _NavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Wallet'),
+  _NavItem(
+    Icons.account_balance_wallet_outlined,
+    Icons.account_balance_wallet_rounded,
+    'Wallet',
+  ),
   _NavItem(Icons.stars_outlined, Icons.stars_rounded, 'Rewards'),
   _NavItem(Icons.person_outlined, Icons.person_rounded, 'Profile'),
 ];
@@ -72,8 +77,15 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final hasProfile = ref.watch(userProfileProvider.select((async) => async.hasValue));
-    final pointsBalance = ref.watch(userProfileProvider.select((async) => async.maybeWhen(data: (p) => p.pointsBalance, orElse: () => null)));
+    final hasProfile = ref.watch(
+      userProfileProvider.select((async) => async.hasValue),
+    );
+    final pointsBalance = ref.watch(
+      userProfileProvider.select(
+        (async) =>
+            async.maybeWhen(data: (p) => p.pointsBalance, orElse: () => null),
+      ),
+    );
     final unreadCountAsync = ref.watch(unreadNotificationCountProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
@@ -85,243 +97,256 @@ class _DashboardLayoutState extends ConsumerState<DashboardLayout> {
     final capsuleLeftOffset =
         (tabWidth * _currentIndex) + (tabWidth - capsuleWidth) / 2;
 
-    return Scaffold(
-      backgroundColor: AppTheme.darkSlate,
-      drawer: const NavigationDrawerWidget(),
-      appBar: AppBar(
+    return ErrorBoundaryWrapper(
+      screenName: 'Dashboard',
+      child: Scaffold(
         backgroundColor: AppTheme.darkSlate,
-        elevation: 0,
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: hasProfile
-                  ? Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppTheme.primaryRed,
-                          width: 1.5,
+        drawer: const NavigationDrawerWidget(),
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkSlate,
+          elevation: 0,
+          leading: Builder(
+            builder: (context) {
+              return IconButton(
+                icon: hasProfile
+                    ? Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.primaryRed,
+                            width: 1.5,
+                          ),
                         ),
-                      ),
-                      child: const CircleAvatar(
-                        radius: 12,
-                        backgroundColor: AppTheme.secondarySlate,
-                        child: Icon(
-                          Icons.person_rounded,
-                          size: 16,
-                          color: AppTheme.white,
+                        child: const CircleAvatar(
+                          radius: 12,
+                          backgroundColor: AppTheme.secondarySlate,
+                          child: Icon(
+                            Icons.person_rounded,
+                            size: 16,
+                            color: AppTheme.white,
+                          ),
                         ),
-                      ),
-                    )
-                  : const Icon(Icons.menu_rounded, color: AppTheme.white),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            );
-          },
-        ),
-        title: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: Text(
-            _appBarTitles[_currentIndex],
-            key: ValueKey<int>(_currentIndex),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
+                      )
+                    : const Icon(Icons.menu_rounded, color: AppTheme.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              );
+            },
+          ),
+          title: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Text(
+              _appBarTitles[_currentIndex],
+              key: ValueKey<int>(_currentIndex),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          if (pointsBalance != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.goldYellow.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.goldYellow.withValues(alpha: 0.2),
+          centerTitle: true,
+          actions: [
+            if (pointsBalance != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.goldYellow.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.goldYellow.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.stars_rounded,
+                          color: AppTheme.goldYellow,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$pointsBalance PTS',
+                          style: const TextStyle(
+                            color: AppTheme.goldYellow,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.stars_rounded,
-                        color: AppTheme.goldYellow,
-                        size: 14,
+                ),
+              ),
+            // Elegant Notification Bell Icon with Red Badge
+            unreadCountAsync.maybeWhen(
+              data: (count) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.notifications_rounded,
+                        color: Colors.white,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$pointsBalance PTS',
-                        style: const TextStyle(
-                          color: AppTheme.goldYellow,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
+                      onPressed: () => context.push('/notifications'),
+                    ),
+                    if (count > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primaryRed,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 14,
+                            minHeight: 14,
+                          ),
+                          child: Text(
+                            '$count',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
+                      ),
+                  ],
+                );
+              },
+              orElse: () => IconButton(
+                icon: const Icon(
+                  Icons.notifications_rounded,
+                  color: Colors.white,
+                ),
+                onPressed: () => context.push('/notifications'),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: Column(
+          children: [
+            const OfflineBanner(),
+            Expanded(
+              child: RepaintBoundary(
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                  physics: const BouncingScrollPhysics(),
+                  children: const [
+                    RepaintBoundary(child: HomeScreen()),
+                    RepaintBoundary(child: ContestTab()),
+                    RepaintBoundary(child: WalletTab()),
+                    RepaintBoundary(child: RewardsTab()),
+                    RepaintBoundary(child: ProfileTab()),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: RepaintBoundary(
+          child: Container(
+            margin: EdgeInsets.only(
+              left: 18,
+              right: 18,
+              bottom: bottomPadding > 0 ? bottomPadding : 16,
+            ),
+            height: 70,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+                BoxShadow(
+                  color: AppTheme.primaryRed.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.secondarySlate.withValues(alpha: 0.82),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutBack,
+                        left: capsuleLeftOffset,
+                        top: 5,
+                        child: Container(
+                          width: capsuleWidth,
+                          height: 55,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primaryRed.withValues(alpha: 0.22),
+                                AppTheme.primaryRed.withValues(alpha: 0.04),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: AppTheme.primaryRed.withValues(
+                                alpha: 0.35,
+                              ),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryRed.withValues(
+                                  alpha: 0.15,
+                                ),
+                                blurRadius: 8,
+                                spreadRadius: 0.5,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: List.generate(_navItems.length, (index) {
+                          return _DashboardNavBarItem(
+                            index: index,
+                            currentIndex: _currentIndex,
+                            navItem: _navItems[index],
+                            onTap: _onTabTapped,
+                          );
+                        }),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
-          // Elegant Notification Bell Icon with Red Badge
-          unreadCountAsync.maybeWhen(
-            data: (count) {
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications_rounded, color: Colors.white),
-                    onPressed: () => context.push('/notifications'),
-                  ),
-                  if (count > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primaryRed,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 14,
-                          minHeight: 14,
-                        ),
-                        child: Text(
-                          '$count',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-            orElse: () => IconButton(
-              icon: const Icon(Icons.notifications_rounded, color: Colors.white),
-              onPressed: () => context.push('/notifications'),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Column(
-        children: [
-          const OfflineBanner(),
-          Expanded(
-            child: RepaintBoundary(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
-                physics: const BouncingScrollPhysics(),
-                children: const [
-                  RepaintBoundary(child: HomeScreen()),
-                  RepaintBoundary(child: ContestTab()),
-                  RepaintBoundary(child: WalletTab()),
-                  RepaintBoundary(child: RewardsTab()),
-                  RepaintBoundary(child: ProfileTab()),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: RepaintBoundary(
-        child: Container(
-          margin: EdgeInsets.only(
-            left: 18,
-            right: 18,
-            bottom: bottomPadding > 0 ? bottomPadding : 16,
-          ),
-          height: 70,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-              BoxShadow(
-                color: AppTheme.primaryRed.withValues(alpha: 0.08),
-                blurRadius: 16,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.secondarySlate.withValues(alpha: 0.82),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    width: 1.2,
-                  ),
-                ),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutBack,
-                      left: capsuleLeftOffset,
-                      top: 5,
-                      child: Container(
-                        width: capsuleWidth,
-                        height: 55,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppTheme.primaryRed.withValues(alpha: 0.22),
-                              AppTheme.primaryRed.withValues(alpha: 0.04),
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: AppTheme.primaryRed.withValues(alpha: 0.35),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primaryRed.withValues(alpha: 0.15),
-                              blurRadius: 8,
-                              spreadRadius: 0.5,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: List.generate(_navItems.length, (index) {
-                        return _DashboardNavBarItem(
-                          index: index,
-                          currentIndex: _currentIndex,
-                          navItem: _navItems[index],
-                          onTap: _onTabTapped,
-                        );
-                      }),
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -361,7 +386,9 @@ class _DashboardNavBarItem extends StatelessWidget {
               curve: Curves.easeOutBack,
               child: Icon(
                 isSelected ? navItem.filledIcon : navItem.outlineIcon,
-                color: isSelected ? AppTheme.white : AppTheme.greyMedium.withValues(alpha: 0.7),
+                color: isSelected
+                    ? AppTheme.white
+                    : AppTheme.greyMedium.withValues(alpha: 0.7),
                 size: 22,
               ),
             ),
@@ -371,10 +398,18 @@ class _DashboardNavBarItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? AppTheme.white : AppTheme.greyMedium.withValues(alpha: 0.7),
+                color: isSelected
+                    ? AppTheme.white
+                    : AppTheme.greyMedium.withValues(alpha: 0.7),
                 letterSpacing: 0.2,
                 shadows: isSelected
-                    ? [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 1))]
+                    ? [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ]
                     : null,
               ),
               child: Text(navItem.label),

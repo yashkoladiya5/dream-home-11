@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
@@ -5,6 +6,9 @@ import 'package:dio/dio.dart';
 class FcmService {
   final FirebaseMessaging _messaging;
   final Dio _dio;
+  StreamSubscription? _tokenRefreshSubscription;
+  StreamSubscription? _onMessageSubscription;
+  StreamSubscription? _onMessageOpenedAppSubscription;
 
   FcmService(this._dio) : _messaging = FirebaseMessaging.instance;
 
@@ -45,7 +49,7 @@ class FcmService {
   }
 
   Future<void> setupTokenRefresh() async {
-    _messaging.onTokenRefresh.listen((newToken) {
+    _tokenRefreshSubscription = _messaging.onTokenRefresh.listen((newToken) {
       registerToken(newToken);
     });
   }
@@ -54,12 +58,12 @@ class FcmService {
     void Function(RemoteMessage)? onForeground,
     void Function(RemoteMessage)? onBackground,
   }) {
-    FirebaseMessaging.onMessage.listen((message) {
+    _onMessageSubscription = FirebaseMessaging.onMessage.listen((message) {
       debugPrint('FCM foreground message: ${message.notification?.title}');
       onForeground?.call(message);
     });
 
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+    _onMessageOpenedAppSubscription = FirebaseMessaging.onMessageOpenedApp.listen((message) {
       debugPrint('FCM opened app: ${message.notification?.title}');
       onBackground?.call(message);
     });
@@ -70,5 +74,11 @@ class FcmService {
         onBackground?.call(message);
       }
     });
+  }
+
+  void dispose() {
+    _tokenRefreshSubscription?.cancel();
+    _onMessageSubscription?.cancel();
+    _onMessageOpenedAppSubscription?.cancel();
   }
 }

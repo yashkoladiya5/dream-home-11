@@ -1,0 +1,5 @@
+account_id        = "123456789012"
+certificate_arn   = "arn:aws:acm:us-east-1:123456789012:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+db_password       = "your-dev-db-password"
+jwt_secret        = "your-dev-jwt-secret"
+container_image   = "dreamhome11/backend:latest"

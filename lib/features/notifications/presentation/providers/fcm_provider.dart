@@ -4,7 +4,9 @@ import '../../services/fcm_service.dart';
 
 final fcmServiceProvider = Provider<FcmService>((ref) {
   final dio = ref.watch(apiClientProvider);
-  return FcmService(dio);
+  final service = FcmService(dio);
+  ref.onDispose(() => service.dispose());
+  return service;
 });
 
 final fcmTokenProvider = FutureProvider<String?>((ref) async {

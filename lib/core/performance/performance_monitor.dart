@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'app_performance_config.dart';
 
 class PerformanceMetrics {
   final int totalFrames;
@@ -47,7 +48,7 @@ class PerformanceMonitor with WidgetsBindingObserver {
 
   PerformanceMonitor() {
     WidgetsBinding.instance.addObserver(this);
-    if (!kReleaseMode) {
+    if (AppPerformanceConfig.enableFrameMonitoring) {
       SchedulerBinding.instance.addTimingsCallback(_onTimings);
       _reportTimer = Timer.periodic(_reportInterval, (_) => _report());
     }

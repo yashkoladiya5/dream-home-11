@@ -6,7 +6,9 @@ import 'fcm_service.dart';
 
 final notificationHandlerProvider = Provider<NotificationHandler>((ref) {
   final dio = ref.watch(apiClientProvider);
-  return NotificationHandler(dio);
+  final handler = NotificationHandler(dio);
+  ref.onDispose(() => handler.dispose());
+  return handler;
 });
 
 class NotificationHandler {
@@ -29,5 +31,9 @@ class NotificationHandler {
         debugPrint('Notification tapped: ${message.notification?.title}');
       },
     );
+  }
+
+  void dispose() {
+    _fcmService.dispose();
   }
 }

@@ -1,0 +1,50 @@
+{
+  "Rules": [
+    {
+      "Id": "daily-backups-to-glacier",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "database/"
+      },
+      "Transitions": [
+        {
+          "Days": 30,
+          "StorageClass": "GLACIER"
+        }
+      ]
+    },
+    {
+      "Id": "weekly-backups-to-deep-archive",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "database/"
+      },
+      "Transitions": [
+        {
+          "Days": 90,
+          "StorageClass": "DEEP_ARCHIVE"
+        }
+      ]
+    },
+    {
+      "Id": "monthly-backup-expiration",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "database/"
+      },
+      "Expiration": {
+        "Days": 365
+      }
+    },
+    {
+      "Id": "cleanup-incomplete-multipart-uploads",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": ""
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 7
+      }
+    }
+  ]
+}

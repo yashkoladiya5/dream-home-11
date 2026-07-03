@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/models/payment_order.dart';
@@ -19,7 +20,8 @@ class PaymentNotifier {
       if (paymentMethod != null) data['paymentMethod'] = paymentMethod;
       final response = await _dio.post('/api/v1/payments/order', data: data);
       return PaymentOrder.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[PaymentNotifier] createOrder error: $e');
       return null;
     }
   }
@@ -31,7 +33,8 @@ class PaymentNotifier {
         'paymentId': paymentId,
       });
       return PaymentVerification.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[PaymentNotifier] verifyPayment error: $e');
       return null;
     }
   }
