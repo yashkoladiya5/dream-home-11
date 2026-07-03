@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'core/network/connectivity_state.dart';
+import 'core/performance/app_startup.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/config/presentation/widgets/config_gate.dart';
@@ -21,6 +23,9 @@ bool isFirebaseInitialized = false;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final startupService = AppStartupService();
+  startupService.completePhase0();
+
   try {
     await Firebase.initializeApp();
     isFirebaseInitialized = true;
@@ -28,8 +33,13 @@ Future<void> main() async {
     debugPrint('Firebase initialization failed: $e');
   }
 
+  startupService.completePhase1();
+
   runApp(
     ProviderScope(
+      overrides: [
+        startupServiceProvider.overrideWithValue(startupService),
+      ],
       child: _AppStartup(
         child: const DreamHomeApp(),
       ),
@@ -51,12 +61,15 @@ class _AppStartupState extends ConsumerState<_AppStartup> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(startupServiceProvider).completePhase2();
+
       final initializer = ref.read(appInitializerProvider);
 
       initializer.addService(
         DeferredInitService(
           serviceName: 'ImagePreloader',
-          initFn: () => ref.read(imagePreloaderProvider).preCacheCommonImages(),
+          initFn: () =>
+              ref.read(imagePreloaderProvider).preCacheCommonImages(),
         ),
         InitPriority.background,
       );
@@ -64,7 +77,9 @@ class _AppStartupState extends ConsumerState<_AppStartup> {
       initializer.addService(
         DeferredInitService(
           serviceName: 'MemoryProfiler',
-          initFn: () async { ref.read(memoryProfilerProvider); },
+          initFn: () async {
+            ref.read(memoryProfilerProvider);
+          },
         ),
         InitPriority.background,
       );
@@ -72,13 +87,17 @@ class _AppStartupState extends ConsumerState<_AppStartup> {
       initializer.addService(
         DeferredInitService(
           serviceName: 'RenderingAnalyzer',
-          initFn: () async { ref.read(renderingAnalyzerProvider); },
+          initFn: () async {
+            ref.read(renderingAnalyzerProvider);
+          },
         ),
         InitPriority.background,
       );
 
       initializer.initializeBackground();
-      initializer.initializeIdle();
+      initializer.initializeIdle().then((_) {
+        ref.read(startupServiceProvider).completePhase3();
+      });
     });
   }
 
@@ -140,6 +159,19 @@ class _DreamHomeAppState extends ConsumerState<DreamHomeApp> {
           debugShowCheckedModeBanner: false,
           theme: AppTheme.darkTheme,
           routerConfig: router,
+          builder: (context, child) {
+            return Stack(
+              children: [
+                if (child != null) child,
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: ConnectivityBanner(),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

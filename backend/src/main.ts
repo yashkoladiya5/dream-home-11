@@ -10,6 +10,10 @@ import { SanitizePipe } from './common/pipes/sanitize.pipe';
 import { SentryExceptionFilter } from './common/filters/sentry-exception.filter';
 import { SentryInterceptor } from './common/interceptors/sentry.interceptor';
 import { PinoLoggerService } from './common/logger/pino-logger.service';
+import { createSwaggerConfig } from './common/config/swagger.config';
+import { createValidationPipe } from './common/pipes/validation-pipe.config';
+import { createCorsConfig } from './common/config/cors.config';
+import { createHelmetConfig } from './common/config/helmet.config';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -66,60 +70,48 @@ async function bootstrap() {
     level: 6,
   }));
 
-  app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  }));
+  app.use(helmet(createHelmetConfig()));
 
-  const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? [
-        'https://dreamhome11.com',
-        'https://www.dreamhome11.com',
-        'https://admin.dreamhome11.com',
-        'https://api.dreamhome11.com',
-      ]
-    : ['*'];
-
-  app.enableCors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
-    exposedHeaders: ['X-Request-Id', 'X-Response-Time'],
-    credentials: true,
-    maxAge: 86400,
-  });
-
-  app.use((req, res, next) => {
-    const start = Date.now();
-    const { method, originalUrl } = req;
-    res.on('finish', () => {
-      const duration = Date.now() - start;
-      if (process.env.NODE_ENV !== 'production' || res.statusCode >= 400) {
-        logger.log(`${method} ${originalUrl} ${res.statusCode} ${duration}ms`);
-      }
-    });
-    next();
-  });
+  app.enableCors(createCorsConfig());
 
   const sanitizePipe = app.get(SanitizePipe);
 
   app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-      disableErrorMessages: process.env.NODE_ENV === 'production',
-    }),
+    createValidationPipe(),
     sanitizePipe,
   );
 
+  app.enableShutdownHooks();
+
   app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads/' });
+
+  if (process.env.NODE_ENV !== 'production') {
+    createSwaggerConfig(app);
+    logger.log('Swagger docs enabled at /api/docs');
+  }
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port, '0.0.0.0');
   logger.log(`Server running on port ${port} in ${process.env.NODE_ENV || 'development'} mode`);
 }
+
+const shutdownTimeout = parseInt(process.env.GRACEFUL_SHUTDOWN_TIMEOUT || '10000', 10);
+
 bootstrap().catch((err) => {
   console.error(err);
   process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+  setTimeout(() => {
+    console.error('Forced shutdown after SIGTERM timeout');
+    process.exit(1);
+  }, shutdownTimeout);
+});
+
+process.on('SIGINT', () => {
+  setTimeout(() => {
+    console.error('Forced shutdown after SIGINT timeout');
+    process.exit(1);
+  }, shutdownTimeout);
 });

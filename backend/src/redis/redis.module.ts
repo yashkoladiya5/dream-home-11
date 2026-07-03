@@ -4,6 +4,7 @@ import Redis from 'ioredis';
 import { RedisLogger } from './redis-logger';
 import { REDIS_CLIENT } from './redis.constants';
 import { RedisThrottlerStorageService } from './redis-throttler-storage.service';
+import { RedisCacheService } from './redis-cache.service';
 
 @Global()
 @Module({
@@ -31,7 +32,8 @@ import { RedisThrottlerStorageService } from './redis-throttler-storage.service'
     },
     RedisLogger,
     RedisThrottlerStorageService,
+    RedisCacheService,
   ],
-  exports: [REDIS_CLIENT, RedisLogger, RedisThrottlerStorageService],
+  exports: [REDIS_CLIENT, RedisLogger, RedisThrottlerStorageService, RedisCacheService],
 })
 export class RedisModule {}
