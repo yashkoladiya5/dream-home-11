@@ -68,4 +68,31 @@ class ApiConfig {
 
   /// API version prefix
   static String get apiPrefix => '/api/v1';
+
+  /// CDN base URL for asset delivery
+  static String get cdnBaseUrl {
+    switch (environment) {
+      case AppEnvironment.production:
+        return 'https://cdn.dreamhome11.com';
+      case AppEnvironment.staging:
+        return 'https://staging-cdn.dreamhome11.com';
+      case AppEnvironment.development:
+        return '';
+    }
+  }
+
+  /// Constructs a full CDN URL for a given asset path
+  static String assetUrl(String path, {String? format, int? width, int? height, int? quality}) {
+    final base = cdnBaseUrl;
+    if (base.isEmpty) return path;
+    final cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    final url = '$base/$cleanPath';
+    final params = <String, String>{};
+    if (format != null) params['format'] = format;
+    if (width != null) params['width'] = width.toString();
+    if (height != null) params['height'] = height.toString();
+    if (quality != null) params['quality'] = quality.toString();
+    if (params.isEmpty) return url;
+    return '$url?${params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&')}';
+  }
 }
