@@ -51,7 +51,6 @@ class ChatListScreen extends ConsumerWidget {
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               itemCount: chats.length,
-              itemExtent: 76,
               addAutomaticKeepAlives: true,
               cacheExtent: 500,
               itemBuilder: (context, index) {
