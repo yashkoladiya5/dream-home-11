@@ -269,7 +269,7 @@ describe('Security E2E', () => {
         exec: jest.fn().mockResolvedValue([
           [null, 1],
           [null, -1],
-        ]),
+         ]),
       })),
       incr: jest.fn().mockResolvedValue(1),
       pttl: jest.fn().mockResolvedValue(-1),
@@ -283,6 +283,9 @@ describe('Security E2E', () => {
       ttl: jest.fn().mockResolvedValue(-1),
       keys: jest.fn().mockResolvedValue([]),
       del: jest.fn().mockResolvedValue(1),
+      quit: jest.fn().mockResolvedValue('OK'),
+      scan: jest.fn().mockResolvedValue(['0', []]),
+      setex: jest.fn().mockResolvedValue('OK'),
     };
 
     let builder = Test.createTestingModule({ imports: [AppModule] })

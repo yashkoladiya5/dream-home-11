@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         applicationId = "com.dreamhome11.dream_home_11"
-        minSdk = 21
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

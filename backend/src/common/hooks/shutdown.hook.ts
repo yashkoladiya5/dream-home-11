@@ -32,9 +32,9 @@ export class ShutdownHook implements OnApplicationShutdown {
 
     const tasks: Promise<void>[] = [];
 
-    const withTimeout = <T>(promise: Promise<T>, name: string): Promise<void> =>
+    const withTimeout = <T>(promise: Promise<T> | any, name: string): Promise<void> =>
       Promise.race([
-        promise
+        Promise.resolve(promise)
           .then(() => this.logger.log(`${name} closed`))
           .catch((err) => {
             this.logger.error(`${name} error`, err);

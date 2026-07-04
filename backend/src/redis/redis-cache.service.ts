@@ -1,12 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { REDIS_CLIENT } from './redis.constants';
+import { CACHE_TTL, CACHE_KEY_PREFIXES } from './cache-ttl.config';
 
 export const DEFAULT_TTL = 300;
 export const USER_TTL = 600;
 export const CONTEST_TTL = 120;
 export const LEADERBOARD_TTL = 60;
 export const BANNER_TTL = 900;
+
+export { CACHE_TTL, CACHE_KEY_PREFIXES };
 
 @Injectable()
 export class RedisCacheService {
@@ -78,5 +81,58 @@ export class RedisCacheService {
     } catch {
       return false;
     }
+  }
+
+  buildKey(prefix: string, ...parts: string[]): string {
+    return [prefix, ...parts].join(':');
+  }
+
+  buildResponseKey(path: string, queryHash: string): string {
+    return this.buildKey(CACHE_KEY_PREFIXES.RESPONSE, path, queryHash);
+  }
+
+  async mget<T>(keys: string[]): Promise<(T | null)[]> {
+    if (keys.length === 0) return [];
+    const raw = await this.redis.mget(keys);
+    return raw.map((r) => {
+      if (r === null) return null;
+      try {
+        return JSON.parse(r) as T;
+      } catch {
+        return r as unknown as T;
+      }
+    });
+  }
+
+  async mset(items: { key: string; value: any; ttl?: number }[]): Promise<void> {
+    if (items.length === 0) return;
+    const multi = this.redis.multi();
+    for (const { key, value, ttl } of items) {
+      const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+      if (ttl !== undefined && ttl > 0) {
+        multi.setex(key, ttl, serialized);
+      } else {
+        multi.set(key, serialized);
+      }
+    }
+    await multi.exec();
+  }
+
+  async ttl(key: string): Promise<number | null> {
+    const remaining = await this.redis.ttl(key);
+    return remaining >= 0 ? remaining : null;
+  }
+
+  async exists(key: string): Promise<boolean> {
+    const count = await this.redis.exists(key);
+    return count > 0;
+  }
+
+  async incr(key: string, ttlSeconds?: number): Promise<number> {
+    const val = await this.redis.incr(key);
+    if (ttlSeconds && ttlSeconds > 0) {
+      await this.redis.expire(key, ttlSeconds);
+    }
+    return val;
   }
 }

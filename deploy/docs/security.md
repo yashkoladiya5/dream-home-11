@@ -314,3 +314,97 @@ API keys and secrets are stored in AWS Secrets Manager and injected at deploymen
 - [x] Request ID and Correlation ID for tracing
 - [x] Consistent error responses (no stack traces in production)
 - [x] Database connection pooling with error handling
+
+---
+
+## Security Audit Results
+
+*Last evaluated: 2026-07-03*
+
+### Summary of Security Controls Implemented
+
+| Control Category | Status | Notes |
+|-----------------|--------|-------|
+| Authentication | ✅ Implemented | JWT-based with Firebase Phone Auth, JwtAuthGuard |
+| Authorization | ✅ Implemented | Three-tier RBAC (user/moderator/admin), RolesGuard |
+| API Key Auth | ✅ Implemented | SHA-256 hashed keys, timing-safe comparison, ApiKeyGuard |
+| Rate Limiting (IP) | ✅ Implemented | ThrottlerBehindProxyGuard, Redis-backed, 30 req/min default |
+| Rate Limiting (User) | ✅ Implemented | Per-endpoint groups via @UserRateLimit() decorator, Redis sorted sets |
+| Input Validation | ✅ Implemented | Global ValidationPipe with whitelist, class-validator DTOs |
+| XSS Sanitization | ✅ Implemented | SanitizePipe strips scripts, iframes, event handlers, javascript: URIs |
+| NoSQL Injection | ✅ Implemented | $‑prefixed keys rejected in SanitizePipe |
+| SQL Injection | ✅ Implemented | TypeORM parameterized queries, no raw SQL |
+| Security Headers | ✅ Implemented | HSTS, CSP, X-Frame-Options, X-Content-Type-Options via helmet |
+| CORS | ✅ Implemented | Dynamic origin validation, restricted methods |
+| Audit Logging | ✅ Implemented | AuditLogService for auth, payments, KYC, admin, withdrawals |
+| PII Redaction | ✅ Implemented | Aadhaar/PAN masked in logs, Pino redact config |
+| Request Size Limits | ✅ Implemented | Per-endpoint group limits enforced via middleware |
+| Unicode Normalization | ✅ Implemented | NFC normalization in SanitizePipe to prevent homograph attacks |
+| Error Handling | ✅ Implemented | Consistent error format, no stack traces in production |
+| Dependency Security | ✅ Monitored | npm audit integrated into CI pipeline |
+
+### Test Coverage
+
+| Test Suite | File | Coverage |
+|-----------|------|----------|
+| Authentication Security | `backend/test/security/auth-security.spec.ts` | JWT validation, role-based access, API key auth, header injection |
+| Injection Prevention | `backend/test/security/injection-security.spec.ts` | SQL/NoSQL/XSS, unicode normalization, null bytes, control chars, length limits |
+| Rate Limit Security | `backend/test/security/rate-limit-security.spec.ts` | IP/user rate limiting, X-Forwarded-For spoofing, bypass prevention, violation logging |
+| Audit Log Security | `backend/test/security/audit-log-security.spec.ts` | Event logging, required fields, PII redaction, failed auth logging, cleanup |
+| Automated Audit | `backend/scripts/security-audit.sh` | Headers check, HTTPS config, exposed endpoints scan, CORS, dependency audit |
+
+Run all security tests:
+```bash
+# Unit tests
+cd backend && npx jest --config test/jest-security.json --forceExit
+
+# Full automated audit
+backend/scripts/security-audit.sh https://api.dreamhome11.com
+```
+
+### Known Security Considerations
+
+1. **Token Expiry**: JWT expiry is set to 7 days by default. No refresh token mechanism exists — users must re-authenticate. For high-security operations (withdrawals, KYC), consider shorter-lived tokens or step-up authentication.
+
+2. **Rate Limit Window**: Rate limit counters reset after 60 seconds. A determined attacker could wait for the window to reset. Consider progressive delays (exponential backoff) for auth endpoints.
+
+3. **Audit Log Retention**: Default retention is 90 days. Ensure compliance with local regulations (some jurisdictions require 1–3 years for financial transaction logs).
+
+4. **API Key Storage**: API keys are stored as SHA-256 hashes in environment variables. While this prevents plaintext exposure, consider using a dedicated secrets manager (AWS Secrets Manager) with automatic rotation.
+
+5. **GraphQL Endpoint**: If GraphQL is introduced, ensure introspection queries are disabled in production and query depth limiting is configured.
+
+6. **WebSocket Security**: WebSocket connections should validate JWT on connection and periodically re-verify during long-lived sessions.
+
+7. **Container Security**: If running in containers, ensure images are regularly scanned for vulnerabilities (Trivy, Snyk) and run with least-privilege user.
+
+### Recommended Penetration Testing Schedule
+
+| Frequency | Scope | Type |
+|-----------|-------|------|
+| Quarterly | Full OWASP Top 10 coverage | Automated + Manual |
+| Per Major Release | New features, changed endpoints | Targeted |
+| Annual | Full-scope penetration test | Third-party assessment |
+| Post-Incident | Affected systems only | Remediation verification |
+| Continuous | Dependency scanning (npm audit) | Automated |
+
+### Incident Response Plan Reference
+
+Refer to the operations runbook at `deploy/docs/operations-runbook.md` for the full incident response procedure.
+
+**Quick Reference:**
+
+1. **Detection**: Sentry alerts on 5xx errors; rate limit spike monitoring; audit log anomaly detection
+2. **Containment**: Rate-limit offending IP/user via environment config override; revoke compromised API keys
+3. **Investigation**: Review audit logs (`audit_logs` table) and Sentry traces; correlate with application logs
+4. **Remediation**: Patch vulnerability → deploy hotfix → rotate affected credentials
+5. **Notification**: Inform affected users per data breach notification requirements; contact DPO for PII incidents
+6. **Post-Mortem**: Document root cause, timeline, and prevention measures within 72 hours
+
+**Emergency Contacts:**
+
+| Role | Contact |
+|------|---------|
+| Security Lead | security@dreamhome11.com |
+| DevOps / On-Call | devops@dreamhome11.com |
+| Data Protection Officer | dpo@dreamhome11.com |
