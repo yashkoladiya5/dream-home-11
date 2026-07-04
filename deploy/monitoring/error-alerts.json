@@ -1,0 +1,301 @@
+{
+  "apiVersion": 1,
+  "groups": [
+    {
+      "orgId": 1,
+      "name": "dreamhome11-error-alerts",
+      "folder": "Dream Home 11 Error Alerts",
+      "interval": "30s",
+      "rules": [
+        {
+          "uid": "dreamhome11-error-high-5xx",
+          "title": "High 5xx Error Rate (>5%)",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))",
+                "intervalMs": 30000,
+                "maxDataPoints": 100,
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "reduce",
+                "expression": "A",
+                "reducer": "last",
+                "settings": { "mode": "value" },
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "math",
+                "expression": "$B > 0.05",
+                "refId": "C"
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "5m",
+          "annotations": {
+            "summary": "High 5xx error rate detected (>5%)",
+            "description": "The 5xx error rate is {{ $values.B | humanizePercentage }} over the last 5 minutes, exceeding the 5% threshold.",
+            "runbook_url": "https://wiki.dreamhome11.com/runbooks/high-error-rate"
+          },
+          "labels": {
+            "severity": "critical",
+            "team": "backend",
+            "notification": "slack-errors"
+          },
+          "isPaused": false
+        },
+        {
+          "uid": "dreamhome11-error-spike",
+          "title": "Error Rate Spike (>10% Increase in 5min)",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "sum(rate(app_errors_total[5m]))",
+                "intervalMs": 30000,
+                "maxDataPoints": 100,
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 600, "to": 300 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "sum(rate(app_errors_total[5m]))",
+                "intervalMs": 30000,
+                "maxDataPoints": 100,
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "math",
+                "expression": "($A - $B) / ($B > 0 or 1) > 0.10",
+                "refId": "C"
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "2m",
+          "annotations": {
+            "summary": "Error rate spike detected (>10% increase)",
+            "description": "Error rate increased by more than 10% compared to the previous 5-minute window.",
+            "runbook_url": "https://wiki.dreamhome11.com/runbooks/error-spike"
+          },
+          "labels": {
+            "severity": "critical",
+            "team": "backend",
+            "notification": "slack-errors"
+          },
+          "isPaused": false
+        },
+        {
+          "uid": "dreamhome11-new-error-type",
+          "title": "New Error Type Detected",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "count(count by (type) (increase(app_errors_total{environment=\"production\"}[5m])))",
+                "intervalMs": 30000,
+                "maxDataPoints": 100,
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 86400, "to": 86100 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "count(count by (type) (increase(app_errors_total{environment=\"production\"}[5m])))",
+                "intervalMs": 300000,
+                "maxDataPoints": 100,
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "math",
+                "expression": "$A > $B",
+                "refId": "C"
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "5m",
+          "annotations": {
+            "summary": "New error type detected in production",
+            "description": "A new error type has appeared that was not seen in the previous 24 hours. Current unique error types: {{ $values.A }}.",
+            "runbook_url": "https://wiki.dreamhome11.com/runbooks/new-error-type"
+          },
+          "labels": {
+            "severity": "warning",
+            "team": "backend",
+            "notification": "slack-errors"
+          },
+          "isPaused": false
+        },
+        {
+          "uid": "dreamhome11-error-above-baseline",
+          "title": "Error Rate Above Baseline (>2x Normal)",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "sum(rate(app_errors_total[5m]))",
+                "intervalMs": 30000,
+                "maxDataPoints": 100,
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 604800, "to": 300 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "expr": "avg_over_time(sum(rate(app_errors_total[5m]))[7d:5m])",
+                "intervalMs": 300000,
+                "maxDataPoints": 100,
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 300, "to": 0 },
+              "datasourceUid": "PBFA97CFB590B2093",
+              "model": {
+                "type": "math",
+                "expression": "$A > ($B * 2)",
+                "refId": "C"
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "10m",
+          "annotations": {
+            "summary": "Error rate is more than 2x the 7-day baseline",
+            "description": "Current error rate is {{ $values.A }} which is more than double the 7-day average of {{ $values.B }}.",
+            "runbook_url": "https://wiki.dreamhome11.com/runbooks/error-baseline"
+          },
+          "labels": {
+            "severity": "warning",
+            "team": "backend",
+            "notification": "slack-errors"
+          },
+          "isPaused": false
+        }
+      ]
+    }
+  ],
+  "contactPoints": [
+    {
+      "receivers": [
+        {
+          "uid": "slack-errors-channel",
+          "type": "slack",
+          "settings": {
+            "url": "${SLACK_WEBHOOK_URL}",
+            "recipient": "#alerts-errors",
+            "title": "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}",
+            "text": "{{ .CommonAnnotations.description }}\n\nRunbook: {{ .CommonAnnotations.runbook_url }}"
+          },
+          "disableResolveMessage": false
+        }
+      ],
+      "name": "Slack Errors Channel",
+      "group_wait": "30s",
+      "group_interval": "5m",
+      "repeat_interval": "15m"
+    },
+    {
+      "receivers": [
+        {
+          "uid": "email-dev-team",
+          "type": "email",
+          "settings": {
+            "addresses": "dev@dreamhome11.com",
+            "singleEmail": false,
+            "subject": "[{{ .Status | toUpper }}] Dream Home 11 - {{ .CommonLabels.alertname }}",
+            "body": "{{ .CommonAnnotations.description }}\n\nRunbook: {{ .CommonAnnotations.runbook_url }}"
+          },
+          "disableResolveMessage": false
+        }
+      ],
+      "name": "Email Dev Team",
+      "group_wait": "1m",
+      "group_interval": "10m",
+      "repeat_interval": "24h"
+    }
+  ],
+  "policies": [
+    {
+      "receiver": "slack-errors-channel",
+      "group_by": ["alertname", "team"],
+      "match": {
+        "notification": "slack-errors",
+        "severity": "critical"
+      },
+      "group_wait": "30s",
+      "group_interval": "5m",
+      "repeat_interval": "15m"
+    },
+    {
+      "receiver": "slack-errors-channel",
+      "group_by": ["alertname", "team"],
+      "match": {
+        "notification": "slack-errors",
+        "severity": "warning"
+      },
+      "group_wait": "1m",
+      "group_interval": "15m",
+      "repeat_interval": "15m"
+    },
+    {
+      "receiver": "email-dev-team",
+      "group_by": ["alertname"],
+      "match": {
+        "severity": "critical"
+      },
+      "group_wait": "2m",
+      "group_interval": "10m",
+      "repeat_interval": "24h",
+      "continue": true
+    }
+  ]
+}

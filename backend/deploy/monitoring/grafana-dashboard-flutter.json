@@ -1,0 +1,346 @@
+{
+  "title": "Dream Home 11 - Flutter App",
+  "uid": "dreamhome11-flutter",
+  "tags": ["dreamhome11", "flutter", "mobile", "crash"],
+  "timezone": "browser",
+  "editable": true,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": { "from": "now-7d", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "env",
+        "type": "constant",
+        "label": "Environment",
+        "query": "production",
+        "current": { "text": "production", "value": "production" },
+        "hide": 0
+      },
+      {
+        "name": "app_version",
+        "type": "query",
+        "label": "App Version",
+        "query": "label_values(flutter_app_version_info, version)",
+        "current": { "text": "All", "value": "$__all" },
+        "includeAll": true,
+        "multi": true,
+        "hide": 0
+      },
+      {
+        "name": "platform",
+        "type": "custom",
+        "label": "Platform",
+        "query": "android,ios",
+        "current": { "text": "All", "value": "$__all" },
+        "includeAll": true,
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "App Crash Rate",
+      "description": "Percentage of sessions that resulted in a crash",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(flutter_crash_total{environment=\"$env\"}[24h])) / sum(rate(flutter_session_total{environment=\"$env\"}[24h])) * 100",
+          "legendFormat": "Crash Rate"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 10,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 1, "color": "yellow" },
+              { "value": 3, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "title": "App Startup Time",
+      "description": "P50/P95/P99 app cold start time in milliseconds",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(flutter_startup_duration_seconds_bucket{environment=\"$env\"}[5m])) by (le)) * 1000",
+          "legendFormat": "P50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(flutter_startup_duration_seconds_bucket{environment=\"$env\"}[5m])) by (le)) * 1000",
+          "legendFormat": "P95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(flutter_startup_duration_seconds_bucket{environment=\"$env\"}[5m])) by (le)) * 1000",
+          "legendFormat": "P99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "right" }
+      }
+    },
+    {
+      "title": "API Response Time from Flutter",
+      "description": "P50/P95/P99 API response time as measured by Flutter client",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 12, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(flutter_api_response_duration_seconds_bucket{environment=\"$env\"}[5m])) by (le, endpoint))",
+          "legendFormat": "P50 {{endpoint}}"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(flutter_api_response_duration_seconds_bucket{environment=\"$env\"}[5m])) by (le, endpoint))",
+          "legendFormat": "P95 {{endpoint}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"] }
+      }
+    },
+    {
+      "title": "Network Errors",
+      "description": "Network-related errors from Flutter client",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(flutter_network_errors_total{environment=\"$env\"}[$interval])) by (error_type)",
+          "legendFormat": "{{error_type}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "showPoints": "never",
+            "stacking": { "mode": "normal" },
+            "fillOpacity": 40,
+            "lineWidth": 1
+          },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "right" }
+      }
+    },
+    {
+      "title": "User Sessions",
+      "description": "Active Flutter user sessions over time",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(flutter_session_total{environment=\"$env\"}[5m])) by (platform)",
+          "legendFormat": "{{platform}}"
+        },
+        {
+          "expr": "sum(rate(flutter_session_total{environment=\"$env\"}[5m]))",
+          "legendFormat": "Total"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 20
+          },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "right" }
+      }
+    },
+    {
+      "title": "App Version Distribution",
+      "description": "Distribution of active users by app version",
+      "type": "pie-chart",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(flutter_active_users{environment=\"$env\"}) by (version)",
+          "legendFormat": "v{{version}}",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["sum"],
+          "limit": 10
+        },
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "list", "placement": "right" },
+        "pieType": "pie"
+      }
+    },
+    {
+      "title": "Crash Types",
+      "description": "Top crash types from Flutter Sentry",
+      "type": "table",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "targets": [
+        {
+          "expr": "topk(10, sum(increase(flutter_crash_total{environment=\"$env\"}[$__range])) by (crash_type))",
+          "legendFormat": "{{crash_type}}",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "displayName": "Crash Count"
+        }
+      },
+      "options": {
+        "sortBy": [{ "displayName": "Value", "desc": true }]
+      }
+    },
+    {
+      "title": "Platform Distribution",
+      "description": "Active users split by platform (Android/iOS)",
+      "type": "pie-chart",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(flutter_active_users{environment=\"$env\"}) by (platform)",
+          "legendFormat": "{{platform}}",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["sum"],
+          "limit": 5
+        },
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "list", "placement": "right" },
+        "pieType": "pie"
+      }
+    },
+    {
+      "title": "Sentry Flutter Error Count",
+      "description": "Total Flutter errors captured by Sentry per day",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "sum(increase(sentry_events_total{environment=\"$env\",source=\"flutter\"}[1d]))",
+          "legendFormat": "Flutter Errors/day"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "showPoints": "auto",
+            "lineWidth": 2,
+            "fillOpacity": 30,
+            "drawStyle": "bars"
+          },
+          "color": { "mode": "fixed", "fixedColor": "red" }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "title": "Flutter Memory Usage",
+      "description": "Memory usage as reported by Flutter app",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(flutter_memory_usage_bytes_bucket{environment=\"$env\"}[5m])) by (le)) / 1024 / 1024",
+          "legendFormat": "P50 Memory"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(flutter_memory_usage_bytes_bucket{environment=\"$env\"}[5m])) by (le)) / 1024 / 1024",
+          "legendFormat": "P95 Memory"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "right" }
+      }
+    }
+  ]
+}

@@ -106,6 +106,7 @@ export class ContestsService {
         endTime: true,
         type: true,
         inviteCode: true,
+        rules: true,
       },
     });
 
@@ -126,6 +127,7 @@ export class ContestsService {
         startTime: true,
         endTime: true,
         type: true,
+        rules: true,
       },
     });
   }
@@ -176,6 +178,7 @@ export class ContestsService {
         status: true,
         startTime: true,
         type: true,
+        rules: true,
       },
     });
     if (!contest) {

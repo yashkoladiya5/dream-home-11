@@ -426,7 +426,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: '₹100 Amazon Gift Card',
         description:
           'Redeem for any product on Amazon.in. Instant digital delivery to your email.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=500',
         pointsRequired: 500,
         stock: 100,
         category: 'gift_card',
@@ -437,7 +437,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: '₹500 Flipkart Voucher',
         description:
           'Shop anything on Flipkart with this digital gift voucher. Valid for 6 months.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500',
         pointsRequired: 2000,
         stock: 50,
         category: 'gift_card',
@@ -448,7 +448,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: '₹1000 Myntra Voucher',
         description:
           'Fashion & lifestyle shopping voucher for Myntra. Valid on all products.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=500',
         pointsRequired: 3500,
         stock: 30,
         category: 'gift_card',
@@ -459,7 +459,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: 'Dream11 Premium Cap',
         description:
           'Official Dream11 premium cotton cap with embroidered logo. One size fits all.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=500',
         pointsRequired: 800,
         stock: 20,
         category: 'merchandise',
@@ -470,7 +470,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: 'Dream11 Branded T-Shirt',
         description:
           'Premium quality black t-shirt with Dream11 signature print. Available in M, L, XL.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500',
         pointsRequired: 1200,
         stock: 15,
         category: 'merchandise',
@@ -481,7 +481,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: 'Dream11 Limited Edition Hoodie',
         description:
           'Exclusive limited edition fleece hoodie. Only 10 ever produced. Collectors item.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500',
         pointsRequired: 2500,
         stock: 10,
         category: 'merchandise',
@@ -492,7 +492,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: '1 Month Dream11 Premium',
         description:
           'Unlock premium contests, exclusive rewards, and priority support for 1 month.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500',
         pointsRequired: 1500,
         stock: null,
         category: 'subscription',
@@ -503,7 +503,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: '3 Month Dream11 Premium',
         description:
           'Premium subscription for 3 months. Best value for dedicated players.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500',
         pointsRequired: 3500,
         stock: null,
         category: 'subscription',
@@ -514,7 +514,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: '1 Year Dream11 Premium',
         description:
           'Full year of Dream11 Premium. All benefits unlocked for 12 months.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500',
         pointsRequired: 8000,
         stock: null,
         category: 'subscription',
@@ -525,7 +525,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: 'Exclusive Dream11 Trophy Replica',
         description:
           'Gold-plated miniature replica of the Dream11 Championship Trophy. Numbered edition.',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1578269174936-2709b5a190f8?w=500',
         pointsRequired: 5000,
         stock: 5,
         category: 'special',
@@ -536,7 +536,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: 'VIP Contest Direct Entry Pass',
         description:
           'Direct entry to any VIP contest of your choice for one year. Skip the queue!',
-        imageUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1471666875520-c75081f42081?w=500',
         pointsRequired: 10000,
         stock: 3,
         category: 'special',

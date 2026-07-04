@@ -273,3 +273,103 @@ Updates will be posted every 30 minutes.
 - [PagerDuty Schedule](https://dreamhome11.pagerduty.com/schedules)
 - [Deployment Runbook](./deployment-runbook.md)
 - [Disaster Recovery Plan](./disaster-recovery.md)
+
+## Synthetic Monitoring (Checkly)
+
+### Overview
+
+Dream Home 11 uses Checkly for synthetic monitoring across three regions: `us-east-1`, `eu-west-1`, and `ap-south-1`. Checkly runs automated checks to detect outages, performance degradation, and broken user flows before end users are impacted.
+
+### Active Checks
+
+| Check | Type | Interval | Regions | Alert |
+|-------|------|----------|---------|-------|
+| Health Check | API | 1 min | us-east-1, eu-west-1, ap-south-1 | Slack, Email |
+| Contest List API | API | 2 min | us-east-1, eu-west-1, ap-south-1 | Slack |
+| Leaderboard API | API | 2 min | us-east-1, eu-west-1, ap-south-1 | Slack |
+| Auth Flow Login OTP | Browser | 5 min | us-east-1, eu-west-1, ap-south-1 | Slack, PagerDuty |
+| Payment Flow API | API | 5 min | us-east-1 | Slack, PagerDuty |
+| WebSocket Connection | API | 5 min | us-east-1 | Slack |
+
+### Adding New Checks
+
+1. Create a new `.check.ts` file in `deploy/monitoring/checkly/checks/`
+2. Import constructs from `checkly/constructs` (`ApiCheck` or `BrowserCheck`)
+3. Set logical ID, name, frequency, locations, and tags
+4. Define request assertions using `AssertionBuilder`
+5. Assign alert channels for the check
+6. Run `npx checkly test` locally to validate
+7. Deploy with `npx checkly deploy`
+
+### Alert Channels
+
+| Channel | Config | Purpose |
+|---------|--------|---------|
+| **Slack** | `#alerts-production` | All check failures and recoveries |
+| **Email** | `ops@dreamhome11.com` | Check failures and recoveries |
+| **PagerDuty** | `dreamhome11-critical-service` | Critical checks only (auth, payments) |
+| **Webhook** | Custom integration | Forwards events to internal automation |
+
+### Check Intervals and Thresholds
+
+| Metric | Warning | Critical |
+|--------|---------|----------|
+| Response time (health) | > 2s | > 5s |
+| Response time (contests/leaderboard) | > 5s | > 10s |
+| Response time (payments) | > 5s | > 10s |
+| Consecutive failures to alert | 2 | 3 |
+| Error rate threshold | > 10% | > 25% |
+
+### Environment Variables
+
+Configure these in the Checkly dashboard or via CI/CD:
+
+```
+BASE_URL=https://api.dreamhome11.com
+LOGIN_URL=https://dreamhome11.com/login
+TEST_PHONE_NUMBER=9876543210
+TEST_CONTEST_ID=<test-contest-uuid>
+TEST_AUTH_TOKEN=<test-bearer-token>
+SLACK_WEBHOOK_URL=<slack-webhook-url>
+PAGERDUTY_INTEGRATION_KEY=<pd-integration-key>
+WEBHOOK_ALERT_URL=<custom-webhook-url>
+WEBHOOK_API_KEY=<webhook-auth-key>
+```
+
+### Troubleshooting Check Failures
+
+1. **Check shows degraded but app is healthy**
+   - Verify the check is hitting the correct URL (`BASE_URL`)
+   - Check if regional DNS resolution differs from expected
+   - Review response time thresholds in the check configuration
+
+2. **Browser check fails (auth flow)**
+   - Verify `TEST_PHONE_NUMBER` is valid and OTP-capable
+   - Check if login page DOM selectors have changed
+   - Review video recording for visual debugging
+
+3. **Payment check returns unexpected status**
+   - Confirm `TEST_AUTH_TOKEN` is not expired
+   - Verify test payment endpoint is configured correctly
+   - Check if test data matches expected schema
+
+4. **WebSocket check fails to connect**
+   - Verify WebSocket endpoint is reachable from the check region
+   - Check if SSL/TLS certificate is valid
+   - Confirm WebSocket protocol version compatibility
+
+### Useful Commands
+
+```bash
+# Test checks locally
+npx checkly test
+
+# Deploy all checks
+npx checkly deploy
+
+# View check results
+npx checkly run:report <run-id>
+
+# List all checks
+npx checkly list
+```

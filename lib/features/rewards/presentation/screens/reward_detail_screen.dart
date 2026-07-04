@@ -151,12 +151,35 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: const Color(0x1FFFFFFF)),
                     ),
-                    child: Center(
-                      child: Icon(
-                        Icons.card_giftcard_rounded,
-                        size: 80,
-                        color: AppTheme.goldYellow,
-                      ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: reward.imageUrl != null && reward.imageUrl!.isNotEmpty
+                          ? Image.network(
+                              reward.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Center(
+                                child: Icon(
+                                  Icons.card_giftcard_rounded,
+                                  size: 80,
+                                  color: AppTheme.goldYellow,
+                                ),
+                              ),
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return const Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.goldYellow),
+                                  ),
+                                );
+                              },
+                            )
+                          : Center(
+                              child: Icon(
+                                Icons.card_giftcard_rounded,
+                                size: 80,
+                                color: AppTheme.goldYellow,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 20),
