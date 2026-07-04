@@ -11,17 +11,19 @@ describe('ChatGateway', () => {
   let usersService: jest.Mocked<UsersService>;
 
   const mockChatHistoryService = {
-    saveMessage: jest.fn().mockImplementation(({ chatId, senderId, content, type }) =>
-      Promise.resolve({
-        id: 'msg-1',
-        chatId,
-        senderId,
-        content,
-        type: type || 'text',
-        createdAt: new Date(),
-        isRead: false,
-      }),
-    ),
+    saveMessage: jest
+      .fn()
+      .mockImplementation(({ chatId, senderId, content, type }) =>
+        Promise.resolve({
+          id: 'msg-1',
+          chatId,
+          senderId,
+          content,
+          type: type || 'text',
+          createdAt: new Date(),
+          isRead: false,
+        }),
+      ),
   };
 
   const mockClient = {
@@ -73,7 +75,10 @@ describe('ChatGateway', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChatGateway,
-        { provide: JwtService, useValue: { verify: jest.fn(), sign: jest.fn() } },
+        {
+          provide: JwtService,
+          useValue: { verify: jest.fn(), sign: jest.fn() },
+        },
         { provide: UsersService, useValue: { findById: jest.fn() } },
         { provide: ChatHistoryService, useValue: mockChatHistoryService },
       ],
@@ -109,7 +114,9 @@ describe('ChatGateway', () => {
 
   it('handleConnection — invalid token', async () => {
     mockClient.handshake.auth.token = 'bad-token';
-    jwtService.verify.mockImplementation(() => { throw new Error('jwt error'); });
+    jwtService.verify.mockImplementation(() => {
+      throw new Error('jwt error');
+    });
 
     await (gateway as any).handleConnection(mockClient);
 
@@ -156,7 +163,11 @@ describe('ChatGateway', () => {
 
   it('handleSendMessage', async () => {
     mockClient.data.userId = 'user-1';
-    await gateway.handleSendMessage(mockClient, { chatId: 'chat-1', content: 'Hello', type: 'text' });
+    await gateway.handleSendMessage(mockClient, {
+      chatId: 'chat-1',
+      content: 'Hello',
+      type: 'text',
+    });
 
     expect(mockServer.to).toHaveBeenCalledWith('chat:chat-1');
     expect(mockServer.emit).toHaveBeenCalledWith(
@@ -171,7 +182,10 @@ describe('ChatGateway', () => {
 
   it('handleSendMessage — no userId', async () => {
     mockClient.data = {};
-    await gateway.handleSendMessage(mockClient, { chatId: 'chat-1', content: 'Hi' });
+    await gateway.handleSendMessage(mockClient, {
+      chatId: 'chat-1',
+      content: 'Hi',
+    });
 
     expect(mockServer.to).not.toHaveBeenCalled();
     expect(mockServer.emit).not.toHaveBeenCalled();
@@ -191,7 +205,10 @@ describe('ChatGateway', () => {
 
   it('handleMarkRead', () => {
     mockClient.data.userId = 'user-1';
-    gateway.handleMarkRead(mockClient, { chatId: 'chat-1', messageId: 'msg-1' });
+    gateway.handleMarkRead(mockClient, {
+      chatId: 'chat-1',
+      messageId: 'msg-1',
+    });
 
     expect(mockServer.to).toHaveBeenCalledWith('chat:chat-1');
     expect(mockServer.emit).toHaveBeenCalledWith('messageRead', {

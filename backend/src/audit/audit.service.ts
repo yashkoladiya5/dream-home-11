@@ -20,18 +20,24 @@ export class AuditService {
     ipAddress?: string;
   }): Promise<AuditLog> {
     const log = this.auditLogRepo.create({
-      adminId: params.adminId as any,
-      userId: params.userId as any,
+      adminId: params.adminId,
+      userId: params.userId,
       action: params.action,
-      targetId: params.targetId as any,
-      targetType: params.targetType as any,
+      targetId: params.targetId,
+      targetType: params.targetType,
       metadata: params.metadata as any,
-      ipAddress: params.ipAddress as any,
+      ipAddress: params.ipAddress,
     });
-    return this.auditLogRepo.save(log) as Promise<AuditLog>;
+    return this.auditLogRepo.save(log);
   }
 
-  async getLogs(query: { page?: number; limit?: number; action?: string; adminId?: string; userId?: string }) {
+  async getLogs(query: {
+    page?: number;
+    limit?: number;
+    action?: string;
+    adminId?: string;
+    userId?: string;
+  }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;

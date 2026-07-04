@@ -18,7 +18,15 @@ import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Kyc, Contest, Transaction, Withdrawal, SupportTicket, SystemConfig]),
+    TypeOrmModule.forFeature([
+      User,
+      Kyc,
+      Contest,
+      Transaction,
+      Withdrawal,
+      SupportTicket,
+      SystemConfig,
+    ]),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
     CompensationModule,

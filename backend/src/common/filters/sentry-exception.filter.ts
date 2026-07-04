@@ -1,4 +1,11 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Response, Request } from 'express';
 import * as Sentry from '@sentry/node';
 
@@ -28,9 +35,10 @@ export class SentryExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      message = typeof exceptionResponse === 'string'
-        ? exceptionResponse
-        : (exceptionResponse as any).message || exceptionResponse;
+      message =
+        typeof exceptionResponse === 'string'
+          ? exceptionResponse
+          : (exceptionResponse as any).message || exceptionResponse;
     }
 
     if (status >= 500) {
@@ -41,7 +49,10 @@ export class SentryExceptionFilter implements ExceptionFilter {
         scope.setExtra('url', request.url);
         scope.setExtra('headers', this.sanitizeHeaders(request.headers));
         scope.setExtra('ip', request.ip);
-        scope.setExtra('user_agent', request.headers['user-agent'] || 'unknown');
+        scope.setExtra(
+          'user_agent',
+          request.headers['user-agent'] || 'unknown',
+        );
         const user = (request as any).user;
         if (user?.id) {
           scope.setUser({ id: user.id });
@@ -51,7 +62,9 @@ export class SentryExceptionFilter implements ExceptionFilter {
     }
 
     if (status === HttpStatus.TOO_MANY_REQUESTS) {
-      this.logger.warn(`Rate limit exceeded: ${request.ip} - ${request.method} ${request.url}`);
+      this.logger.warn(
+        `Rate limit exceeded: ${request.ip} - ${request.method} ${request.url}`,
+      );
     }
 
     this.logger.error(`${request.method} ${request.url} - ${status}`);

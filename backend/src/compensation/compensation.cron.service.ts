@@ -14,23 +14,27 @@ export class CompensationCronService {
 
     try {
       // First, auto-close any running/upcoming contests that have expired
-      const closeStats = await this.compensationService.autoCloseExpiredContests();
+      const closeStats =
+        await this.compensationService.autoCloseExpiredContests();
       if (closeStats.completed > 0 || closeStats.cancelled > 0) {
         this.logger.log(
           `Auto-closed expired contests: ${closeStats.completed} completed, ${closeStats.cancelled} cancelled`,
         );
       }
 
-      const result = await this.compensationService.processPendingCompensations();
+      const result =
+        await this.compensationService.processPendingCompensations();
 
       if (result.contestsProcessed > 0) {
         this.logger.log(
           `Compensation complete: ${result.contestsProcessed} contests, ` +
-          `${result.membersCompensated} members, ${result.totalPointsAwarded} total points`,
+            `${result.membersCompensated} members, ${result.totalPointsAwarded} total points`,
         );
       }
     } catch (error) {
-      this.logger.error(`Compensation check failed: ${(error as Error).message}`);
+      this.logger.error(
+        `Compensation check failed: ${(error as Error).message}`,
+      );
     }
   }
 }

@@ -282,55 +282,76 @@ class _PaymentOptionsScreenState extends ConsumerState<PaymentOptionsScreen> {
 
   Widget _buildSavedMethodItem(SavedPaymentMethod method) {
     final icon = _categoryIcon(method.category);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: AppTheme.darkCardGradient,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x1FFFFFFF)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppTheme.greyDark.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: AppTheme.greyLight, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(method.label, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                Text(
-                  method.displayValue,
-                  style: const TextStyle(color: AppTheme.greyMedium, fontSize: 12),
-                ),
-                if (method.providerName != null) ...[
-                  const SizedBox(height: 1),
-                  Text(method.providerName!, style: TextStyle(color: AppTheme.greyMedium.withValues(alpha: 0.6), fontSize: 11)),
-                ],
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () => _confirmDelete(method),
-            child: Container(
-              padding: const EdgeInsets.all(8),
+    final String returnCategory;
+    switch (method.category) {
+      case 'upi':
+        returnCategory = 'UPI';
+        break;
+      case 'card':
+        returnCategory = 'Credit/Debit Card';
+        break;
+      case 'net_banking':
+        returnCategory = 'Net Banking';
+        break;
+      case 'wallet':
+        returnCategory = 'Wallet';
+        break;
+      default:
+        returnCategory = method.category;
+    }
+
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pop(returnCategory),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: AppTheme.darkCardGradient,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0x1FFFFFFF)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: AppTheme.primaryRed.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: AppTheme.greyDark.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.delete_outline_rounded, color: AppTheme.primaryRed, size: 18),
+              child: Icon(icon, color: AppTheme.greyLight, size: 20),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(method.label, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(
+                    method.displayValue,
+                    style: const TextStyle(color: AppTheme.greyMedium, fontSize: 12),
+                  ),
+                  if (method.providerName != null) ...[
+                    const SizedBox(height: 1),
+                    Text(method.providerName!, style: TextStyle(color: AppTheme.greyMedium.withValues(alpha: 0.6), fontSize: 11)),
+                  ],
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _confirmDelete(method),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryRed.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.delete_outline_rounded, color: AppTheme.primaryRed, size: 18),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

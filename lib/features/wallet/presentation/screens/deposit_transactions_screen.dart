@@ -26,17 +26,7 @@ class DepositTransactionsScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text('Deposit History', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text('Cash deposits and bonus points', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.greyMedium)),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               TransactionListView(
                 transactionsAsync: txAsync,
                 onRefresh: () => ref.invalidate(filteredTransactionProvider('deposit,points_bonus')),

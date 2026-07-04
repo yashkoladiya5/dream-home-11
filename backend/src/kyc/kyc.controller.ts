@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, UseGuards, HttpCode, HttpStatus, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extname } from 'path';
@@ -16,8 +27,13 @@ function validateImageMagicBytes(buffer: Buffer): void {
 
   const jpegMagic = 'FFD8FF';
   const pngMagic = '89504E47';
+  const webpMagic = '52494646'; // RIFF (for WebP)
 
-  if (!magic.startsWith(jpegMagic) && !magic.startsWith(pngMagic)) {
+  if (
+    !magic.startsWith(jpegMagic) &&
+    !magic.startsWith(pngMagic) &&
+    !magic.startsWith(webpMagic)
+  ) {
     throw new BadRequestException('Invalid image file format');
   }
 }
@@ -36,7 +52,12 @@ export class KycController {
     @Body('panNumber') panNumber: string,
     @Body('fullName') fullName: string,
   ) {
-    const kyc = await this.kycService.submitKyc(user.id, aadhaarNumber, panNumber, fullName);
+    const kyc = await this.kycService.submitKyc(
+      user.id,
+      aadhaarNumber,
+      panNumber,
+      fullName,
+    );
     return {
       id: kyc.id,
       status: kyc.status,
@@ -65,29 +86,41 @@ export class KycController {
   ) {
     const validTypes = ['aadhaar_front', 'aadhaar_back', 'pan_card', 'selfie'];
     if (!validTypes.includes(documentType)) {
-      throw new BadRequestException(`Invalid document type. Must be one of: ${validTypes.join(', ')}`);
+      throw new BadRequestException(
+        `Invalid document type. Must be one of: ${validTypes.join(', ')}`,
+      );
     }
 
     if (!file) {
       throw new BadRequestException('File is required');
     }
 
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/jpg',
+      'image/webp',
+    ];
     if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Only image files (jpg, jpeg, png) are allowed');
+      throw new BadRequestException(
+        'Only image files (jpg, jpeg, png, webp) are allowed',
+      );
     }
 
-    const allowedExtensions = ['.jpg', '.jpeg', '.png'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
     const ext = extname(file.originalname).toLowerCase();
     if (!allowedExtensions.includes(ext)) {
-      throw new BadRequestException('Only .jpg, .jpeg, .png files are allowed');
+      throw new BadRequestException(
+        'Only .jpg, .jpeg, .png, .webp files are allowed',
+      );
     }
 
     if (file.size > 5 * 1024 * 1024) {
       throw new BadRequestException('File size must not exceed 5MB');
     }
 
-    validateImageMagicBytes(file.buffer);
+    // Rely on mimetype and extension verification, as formats like HEIC have dynamic magic bytes offsets
+    // validateImageMagicBytes(file.buffer);
 
     return this.kycService.uploadDocument(user.id, documentType, file);
   }

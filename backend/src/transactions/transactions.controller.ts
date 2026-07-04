@@ -16,7 +16,12 @@ export class TransactionsController {
     @Query('limit') limit?: number,
     @Query('type') type?: string,
   ) {
-    return this.transactionsService.getHistory(user.id, page ?? 1, limit ?? 20, type);
+    return this.transactionsService.getHistory(
+      user.id,
+      page ?? 1,
+      limit ?? 20,
+      type,
+    );
   }
 
   @Get('balance')

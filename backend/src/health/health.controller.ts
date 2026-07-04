@@ -1,4 +1,11 @@
-import { Controller, Get, Headers, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Headers,
+  HttpException,
+  HttpStatus,
+  Inject,
+} from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -44,7 +51,12 @@ export class HealthController {
     try {
       await Promise.race([
         this.dataSource.query('SELECT 1'),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout after 5s')), 5000)),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Database timeout after 5s')),
+            5000,
+          ),
+        ),
       ]);
       dbEntry['status'] = 'pass';
     } catch (err) {
@@ -63,7 +75,9 @@ export class HealthController {
     try {
       await Promise.race([
         this.redis.ping(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout after 3s')), 3000)),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Redis timeout after 3s')), 3000),
+        ),
       ]);
       redisEntry['status'] = 'pass';
     } catch (err) {
@@ -72,7 +86,7 @@ export class HealthController {
     }
     checks.push(redisEntry);
 
-    const allPass = checks.every(c => c.status === 'pass');
+    const allPass = checks.every((c) => c.status === 'pass');
     const status = allPass ? 'ok' : 'degraded';
 
     return {
@@ -112,7 +126,12 @@ export class HealthController {
     try {
       await Promise.race([
         this.dataSource.query('SELECT 1'),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout after 5s')), 5000)),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Database timeout after 5s')),
+            5000,
+          ),
+        ),
       ]);
       dbEntry['status'] = 'pass';
     } catch (err) {
@@ -131,7 +150,9 @@ export class HealthController {
     try {
       await Promise.race([
         this.redis.ping(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout after 3s')), 3000)),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Redis timeout after 3s')), 3000),
+        ),
       ]);
       redisEntry['status'] = 'pass';
     } catch (err) {
@@ -161,7 +182,7 @@ export class HealthController {
     };
     checks.push(diskEntry);
 
-    const allPass = checks.every(c => c.status === 'pass');
+    const allPass = checks.every((c) => c.status === 'pass');
     const status = allPass ? 'ok' : 'degraded';
 
     return {

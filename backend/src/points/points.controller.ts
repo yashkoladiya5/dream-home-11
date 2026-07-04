@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Req, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { PointsEngineService } from './points-engine.service';
 import { StreakService } from './streak.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -38,7 +46,11 @@ export class PointsController {
       throw new BadRequestException('User not found');
     }
 
-    const result = await this.pointsEngineService.performDailyAction(userId, action, user.currentTier);
+    const result = await this.pointsEngineService.performDailyAction(
+      userId,
+      action,
+      user.currentTier,
+    );
 
     if (!result) {
       return { success: false, reason: 'Unknown action type' };
@@ -70,8 +82,10 @@ export class PointsController {
         (result as any).streakBonusPoints = streakResult.bonusPoints;
 
         if (streakResult.bonusPoints > 0) {
-          user.lifetimePoints = Number(user.lifetimePoints) + streakResult.bonusPoints;
-          user.pointsBalance = Number(user.pointsBalance) + streakResult.bonusPoints;
+          user.lifetimePoints =
+            Number(user.lifetimePoints) + streakResult.bonusPoints;
+          user.pointsBalance =
+            Number(user.pointsBalance) + streakResult.bonusPoints;
 
           if (user.lifetimePoints >= 5000) {
             user.currentTier = UserLevel.PLATINUM;

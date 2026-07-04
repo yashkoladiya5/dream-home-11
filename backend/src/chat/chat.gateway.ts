@@ -74,9 +74,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const user = await this.usersService.findById(payload.sub);
 
       if (!user || !user.isActive) {
-        this.logger.warn(
-          `User not found or inactive for client ${client.id}`,
-        );
+        this.logger.warn(`User not found or inactive for client ${client.id}`);
         client.disconnect();
         return;
       }
@@ -152,13 +150,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('typing')
   handleTyping(client: Socket, payload: TypingPayload) {
     if (!payload?.chatId) return;
-    client
-      .to(`chat:${payload.chatId}`)
-      .emit('userTyping', {
-        userId: client.data?.userId,
-        chatId: payload.chatId,
-        isTyping: payload.isTyping,
-      });
+    client.to(`chat:${payload.chatId}`).emit('userTyping', {
+      userId: client.data?.userId,
+      chatId: payload.chatId,
+      isTyping: payload.isTyping,
+    });
   }
 
   @SubscribeMessage('markRead')

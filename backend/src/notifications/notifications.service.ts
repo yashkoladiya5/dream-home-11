@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -28,8 +33,14 @@ export class NotificationsService {
     private readonly pointsEngineService: PointsEngineService,
   ) {}
 
-  async registerToken(userId: string, token: string, deviceType: string): Promise<FcmToken> {
-    const existing = await this.fcmTokenRepo.findOne({ where: { userId, token } });
+  async registerToken(
+    userId: string,
+    token: string,
+    deviceType: string,
+  ): Promise<FcmToken> {
+    const existing = await this.fcmTokenRepo.findOne({
+      where: { userId, token },
+    });
     if (existing) {
       existing.deviceType = deviceType;
       return this.fcmTokenRepo.save(existing);
@@ -45,10 +56,18 @@ export class NotificationsService {
     });
   }
 
-  async createReminder(userId: string, contestId: string, remindAt: Date): Promise<Reminder> {
-    const existing = await this.reminderRepo.findOne({ where: { userId, contestId, status: 'pending' } });
+  async createReminder(
+    userId: string,
+    contestId: string,
+    remindAt: Date,
+  ): Promise<Reminder> {
+    const existing = await this.reminderRepo.findOne({
+      where: { userId, contestId, status: 'pending' },
+    });
     if (existing) {
-      this.logger.warn(`Duplicate reminder attempt for user ${userId}, contest ${contestId}`);
+      this.logger.warn(
+        `Duplicate reminder attempt for user ${userId}, contest ${contestId}`,
+      );
       return existing;
     }
 
@@ -64,7 +83,13 @@ export class NotificationsService {
       this.scheduledTimeouts.set(saved.id, timeout);
     }
 
-    await this.pointsEngineService.logPointAction(userId, 'reminder_created', REMINDER_POINTS, 1.0, REMINDER_POINTS);
+    await this.pointsEngineService.logPointAction(
+      userId,
+      'reminder_created',
+      REMINDER_POINTS,
+      1.0,
+      REMINDER_POINTS,
+    );
 
     return saved;
   }
@@ -75,14 +100,21 @@ export class NotificationsService {
       relations: { contest: true },
       order: { remindAt: 'DESC' },
       select: {
-        id: true, userId: true, contestId: true, remindAt: true, status: true, createdAt: true,
+        id: true,
+        userId: true,
+        contestId: true,
+        remindAt: true,
+        status: true,
+        createdAt: true,
         contest: { id: true, title: true },
       },
     });
   }
 
   async deleteReminder(userId: string, reminderId: string): Promise<void> {
-    const reminder = await this.reminderRepo.findOne({ where: { id: reminderId, userId } });
+    const reminder = await this.reminderRepo.findOne({
+      where: { id: reminderId, userId },
+    });
     if (!reminder) {
       throw new NotFoundException('Reminder not found');
     }
@@ -96,7 +128,10 @@ export class NotificationsService {
     await this.reminderRepo.remove(reminder);
   }
 
-  async sendCompensationNotification(userId: string, points: number): Promise<void> {
+  async sendCompensationNotification(
+    userId: string,
+    points: number,
+  ): Promise<void> {
     await this.createNotification(
       userId,
       'Points Compensated!',
@@ -122,17 +157,30 @@ export class NotificationsService {
 
       try {
         await getMessaging().send(message);
-        this.logger.log(`Compensation notification sent to device ${fcmToken.id}`);
+        this.logger.log(
+          `Compensation notification sent to device ${fcmToken.id}`,
+        );
       } catch (error: any) {
-        this.logger.error(`Failed to send FCM to token ${fcmToken.id}: ${error.message}`);
+        this.logger.error(
+          `Failed to send FCM to token ${fcmToken.id}: ${error.message}`,
+        );
       }
     }
   }
 
-  async broadcastToAllUsers(title: string, body: string, data?: Record<string, string>): Promise<number> {
+  async broadcastToAllUsers(
+    title: string,
+    body: string,
+    data?: Record<string, string>,
+  ): Promise<number> {
     const users = await this.userRepo.find({ where: { isActive: true } });
     for (const user of users) {
-      await this.createNotification(user.id, title, body, data?.type || 'broadcast');
+      await this.createNotification(
+        user.id,
+        title,
+        body,
+        data?.type || 'broadcast',
+      );
     }
 
     const tokens = await this.fcmTokenRepo.find();
@@ -149,7 +197,9 @@ export class NotificationsService {
         await getMessaging().send(message);
         sentCount++;
       } catch (error: any) {
-        this.logger.error(`Failed to send broadcast to token ${fcmToken.id}: ${error.message}`);
+        this.logger.error(
+          `Failed to send broadcast to token ${fcmToken.id}: ${error.message}`,
+        );
       }
     }
 
@@ -157,13 +207,23 @@ export class NotificationsService {
     return sentCount;
   }
 
-  async broadcastToUsersByTier(tier: string, title: string, body: string, data?: Record<string, string>): Promise<number> {
+  async broadcastToUsersByTier(
+    tier: string,
+    title: string,
+    body: string,
+    data?: Record<string, string>,
+  ): Promise<number> {
     const users = await this.userRepo.find({
       where: { currentTier: tier as any, isActive: true },
       select: { id: true, phoneNumber: true, fullName: true },
     });
     for (const user of users) {
-      await this.createNotification(user.id, title, body, data?.type || 'broadcast');
+      await this.createNotification(
+        user.id,
+        title,
+        body,
+        data?.type || 'broadcast',
+      );
     }
 
     const tokens = await this.fcmTokenRepo
@@ -184,11 +244,15 @@ export class NotificationsService {
         await getMessaging().send(message);
         sentCount++;
       } catch (error: any) {
-        this.logger.error(`Failed to send broadcast to token ${fcmToken.id}: ${error.message}`);
+        this.logger.error(
+          `Failed to send broadcast to token ${fcmToken.id}: ${error.message}`,
+        );
       }
     }
 
-    this.logger.log(`Broadcast to tier ${tier} sent to ${sentCount}/${tokens.length} devices`);
+    this.logger.log(
+      `Broadcast to tier ${tier} sent to ${sentCount}/${tokens.length} devices`,
+    );
     return sentCount;
   }
 
@@ -208,7 +272,10 @@ export class NotificationsService {
 
     for (const fcmToken of tokens) {
       const message = {
-        notification: { title: 'Dream11 Reminder', body: `Your contest is starting soon!` },
+        notification: {
+          title: 'Dream11 Reminder',
+          body: `Your contest is starting soon!`,
+        },
         token: fcmToken.token,
         data: { contestId: reminder.contestId, type: 'contest_reminder' },
       };
@@ -217,7 +284,9 @@ export class NotificationsService {
         await getMessaging().send(message);
         this.logger.log(`Reminder sent to device ${fcmToken.id}`);
       } catch (error: any) {
-        this.logger.error(`Failed to send FCM to token ${fcmToken.id}: ${error.message}`);
+        this.logger.error(
+          `Failed to send FCM to token ${fcmToken.id}: ${error.message}`,
+        );
       }
     }
   }
@@ -240,7 +309,12 @@ export class NotificationsService {
 
   // --- Notification Log Management ---
 
-  async createNotification(userId: string, title: string, body: string, type: string): Promise<NotificationLog> {
+  async createNotification(
+    userId: string,
+    title: string,
+    body: string,
+    type: string,
+  ): Promise<NotificationLog> {
     const notification = this.notificationLogRepo.create({
       userId,
       title,
@@ -251,7 +325,14 @@ export class NotificationsService {
     return this.notificationLogRepo.save(notification);
   }
 
-  async getUserNotifications(userId: string, query: { page?: number; limit?: number }): Promise<{ notifications: NotificationLog[]; total: number; unreadCount: number }> {
+  async getUserNotifications(
+    userId: string,
+    query: { page?: number; limit?: number },
+  ): Promise<{
+    notifications: NotificationLog[];
+    total: number;
+    unreadCount: number;
+  }> {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;
@@ -277,7 +358,9 @@ export class NotificationsService {
   }
 
   async markAsRead(userId: string, id: string): Promise<NotificationLog> {
-    const notification = await this.notificationLogRepo.findOne({ where: { id, userId } });
+    const notification = await this.notificationLogRepo.findOne({
+      where: { id, userId },
+    });
     if (!notification) {
       throw new NotFoundException('Notification not found');
     }
@@ -286,6 +369,9 @@ export class NotificationsService {
   }
 
   async markAllAsRead(userId: string): Promise<void> {
-    await this.notificationLogRepo.update({ userId, isRead: false }, { isRead: true });
+    await this.notificationLogRepo.update(
+      { userId, isRead: false },
+      { isRead: true },
+    );
   }
 }

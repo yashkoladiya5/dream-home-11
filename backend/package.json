@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "",
   "author": "",
   "private": true,
@@ -17,7 +17,12 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch",
+    "pretest:e2e": "echo 'Ensure test DB is running'",
+    "migration:generate": "npx ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:generate -d src/config/typeorm.config.ts",
+    "migration:run": "npx ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:run -d src/config/typeorm.config.ts",
+    "migration:revert": "npx ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:revert -d src/config/typeorm.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -32,6 +37,7 @@
     "@nestjs/websockets": "^11.1.27",
     "@types/ioredis": "^4.28.10",
     "@types/socket.io": "^3.0.1",
+    "@nestjs/swagger": "^11.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "compression": "^1.8.0",
@@ -46,7 +52,8 @@
     "@sentry/node": "^9.0.0",
     "pino": "^9.0.0",
     "prom-client": "^15.0.0",
-    "uuid": "^11.0.0"
+    "uuid": "^11.0.0",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

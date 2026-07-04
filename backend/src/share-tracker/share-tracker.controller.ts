@@ -8,9 +8,18 @@ export class ShareTrackerController {
   constructor(private readonly shareTrackerService: ShareTrackerService) {}
 
   @Post()
-  async logShare(@Req() req, @Body('contestId') contestId: string, @Body('shareChannel') shareChannel: string) {
-    if (!shareChannel) return { success: false, reason: 'shareChannel is required' };
-    const share = await this.shareTrackerService.logShare(req.user.id, contestId, shareChannel);
+  async logShare(
+    @Req() req,
+    @Body('contestId') contestId: string,
+    @Body('shareChannel') shareChannel: string,
+  ) {
+    if (!shareChannel)
+      return { success: false, reason: 'shareChannel is required' };
+    const share = await this.shareTrackerService.logShare(
+      req.user.id,
+      contestId,
+      shareChannel,
+    );
     return { success: true, share };
   }
 

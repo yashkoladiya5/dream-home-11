@@ -1,0 +1,140 @@
+groups:
+  - name: dreamhome11-critical
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_duration_seconds_count{status_code=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_duration_seconds_count[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High HTTP 5xx error rate"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%) over the last 5 minutes."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/high-error-rate"
+
+      - alert: ApiDown
+        expr: |
+          probe_success{job="dreamhome11-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "API health check failing"
+          description: "The API health endpoint has been failing for more than 1 minute."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/api-down"
+
+      - alert: LowDiskSpace
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})
+          < 0.10
+        for: 5m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is at {{ $value | humanizePercentage }} free (threshold: < 10%)."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/low-disk-space"
+
+  - name: dreamhome11-warning
+    interval: 30s
+    rules:
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_requests_duration_seconds_bucket[5m])) by (le)
+          ) > 3
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High p99 latency"
+          description: "p99 latency is {{ $value }}s (threshold: 3s) over the last 5 minutes."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/high-latency"
+
+      - alert: DatabaseConnectionsHigh
+        expr: |
+          pg_stat_activity_count / pg_settings_max_connections
+          > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Database connection pool utilization high"
+          description: "Database connection pool is at {{ $value | humanizePercentage }} (threshold: 80%)."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/database-connections"
+
+      - alert: RedisMemoryHigh
+        expr: |
+          (redis_memory_used_bytes / redis_memory_max_bytes)
+          > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Redis memory usage high"
+          description: "Redis memory usage is at {{ $value | humanizePercentage }} (threshold: 85%)."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/redis-memory"
+
+      - alert: HighCpuUsage
+        expr: |
+          avg by(instance) (rate(node_cpu_seconds_total{mode!="idle"}[5m]))
+          > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is at {{ $value | humanizePercentage }} (threshold: 80%) for 5 minutes."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/high-cpu"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))
+          > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is at {{ $value | humanizePercentage }} (threshold: 85%) for 5 minutes."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/high-memory"
+
+      - alert: CertificateExpiry
+        expr: |
+          certificate_expiry_days < 30
+        for: 1h
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate for {{ $labels.subject }} expires in {{ $value }} days."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/certificate-renewal"
+
+  - name: dreamhome11-info
+    interval: 60s
+    rules:
+      - alert: RateLimitHit
+        expr: |
+          sum(rate(http_requests_duration_seconds_count{status_code="429"}[5m]))
+          > 1000
+        for: 5m
+        labels:
+          severity: info
+          team: backend
+        annotations:
+          summary: "High rate limit blocking"
+          description: "More than 1000 requests were rate-limited (429) in the last 5 minutes."
+          runbook_url: "https://wiki.dreamhome11.com/runbooks/rate-limiting"

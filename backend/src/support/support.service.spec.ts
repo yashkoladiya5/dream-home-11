@@ -55,7 +55,11 @@ describe('SupportService', () => {
 
   describe('createTicket', () => {
     it('should create a ticket without file attachment', async () => {
-      const dto = { subject: 'Test subject', message: 'Test message', category: 'general' };
+      const dto = {
+        subject: 'Test subject',
+        message: 'Test message',
+        category: 'general',
+      };
       mockSupportTicketRepo.create.mockReturnValue(mockTicket);
       mockSupportTicketRepo.save.mockResolvedValue(mockTicket);
 
@@ -89,7 +93,11 @@ describe('SupportService', () => {
     });
 
     it('should create a ticket with file attachment and save attachmentUrl', async () => {
-      const dto = { subject: 'Test subject', message: 'Test message', category: 'technical' };
+      const dto = {
+        subject: 'Test subject',
+        message: 'Test message',
+        category: 'technical',
+      };
       const file = {
         originalname: 'screenshot.png',
         buffer: Buffer.from('test'),
@@ -101,7 +109,10 @@ describe('SupportService', () => {
       mockSupportTicketRepo.create.mockReturnValue(mockTicket);
       mockSupportTicketRepo.save
         .mockResolvedValueOnce(savedTicket)
-        .mockResolvedValueOnce({ ...savedTicket, attachmentUrl: `/uploads/support/user-1/ticket-new-screenshot.png` });
+        .mockResolvedValueOnce({
+          ...savedTicket,
+          attachmentUrl: `/uploads/support/user-1/ticket-new-screenshot.png`,
+        });
 
       const result = await service.createTicket('user-1', dto, file);
 
@@ -110,8 +121,16 @@ describe('SupportService', () => {
     });
 
     it('should create a ticket with other category', async () => {
-      const dto = { subject: 'Other issue', message: 'Some message', category: 'other' };
-      const ticketOther = { ...mockTicket, subject: 'Other issue', category: 'other' };
+      const dto = {
+        subject: 'Other issue',
+        message: 'Some message',
+        category: 'other',
+      };
+      const ticketOther = {
+        ...mockTicket,
+        subject: 'Other issue',
+        category: 'other',
+      };
       mockSupportTicketRepo.create.mockReturnValue(ticketOther);
       mockSupportTicketRepo.save.mockResolvedValue(ticketOther);
 
@@ -150,7 +169,9 @@ describe('SupportService', () => {
     });
 
     it('should handle pagination correctly', async () => {
-      const tickets = Array(5).fill(null).map((_, i) => ({ ...mockTicket, id: `ticket-${i}` }));
+      const tickets = Array(5)
+        .fill(null)
+        .map((_, i) => ({ ...mockTicket, id: `ticket-${i}` }));
       mockSupportTicketRepo.findAndCount.mockResolvedValue([tickets, 15]);
 
       const result = await service.getUserTickets('user-1', 2, 5);
@@ -195,13 +216,17 @@ describe('SupportService', () => {
     it('should throw NotFoundException when ticket does not exist', async () => {
       mockSupportTicketRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getTicketById('user-1', 'nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.getTicketById('user-1', 'nonexistent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException when ticket belongs to a different user', async () => {
       mockSupportTicketRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getTicketById('user-2', 'ticket-1')).rejects.toThrow(NotFoundException);
+      await expect(service.getTicketById('user-2', 'ticket-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

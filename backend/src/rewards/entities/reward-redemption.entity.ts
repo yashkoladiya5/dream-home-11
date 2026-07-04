@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Reward } from './reward.entity';
 
@@ -30,7 +37,11 @@ export class RewardRedemption {
   @CreateDateColumn({ name: 'redeemed_at', type: 'timestamp with time zone' })
   redeemedAt: Date;
 
-  @Column({ name: 'fulfilled_at', type: 'timestamp with time zone', nullable: true })
+  @Column({
+    name: 'fulfilled_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
   fulfilledAt: Date | null;
 
   @Column({ type: 'text', nullable: true })

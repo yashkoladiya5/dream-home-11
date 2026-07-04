@@ -1,0 +1,153 @@
+{
+  "name": "Dream Home 11 - Uptime Monitoring",
+  "checks": [
+    {
+      "id": "api-health",
+      "name": "API Health Check",
+      "type": "api",
+      "frequency": 1,
+      "frequency_unit": "minutes",
+      "method": "GET",
+      "url": "https://api.dreamhome11.com/health",
+      "assertions": {
+        "status_code": 200,
+        "max_response_time": 5000
+      },
+      "locations": ["us-east-1", "eu-west-1", "ap-south-1"],
+      "tags": ["api", "health", "critical"],
+      "alert": {
+        "channels": ["slack", "pagerduty"],
+        "retries": 2,
+        "escalation": 5
+      }
+    },
+    {
+      "id": "api-readiness",
+      "name": "API Readiness Probe",
+      "type": "api",
+      "frequency": 1,
+      "frequency_unit": "minutes",
+      "method": "GET",
+      "url": "https://api.dreamhome11.com/health/ready",
+      "assertions": {
+        "status_code": 200,
+        "max_response_time": 3000
+      },
+      "locations": ["us-east-1", "eu-west-1", "ap-south-1"],
+      "tags": ["api", "readiness", "critical"],
+      "alert": {
+        "channels": ["slack", "pagerduty"],
+        "retries": 2,
+        "escalation": 5
+      }
+    },
+    {
+      "id": "auth-verify-otp",
+      "name": "Auth OTP Verification Endpoint",
+      "type": "api",
+      "frequency": 5,
+      "frequency_unit": "minutes",
+      "method": "POST",
+      "url": "https://api.dreamhome11.com/api/v1/auth/verify-otp",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "phone": "+919999999999",
+        "otp": "000000"
+      },
+      "assertions": {
+        "status_code": 400
+      },
+      "locations": ["us-east-1", "eu-west-1", "ap-south-1"],
+      "tags": ["api", "auth", "critical"],
+      "alert": {
+        "channels": ["slack"],
+        "retries": 1,
+        "escalation": 10
+      }
+    },
+    {
+      "id": "contest-list",
+      "name": "Contest List Endpoint",
+      "type": "api",
+      "frequency": 2,
+      "frequency_unit": "minutes",
+      "method": "GET",
+      "url": "https://api.dreamhome11.com/api/v1/contests",
+      "assertions": {
+        "status_code": 200,
+        "max_response_time": 3000
+      },
+      "locations": ["us-east-1", "eu-west-1", "ap-south-1"],
+      "tags": ["api", "contests", "high"],
+      "alert": {
+        "channels": ["slack"],
+        "retries": 2,
+        "escalation": 5
+      }
+    },
+    {
+      "id": "login-flow",
+      "name": "Login Flow - Full Page Load",
+      "type": "browser",
+      "frequency": 5,
+      "frequency_unit": "minutes",
+      "url": "https://dreamhome11.com",
+      "script": [
+        {
+          "action": "navigate",
+          "url": "https://dreamhome11.com"
+        },
+        {
+          "action": "wait",
+          "selector": "body",
+          "timeout": 10000
+        },
+        {
+          "action": "assert",
+          "condition": "elementPresent",
+          "selector": "body"
+        }
+      ],
+      "locations": ["us-east-1", "eu-west-1", "ap-south-1"],
+      "tags": ["frontend", "login", "critical"],
+      "alert": {
+        "channels": ["slack", "pagerduty"],
+        "retries": 2,
+        "escalation": 5
+      }
+    },
+    {
+      "id": "metrics-endpoint",
+      "name": "Prometheus Metrics Endpoint",
+      "type": "api",
+      "frequency": 5,
+      "frequency_unit": "minutes",
+      "method": "GET",
+      "url": "https://api.dreamhome11.com/metrics",
+      "assertions": {
+        "status_code": 200,
+        "content_type": "text/plain"
+      },
+      "locations": ["us-east-1", "eu-west-1", "ap-south-1"],
+      "tags": ["api", "metrics", "monitoring"],
+      "alert": {
+        "channels": ["slack"],
+        "retries": 1,
+        "escalation": 10
+      }
+    }
+  ],
+  "alert_settings": {
+    "run_based_alerts": true,
+    "run_based_alert_retries": 2,
+    "ssl_certificate_expiry_alert_threshold": 30,
+    "escalation_delay_seconds": 300
+  },
+  "integration_ids": {
+    "slack": "slack-webhook-production",
+    "pagerduty": "pagerduty-production",
+    "opsgenie": "opsgenie-production"
+  }
+}

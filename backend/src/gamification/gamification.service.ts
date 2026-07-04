@@ -1,4 +1,9 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { REDIS_CLIENT } from '../redis/redis.constants';
@@ -71,7 +76,8 @@ export class GamificationService {
     }
 
     const tier = user.currentTier || 'bronze';
-    const segments = this.TIER_SEGMENTS[tier.toLowerCase()] || this.TIER_SEGMENTS.bronze;
+    const segments =
+      this.TIER_SEGMENTS[tier.toLowerCase()] || this.TIER_SEGMENTS.bronze;
     const segmentIndex = Math.floor(Math.random() * segments.length);
     const prizePoints = segments[segmentIndex];
 

@@ -68,30 +68,64 @@ describe('FeedService', () => {
 
   describe('createPost', () => {
     it('should create a post successfully', async () => {
-      mockPostRepo.create.mockReturnValue({ id: 'post-1', userId: 'user-1', content: 'Hello world', imageUrl: null });
-      mockPostRepo.save.mockResolvedValue({ id: 'post-1', userId: 'user-1', content: 'Hello world', imageUrl: null });
+      mockPostRepo.create.mockReturnValue({
+        id: 'post-1',
+        userId: 'user-1',
+        content: 'Hello world',
+        imageUrl: null,
+      });
+      mockPostRepo.save.mockResolvedValue({
+        id: 'post-1',
+        userId: 'user-1',
+        content: 'Hello world',
+        imageUrl: null,
+      });
 
       const result = await service.createPost('user-1', 'Hello world');
 
-      expect(mockPostRepo.create).toHaveBeenCalledWith({ userId: 'user-1', content: 'Hello world', imageUrl: null });
+      expect(mockPostRepo.create).toHaveBeenCalledWith({
+        userId: 'user-1',
+        content: 'Hello world',
+        imageUrl: null,
+      });
       expect(mockPostRepo.save).toHaveBeenCalled();
       expect(mockRateLimiter.recordRequest).toHaveBeenCalledWith('user-1');
       expect(result.content).toBe('Hello world');
     });
 
     it('should create a post with image', async () => {
-      mockPostRepo.create.mockReturnValue({ id: 'post-2', userId: 'user-1', content: 'Check this', imageUrl: 'https://example.com/img.jpg' });
-      mockPostRepo.save.mockResolvedValue({ id: 'post-2', userId: 'user-1', content: 'Check this', imageUrl: 'https://example.com/img.jpg' });
+      mockPostRepo.create.mockReturnValue({
+        id: 'post-2',
+        userId: 'user-1',
+        content: 'Check this',
+        imageUrl: 'https://example.com/img.jpg',
+      });
+      mockPostRepo.save.mockResolvedValue({
+        id: 'post-2',
+        userId: 'user-1',
+        content: 'Check this',
+        imageUrl: 'https://example.com/img.jpg',
+      });
 
-      await service.createPost('user-1', 'Check this', 'https://example.com/img.jpg');
+      await service.createPost(
+        'user-1',
+        'Check this',
+        'https://example.com/img.jpg',
+      );
 
-      expect(mockPostRepo.create).toHaveBeenCalledWith({ userId: 'user-1', content: 'Check this', imageUrl: 'https://example.com/img.jpg' });
+      expect(mockPostRepo.create).toHaveBeenCalledWith({
+        userId: 'user-1',
+        content: 'Check this',
+        imageUrl: 'https://example.com/img.jpg',
+      });
     });
 
     it('should throw when rate limited', async () => {
       mockRateLimiter.isRateLimited.mockReturnValue(true);
 
-      await expect(service.createPost('user-1', 'Too many')).rejects.toThrow(BadRequestException);
+      await expect(service.createPost('user-1', 'Too many')).rejects.toThrow(
+        BadRequestException,
+      );
       expect(mockPostRepo.save).not.toHaveBeenCalled();
     });
   });
@@ -100,7 +134,10 @@ describe('FeedService', () => {
     it('should like a post', async () => {
       mockPostRepo.findOne.mockResolvedValue({ id: 'post-1', isActive: true });
       mockLikeRepo.findOne.mockResolvedValue(null);
-      mockLikeRepo.create.mockReturnValue({ postId: 'post-1', userId: 'user-1' });
+      mockLikeRepo.create.mockReturnValue({
+        postId: 'post-1',
+        userId: 'user-1',
+      });
       mockLikeRepo.save.mockResolvedValue({});
       mockLikeRepo.count.mockResolvedValue(5);
 
@@ -111,7 +148,11 @@ describe('FeedService', () => {
 
     it('should unlike a post', async () => {
       mockPostRepo.findOne.mockResolvedValue({ id: 'post-1', isActive: true });
-      mockLikeRepo.findOne.mockResolvedValue({ id: 'like-1', postId: 'post-1', userId: 'user-1' });
+      mockLikeRepo.findOne.mockResolvedValue({
+        id: 'like-1',
+        postId: 'post-1',
+        userId: 'user-1',
+      });
       mockLikeRepo.remove.mockResolvedValue({});
       mockLikeRepo.count.mockResolvedValue(3);
 
@@ -123,26 +164,48 @@ describe('FeedService', () => {
     it('should throw for non-existent post', async () => {
       mockPostRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.toggleLike('user-1', 'bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.toggleLike('user-1', 'bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('addComment', () => {
     it('should add a comment successfully', async () => {
       mockPostRepo.findOne.mockResolvedValue({ id: 'post-1', isActive: true });
-      mockCommentRepo.create.mockReturnValue({ postId: 'post-1', userId: 'user-1', content: 'Great post!' });
-      mockCommentRepo.save.mockResolvedValue({ id: 'comment-1', postId: 'post-1', userId: 'user-1', content: 'Great post!', createdAt: new Date() });
+      mockCommentRepo.create.mockReturnValue({
+        postId: 'post-1',
+        userId: 'user-1',
+        content: 'Great post!',
+      });
+      mockCommentRepo.save.mockResolvedValue({
+        id: 'comment-1',
+        postId: 'post-1',
+        userId: 'user-1',
+        content: 'Great post!',
+        createdAt: new Date(),
+      });
 
-      const result = await service.addComment('user-1', 'post-1', 'Great post!');
+      const result = await service.addComment(
+        'user-1',
+        'post-1',
+        'Great post!',
+      );
 
-      expect(mockCommentRepo.create).toHaveBeenCalledWith({ postId: 'post-1', userId: 'user-1', content: 'Great post!' });
+      expect(mockCommentRepo.create).toHaveBeenCalledWith({
+        postId: 'post-1',
+        userId: 'user-1',
+        content: 'Great post!',
+      });
       expect(result).toBeDefined();
     });
 
     it('should throw for non-existent post', async () => {
       mockPostRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.addComment('user-1', 'bad-id', 'comment')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.addComment('user-1', 'bad-id', 'comment'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -150,7 +213,20 @@ describe('FeedService', () => {
     it('should return enriched posts', async () => {
       const now = new Date();
       mockPostRepo.findAndCount.mockResolvedValue([
-        [{ id: 'post-1', content: 'Hello', imageUrl: null, createdAt: now, user: { id: 'user-1', fullName: 'Alice', avatarUrl: 'a1', currentTier: 'GOLD' } }],
+        [
+          {
+            id: 'post-1',
+            content: 'Hello',
+            imageUrl: null,
+            createdAt: now,
+            user: {
+              id: 'user-1',
+              fullName: 'Alice',
+              avatarUrl: 'a1',
+              currentTier: 'GOLD',
+            },
+          },
+        ],
         1,
       ]);
       mockLikeRepo.find.mockResolvedValue([]);
@@ -167,10 +243,25 @@ describe('FeedService', () => {
     it('should mark hasLiked when user has liked', async () => {
       const now = new Date();
       mockPostRepo.findAndCount.mockResolvedValue([
-        [{ id: 'post-1', content: 'Hello', imageUrl: null, createdAt: now, user: { id: 'user-1', fullName: 'Alice', avatarUrl: 'a1', currentTier: 'GOLD' } }],
+        [
+          {
+            id: 'post-1',
+            content: 'Hello',
+            imageUrl: null,
+            createdAt: now,
+            user: {
+              id: 'user-1',
+              fullName: 'Alice',
+              avatarUrl: 'a1',
+              currentTier: 'GOLD',
+            },
+          },
+        ],
         1,
       ]);
-      mockLikeRepo.find.mockResolvedValue([{ postId: 'post-1', userId: 'user-1' }]);
+      mockLikeRepo.find.mockResolvedValue([
+        { postId: 'post-1', userId: 'user-1' },
+      ]);
 
       const result = await service.getPosts('user-1', 1, 20);
 
@@ -183,7 +274,19 @@ describe('FeedService', () => {
       mockPostRepo.findOne.mockResolvedValue({ id: 'post-1', isActive: true });
       const now = new Date();
       mockCommentRepo.findAndCount.mockResolvedValue([
-        [{ id: 'c1', content: 'Nice!', createdAt: now, user: { id: 'user-2', fullName: 'Bob', avatarUrl: 'a2', currentTier: 'SILVER' } }],
+        [
+          {
+            id: 'c1',
+            content: 'Nice!',
+            createdAt: now,
+            user: {
+              id: 'user-2',
+              fullName: 'Bob',
+              avatarUrl: 'a2',
+              currentTier: 'SILVER',
+            },
+          },
+        ],
         1,
       ]);
 
@@ -197,13 +300,18 @@ describe('FeedService', () => {
     it('should throw for non-existent post', async () => {
       mockPostRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getComments('bad-id', 1, 20)).rejects.toThrow(NotFoundException);
+      await expect(service.getComments('bad-id', 1, 20)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('getPostById', () => {
     it('should return a post by id', async () => {
-      mockPostRepo.findOne.mockResolvedValue({ id: 'post-1', content: 'Hello' });
+      mockPostRepo.findOne.mockResolvedValue({
+        id: 'post-1',
+        content: 'Hello',
+      });
 
       const result = await service.getPostById('post-1');
 
@@ -213,7 +321,9 @@ describe('FeedService', () => {
     it('should throw for non-existent post', async () => {
       mockPostRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getPostById('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getPostById('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

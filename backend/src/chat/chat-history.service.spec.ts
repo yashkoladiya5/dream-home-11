@@ -36,8 +36,14 @@ describe('ChatHistoryService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChatHistoryService,
-        { provide: getRepositoryToken(ChatMessage), useValue: mockChatMessageRepo },
-        { provide: getRepositoryToken(ChatParticipant), useValue: mockChatParticipantRepo },
+        {
+          provide: getRepositoryToken(ChatMessage),
+          useValue: mockChatMessageRepo,
+        },
+        {
+          provide: getRepositoryToken(ChatParticipant),
+          useValue: mockChatParticipantRepo,
+        },
         { provide: getRepositoryToken(Chat), useValue: mockChatRepo },
       ],
     }).compile();
@@ -47,7 +53,12 @@ describe('ChatHistoryService', () => {
 
   describe('saveMessage', () => {
     it('creates and saves a message, returns it', async () => {
-      const data = { chatId: 'chat-1', senderId: 'user-1', content: 'Hello', type: 'text' };
+      const data = {
+        chatId: 'chat-1',
+        senderId: 'user-1',
+        content: 'Hello',
+        type: 'text',
+      };
       const created = { id: 'msg-1', ...data };
       mockChatMessageRepo.create.mockReturnValue(created);
       mockChatMessageRepo.save.mockResolvedValue(created);
@@ -63,7 +74,13 @@ describe('ChatHistoryService', () => {
   describe('getMessages', () => {
     it('returns paginated messages with sender relations', async () => {
       const messages = [
-        { id: 'msg-1', chatId: 'chat-1', senderId: 'user-1', content: 'Hello', sender: { id: 'user-1' } },
+        {
+          id: 'msg-1',
+          chatId: 'chat-1',
+          senderId: 'user-1',
+          content: 'Hello',
+          sender: { id: 'user-1' },
+        },
       ];
       mockChatMessageRepo.findAndCount.mockResolvedValue([messages, 1]);
 
@@ -94,7 +111,13 @@ describe('ChatHistoryService', () => {
 
   describe('getUserChats', () => {
     it('returns user chats from participant records', async () => {
-      const chat = { id: 'chat-1', name: 'Test Chat', type: 'group', participants: [], messages: [] };
+      const chat = {
+        id: 'chat-1',
+        name: 'Test Chat',
+        type: 'group',
+        participants: [],
+        messages: [],
+      };
       mockChatParticipantRepo.find.mockResolvedValue([
         { id: 'p-1', chatId: 'chat-1', userId: 'user-1', chat },
       ]);
@@ -117,8 +140,13 @@ describe('ChatHistoryService', () => {
       expect(mockChatMessageRepo.createQueryBuilder).toHaveBeenCalled();
       expect(mockQueryBuilder.update).toHaveBeenCalled();
       expect(mockQueryBuilder.set).toHaveBeenCalledWith({ isRead: true });
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('chat_id = :chatId', { chatId: 'chat-1' });
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('sender_id != :userId', { userId: 'user-1' });
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('chat_id = :chatId', {
+        chatId: 'chat-1',
+      });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'sender_id != :userId',
+        { userId: 'user-1' },
+      );
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('is_read = false');
       expect(mockQueryBuilder.execute).toHaveBeenCalled();
     });

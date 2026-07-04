@@ -8,7 +8,7 @@ export const requestContext = new AsyncLocalStorage<Map<string, any>>();
 @Injectable()
 export class RequestIdMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    const requestId = req.headers['x-request-id'] as string || uuidv4();
+    const requestId = (req.headers['x-request-id'] as string) || uuidv4();
     res.setHeader('x-request-id', requestId);
     (req as any).requestId = requestId;
     const store = new Map<string, any>();

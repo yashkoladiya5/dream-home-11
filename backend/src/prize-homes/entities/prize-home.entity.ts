@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity('prize_homes')
 export class PrizeHome {
@@ -23,7 +28,13 @@ export class PrizeHome {
   @Column({ type: 'text', nullable: true })
   location: string | null;
 
-  @Column({ name: 'value_inr', type: 'numeric', precision: 15, scale: 2, nullable: false })
+  @Column({
+    name: 'value_inr',
+    type: 'numeric',
+    precision: 15,
+    scale: 2,
+    nullable: false,
+  })
   valueInr: number;
 
   @Column({ type: 'integer', nullable: true })

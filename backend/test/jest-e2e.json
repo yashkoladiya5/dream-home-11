@@ -6,5 +6,8 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "transformIgnorePatterns": ["/node_modules/(?!(jose|jwks-rsa)/)"]
+  "transformIgnorePatterns": ["/node_modules/(?!(jose|jwks-rsa)/)"],
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/../src/$1"
+  }
 }

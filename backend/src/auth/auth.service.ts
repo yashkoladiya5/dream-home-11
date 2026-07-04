@@ -10,7 +10,10 @@ import { exec } from 'child_process';
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   // In-memory cache for OTP codes. Key: phone number, Value: OTP, expiration date, and attempts.
-  private otpStore = new Map<string, { code: string; expiresAt: Date; attempts: number }>();
+  private otpStore = new Map<
+    string,
+    { code: string; expiresAt: Date; attempts: number }
+  >();
 
   constructor(
     private readonly firebaseService: FirebaseService,
@@ -78,7 +81,9 @@ export class AuthService {
         cachedOtp.attempts += 1;
         if (cachedOtp.attempts >= 3) {
           this.otpStore.delete(phoneNumber);
-          throw new UnauthorizedException('Too many failed attempts. Please request a new OTP.');
+          throw new UnauthorizedException(
+            'Too many failed attempts. Please request a new OTP.',
+          );
         }
         throw new UnauthorizedException('Invalid OTP verification code');
       }
@@ -96,7 +101,9 @@ export class AuthService {
       try {
         await this.referralService.applyReferral(user, referralCode);
       } catch (err) {
-        this.logger.warn(`Referral code application failed for user ${user.id}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        this.logger.warn(
+          `Referral code application failed for user ${user.id}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        );
       }
     }
 
@@ -106,7 +113,10 @@ export class AuthService {
     return { token, user };
   }
 
-  async createMockToken(phoneNumber: string, role?: UserRole): Promise<{ accessToken: string; user: User }> {
+  async createMockToken(
+    phoneNumber: string,
+    role?: UserRole,
+  ): Promise<{ accessToken: string; user: User }> {
     if (process.env.NODE_ENV === 'production') {
       throw new UnauthorizedException('Not available in production');
     }

@@ -24,51 +24,83 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
 
   // --- Public Trigger Methods ---
 
-  async syncAll(): Promise<{ global: number; contests: number; contestCount: number }> {
+  async syncAll(): Promise<{
+    global: number;
+    contests: number;
+    contestCount: number;
+  }> {
     this.logger.log('Starting full leaderboard sync...');
     const globalCount = await this.syncGlobalLeaderboard();
-    const { memberCount, contestCount } = await this.syncAllContestLeaderboards();
-    this.logger.log(`Full sync complete: ${globalCount} global users, ${memberCount} members across ${contestCount} contests`);
+    const { memberCount, contestCount } =
+      await this.syncAllContestLeaderboards();
+    this.logger.log(
+      `Full sync complete: ${globalCount} global users, ${memberCount} members across ${contestCount} contests`,
+    );
     return { global: globalCount, contests: memberCount, contestCount };
   }
 
   async syncGlobalLeaderboard(): Promise<number> {
     const users = await this.userRepo.find({
       where: { isActive: true },
-      select: { id: true, lifetimePoints: true, weeklyPoints: true, monthlyPoints: true },
+      select: {
+        id: true,
+        lifetimePoints: true,
+        weeklyPoints: true,
+        monthlyPoints: true,
+      },
     });
 
     const lifetimeScores = users
-      .filter(u => u.lifetimePoints > 0)
-      .map(u => ({
+      .filter((u) => u.lifetimePoints > 0)
+      .map((u) => ({
         userId: u.id,
         score: u.lifetimePoints,
       }));
-    await this.leaderboardRedis.batchSetScores(LeaderboardRedisService.GLOBAL_KEY, lifetimeScores);
+    await this.leaderboardRedis.batchSetScores(
+      LeaderboardRedisService.GLOBAL_KEY,
+      lifetimeScores,
+    );
 
     const weeklyScores = users
-      .filter(u => u.weeklyPoints > 0)
-      .map(u => ({
+      .filter((u) => u.weeklyPoints > 0)
+      .map((u) => ({
         userId: u.id,
         score: u.weeklyPoints,
       }));
-    await this.leaderboardRedis.batchSetScores(LeaderboardRedisService.WEEKLY_KEY, weeklyScores);
-    await this.leaderboardRedis.setKeyExpiry(LeaderboardRedisService.WEEKLY_KEY, LeaderboardRedisService.WEEKLY_TTL);
+    await this.leaderboardRedis.batchSetScores(
+      LeaderboardRedisService.WEEKLY_KEY,
+      weeklyScores,
+    );
+    await this.leaderboardRedis.setKeyExpiry(
+      LeaderboardRedisService.WEEKLY_KEY,
+      LeaderboardRedisService.WEEKLY_TTL,
+    );
 
     const monthlyScores = users
-      .filter(u => u.monthlyPoints > 0)
-      .map(u => ({
+      .filter((u) => u.monthlyPoints > 0)
+      .map((u) => ({
         userId: u.id,
         score: u.monthlyPoints,
       }));
-    await this.leaderboardRedis.batchSetScores(LeaderboardRedisService.MONTHLY_KEY, monthlyScores);
-    await this.leaderboardRedis.setKeyExpiry(LeaderboardRedisService.MONTHLY_KEY, LeaderboardRedisService.MONTHLY_TTL);
+    await this.leaderboardRedis.batchSetScores(
+      LeaderboardRedisService.MONTHLY_KEY,
+      monthlyScores,
+    );
+    await this.leaderboardRedis.setKeyExpiry(
+      LeaderboardRedisService.MONTHLY_KEY,
+      LeaderboardRedisService.MONTHLY_TTL,
+    );
 
-    this.logger.log(`Synced ${lifetimeScores.length} lifetime, ${weeklyScores.length} weekly, ${monthlyScores.length} monthly users`);
+    this.logger.log(
+      `Synced ${lifetimeScores.length} lifetime, ${weeklyScores.length} weekly, ${monthlyScores.length} monthly users`,
+    );
     return lifetimeScores.length;
   }
 
-  async syncAllContestLeaderboards(): Promise<{ memberCount: number; contestCount: number }> {
+  async syncAllContestLeaderboards(): Promise<{
+    memberCount: number;
+    contestCount: number;
+  }> {
     const contests = await this.contestRepo.find();
     let totalMembers = 0;
 
@@ -80,7 +112,7 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
 
       if (members.length === 0) continue;
 
-      const scores = members.map(m => ({
+      const scores = members.map((m) => ({
         userId: m.userId,
         score: m.pointsEarned,
       }));
@@ -90,7 +122,9 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
       totalMembers += members.length;
     }
 
-    this.logger.log(`Synced ${totalMembers} members across ${contests.length} contest leaderboards`);
+    this.logger.log(
+      `Synced ${totalMembers} members across ${contests.length} contest leaderboards`,
+    );
     return { memberCount: totalMembers, contestCount: contests.length };
   }
 
@@ -102,7 +136,7 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
 
     if (members.length === 0) return 0;
 
-    const scores = members.map(m => ({
+    const scores = members.map((m) => ({
       userId: m.userId,
       score: m.pointsEarned,
     }));
@@ -119,7 +153,9 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
     try {
       await this.syncAll();
     } catch (err) {
-      this.logger.warn(`Initial leaderboard sync failed (Redis may be unavailable): ${(err as Error).message}`);
+      this.logger.warn(
+        `Initial leaderboard sync failed (Redis may be unavailable): ${(err as Error).message}`,
+      );
     }
   }
 

@@ -1,37 +1,102 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+
+rule_files:
+  - 'alerting-rules.yml'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
 
 scrape_configs:
   - job_name: 'dreamhome11-api'
-    scrape_interval: 30s
     metrics_path: /metrics
     static_configs:
       - targets: ['app:3000']
         labels:
           service: 'api'
           environment: 'production'
+    relabel_configs:
+      - source_labels: ['__address__']
+        target_label: 'instance'
+        regex: '(.*)'
+        replacement: 'api-$1'
+      - target_label: 'team'
+        replacement: 'backend'
 
   - job_name: 'postgres'
-    scrape_interval: 30s
     static_configs:
-      - targets: ['db-exporter:9187']
+      - targets: ['postgres-exporter:9187']
         labels:
           service: 'database'
           environment: 'production'
+    relabel_configs:
+      - source_labels: ['__address__']
+        target_label: 'instance'
+        regex: '(.*)'
+        replacement: 'db-$1'
+      - target_label: 'team'
+        replacement: 'backend'
 
   - job_name: 'redis'
-    scrape_interval: 30s
     static_configs:
       - targets: ['redis-exporter:9121']
         labels:
           service: 'cache'
           environment: 'production'
+    relabel_configs:
+      - source_labels: ['__address__']
+        target_label: 'instance'
+        regex: '(.*)'
+        replacement: 'redis-$1'
+      - target_label: 'team'
+        replacement: 'backend'
 
   - job_name: 'nginx'
-    scrape_interval: 30s
     static_configs:
       - targets: ['nginx-exporter:9113']
         labels:
           service: 'reverse-proxy'
           environment: 'production'
+    relabel_configs:
+      - source_labels: ['__address__']
+        target_label: 'instance'
+        regex: '(.*)'
+        replacement: 'nginx-$1'
+      - target_label: 'team'
+        replacement: 'infrastructure'
+
+  - job_name: 'node-exporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'system'
+          environment: 'production'
+    relabel_configs:
+      - source_labels: ['__address__']
+        target_label: 'instance'
+        regex: '(.*)'
+        replacement: 'node-$1'
+      - target_label: 'team'
+        replacement: 'infrastructure'
+
+  - job_name: 'alertmanager'
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['alertmanager:9093']
+        labels:
+          service: 'alerting'
+          environment: 'production'
+    relabel_configs:
+      - source_labels: ['__address__']
+        target_label: 'instance'
+        regex: '(.*)'
+        replacement: 'alertmanager-$1'
+      - target_label: 'team'
+        replacement: 'infrastructure'

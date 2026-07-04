@@ -24,7 +24,31 @@ import { SystemConfig } from '../config/entities/system-config.entity';
 import { SeedService } from './seed.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contest, ContestMember, User, Reward, Banner, Achievement, PrizeHome, Transaction, SavedPaymentMethod, Kyc, Withdrawal, Poll, Post, Like, Comment, Chat, ChatMessage, ChatParticipant, Referral, SupportTicket, SystemConfig])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Contest,
+      ContestMember,
+      User,
+      Reward,
+      Banner,
+      Achievement,
+      PrizeHome,
+      Transaction,
+      SavedPaymentMethod,
+      Kyc,
+      Withdrawal,
+      Poll,
+      Post,
+      Like,
+      Comment,
+      Chat,
+      ChatMessage,
+      ChatParticipant,
+      Referral,
+      SupportTicket,
+      SystemConfig,
+    ]),
+  ],
   providers: [SeedService],
 })
 export class SeedModule {}

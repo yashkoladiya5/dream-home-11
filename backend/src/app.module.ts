@@ -8,6 +8,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
+import { CompressionMiddleware } from './common/middleware/compression.middleware';
+import { EtagMiddleware } from './common/middleware/etag.middleware';
+import { RequestSizeLimiterMiddleware } from './common/middleware/request-size-limiter.middleware';
+import { BatchModule } from './common/controllers/batch.module';
 import { HealthModule } from './health/health.module';
 import { User } from './users/entities/user.entity';
 import { Kyc } from './kyc/entities/kyc.entity';
@@ -90,14 +96,56 @@ import { MetricsModule } from './common/metrics/metrics.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'dream_home_11'),
-        entities: [User, Kyc, Contest, ContestMember, PointLog, FcmToken, Reminder, NotificationLog, Share, Reward, RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome, Transaction, Payment, SavedPaymentMethod, Withdrawal, Post, Like, Comment, Poll, PollVote, Referral, SupportTicket, Chat, ChatMessage, ChatParticipant, SystemConfig, CompensationLog, AuditLog],
+        entities: [
+          User,
+          Kyc,
+          Contest,
+          ContestMember,
+          PointLog,
+          FcmToken,
+          Reminder,
+          NotificationLog,
+          Share,
+          Reward,
+          RewardRedemption,
+          Banner,
+          Achievement,
+          UserAchievement,
+          PrizeHome,
+          Transaction,
+          Payment,
+          SavedPaymentMethod,
+          Withdrawal,
+          Post,
+          Like,
+          Comment,
+          Poll,
+          PollVote,
+          Referral,
+          SupportTicket,
+          Chat,
+          ChatMessage,
+          ChatParticipant,
+          SystemConfig,
+          CompensationLog,
+          AuditLog,
+        ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
+        autoLoadEntities: false,
+        keepConnectionAlive: true,
+        retryAttempts: 10,
+        retryDelay: 3000,
         logging: ['error', 'warn', 'schema'],
         maxQueryExecutionTime: 1000,
         applicationName: config.get<string>('APP_NAME', 'dream-home-11'),
         extra: {
           max: config.get<number>('DB_POOL_SIZE', 50),
+          min: config.get<number>('DB_POOL_MIN', 5),
           idleTimeoutMillis: 30000,
+          connectionTimeoutMillis: 5000,
+        },
+        poolErrorHandler: (err: Error) => {
+          console.error('[DB Pool] Connection error:', err.message);
         },
       }),
     }),
@@ -107,8 +155,8 @@ import { MetricsModule } from './common/metrics/metrics.module';
       useFactory: (storage: RedisThrottlerStorageService) => ({
         throttlers: [
           {
-        ttl: 60000,
-        limit: process.env.NODE_ENV === 'production' ? 30 : 100000,
+            ttl: 60000,
+            limit: process.env.NODE_ENV === 'production' ? 30 : 100000,
           },
         ],
         storage,
@@ -147,6 +195,7 @@ import { MetricsModule } from './common/metrics/metrics.module';
     CommonModule,
     HealthModule,
     MetricsModule,
+    BatchModule,
   ],
   controllers: [AppController],
   providers: [
@@ -159,6 +208,15 @@ import { MetricsModule } from './common/metrics/metrics.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer
+      .apply(
+        RequestIdMiddleware,
+        CorrelationIdMiddleware,
+        RequestLoggingMiddleware,
+        CompressionMiddleware,
+        EtagMiddleware,
+        RequestSizeLimiterMiddleware,
+      )
+      .forRoutes('*');
   }
 }

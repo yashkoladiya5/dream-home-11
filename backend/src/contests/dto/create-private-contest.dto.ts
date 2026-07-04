@@ -1,4 +1,13 @@
-import { IsString, IsNumber, IsInt, Min, Max, MaxLength, IsOptional, MinDate } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsInt,
+  Min,
+  Max,
+  MaxLength,
+  IsOptional,
+  MinDate,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreatePrivateContestDto {

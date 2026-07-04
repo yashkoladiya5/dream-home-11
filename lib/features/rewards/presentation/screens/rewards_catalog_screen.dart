@@ -148,10 +148,40 @@ class _RewardCard extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Spacer(),
-                  Icon(
-                    Icons.card_giftcard_rounded,
-                    size: 40,
-                    color: AppTheme.goldYellow,
+                  SizedBox(
+                    height: 64,
+                    width: double.infinity,
+                    child: reward.imageUrl != null && reward.imageUrl!.isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              reward.imageUrl!,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Icon(
+                                Icons.card_giftcard_rounded,
+                                size: 40,
+                                color: AppTheme.goldYellow,
+                              ),
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return const Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.goldYellow),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        : Icon(
+                            Icons.card_giftcard_rounded,
+                            size: 40,
+                            color: AppTheme.goldYellow,
+                          ),
                   ),
                   const SizedBox(height: 12),
                   Text(

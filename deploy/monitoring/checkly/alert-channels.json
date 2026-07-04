@@ -1,0 +1,65 @@
+{
+  "$schema": "https://checklyhq.com/schemas/alert-channels.json",
+  "alertChannels": [
+    {
+      "logicalId": "SlackAlertChannel",
+      "type": "SLACK",
+      "config": {
+        "url": "${SLACK_WEBHOOK_URL}",
+        "channel": "#alerts-production",
+        "name": "Dream Home 11 - Production Alerts"
+      },
+      "createdOn": "2026-07-04T00:00:00Z",
+      "lastUpdatedOn": "2026-07-04T00:00:00Z"
+    },
+    {
+      "logicalId": "EmailAlertChannel",
+      "type": "EMAIL",
+      "config": {
+        "address": "ops@dreamhome11.com",
+        "name": "Operations Team",
+        "sendOnResolve": true,
+        "sendOnRecover": true
+      },
+      "createdOn": "2026-07-04T00:00:00Z",
+      "lastUpdatedOn": "2026-07-04T00:00:00Z"
+    },
+    {
+      "logicalId": "PagerDutyAlertChannel",
+      "type": "PAGERDUTY",
+      "config": {
+        "account": "dreamhome11",
+        "serviceName": "dreamhome11-critical-service",
+        "integrationKey": "${PAGERDUTY_INTEGRATION_KEY}",
+        "name": "Dream Home 11 - Critical Alerts"
+      },
+      "createdOn": "2026-07-04T00:00:00Z",
+      "lastUpdatedOn": "2026-07-04T00:00:00Z"
+    },
+    {
+      "logicalId": "WebhookAlertChannel",
+      "type": "WEBHOOK",
+      "config": {
+        "url": "${WEBHOOK_ALERT_URL}",
+        "name": "Custom Integration Webhook",
+        "method": "POST",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "${WEBHOOK_API_KEY}"
+          }
+        ],
+        "template": {
+          "type": "json",
+          "body": "{\"event\": \"{{alertType}}\", \"check\": \"{{checkName}}\", \"status\": \"{{status}}\", \"timestamp\": \"{{timestamp}}\", \"message\": \"{{message}}\", \"resultsUrl\": \"{{resultsUrl}}\"}"
+        }
+      },
+      "createdOn": "2026-07-04T00:00:00Z",
+      "lastUpdatedOn": "2026-07-04T00:00:00Z"
+    }
+  ]
+}

@@ -20,7 +20,7 @@ describe('Security Integration', () => {
       mockReflector = {
         getAllAndOverride: jest.fn(),
       } as any;
-      guard = new RolesGuard(mockReflector as any);
+      guard = new RolesGuard(mockReflector);
     });
 
     it('should be defined and implement CanActivate', () => {
@@ -29,13 +29,14 @@ describe('Security Integration', () => {
       expect(prototype).toContain('canActivate');
     });
 
-    const createMockCtx = (user: any) => ({
-      switchToHttp: () => ({
-        getRequest: () => ({ user }),
-      }),
-      getHandler: () => ({}),
-      getClass: () => ({}),
-    }) as any;
+    const createMockCtx = (user: any) =>
+      ({
+        switchToHttp: () => ({
+          getRequest: () => ({ user }),
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({}),
+      }) as any;
 
     it('should allow access when no roles required', () => {
       mockReflector.getAllAndOverride.mockReturnValue(null);
@@ -44,7 +45,9 @@ describe('Security Integration', () => {
 
     it('should deny access when user does not have required role', () => {
       mockReflector.getAllAndOverride.mockReturnValue(['admin']);
-      expect(() => guard.canActivate(createMockCtx({ role: 'user' }))).toThrow('Insufficient permissions');
+      expect(() => guard.canActivate(createMockCtx({ role: 'user' }))).toThrow(
+        'Insufficient permissions',
+      );
     });
 
     it('should allow access when user has required role', () => {
@@ -54,7 +57,9 @@ describe('Security Integration', () => {
 
     it('should deny access when user object is missing', () => {
       mockReflector.getAllAndOverride.mockReturnValue(['admin']);
-      expect(() => guard.canActivate(createMockCtx(undefined))).toThrow('Access denied');
+      expect(() => guard.canActivate(createMockCtx(undefined))).toThrow(
+        'Access denied',
+      );
     });
   });
 });

@@ -31,7 +31,9 @@ describe('RedisThrottlerStorageService', () => {
       ],
     }).compile();
 
-    service = module.get<RedisThrottlerStorageService>(RedisThrottlerStorageService);
+    service = module.get<RedisThrottlerStorageService>(
+      RedisThrottlerStorageService,
+    );
   });
 
   it('should be defined', () => {
@@ -41,7 +43,13 @@ describe('RedisThrottlerStorageService', () => {
   describe('increment', () => {
     it('should use fallback increment when Redis is not ready', async () => {
       mockRedis.status = 'close';
-      const result = await service.increment('test-key', 60000, 5, 10000, 'default');
+      const result = await service.increment(
+        'test-key',
+        60000,
+        5,
+        10000,
+        'default',
+      );
       expect(result.totalHits).toBe(1);
       expect(result.isBlocked).toBe(false);
       expect(result.timeToBlockExpire).toBe(0);
@@ -52,12 +60,20 @@ describe('RedisThrottlerStorageService', () => {
       (mockRedis.get as jest.Mock).mockResolvedValue('1');
       (mockRedis.ttl as jest.Mock).mockResolvedValue(5); // 5 seconds remaining
 
-      const result = await service.increment('test-key', 60000, 5, 10000, 'default');
+      const result = await service.increment(
+        'test-key',
+        60000,
+        5,
+        10000,
+        'default',
+      );
       expect(result.totalHits).toBe(6);
       expect(result.isBlocked).toBe(true);
       expect(result.timeToExpire).toBe(5000);
       expect(result.timeToBlockExpire).toBe(5000);
-      expect(mockRedis.get).toHaveBeenCalledWith('throttler:block:default:test-key');
+      expect(mockRedis.get).toHaveBeenCalledWith(
+        'throttler:block:default:test-key',
+      );
     });
 
     it('should increment hits and return totalHits when limit is not exceeded', async () => {
@@ -74,7 +90,13 @@ describe('RedisThrottlerStorageService', () => {
         exec: mockExec,
       });
 
-      const result = await service.increment('test-key', 60000, 5, 10000, 'default');
+      const result = await service.increment(
+        'test-key',
+        60000,
+        5,
+        10000,
+        'default',
+      );
       expect(result.totalHits).toBe(3);
       expect(result.isBlocked).toBe(false);
       expect(result.timeToExpire).toBe(45000);
@@ -96,12 +118,23 @@ describe('RedisThrottlerStorageService', () => {
         exec: mockExec,
       });
 
-      const result = await service.increment('test-key', 60000, 5, 10000, 'default');
+      const result = await service.increment(
+        'test-key',
+        60000,
+        5,
+        10000,
+        'default',
+      );
       expect(result.totalHits).toBe(6);
       expect(result.isBlocked).toBe(true);
       expect(result.timeToExpire).toBe(10000); // blockDuration
       expect(result.timeToBlockExpire).toBe(10000);
-      expect(mockRedis.set).toHaveBeenCalledWith('throttler:block:default:test-key', '1', 'PX', 10000);
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        'throttler:block:default:test-key',
+        '1',
+        'PX',
+        10000,
+      );
     });
   });
 });

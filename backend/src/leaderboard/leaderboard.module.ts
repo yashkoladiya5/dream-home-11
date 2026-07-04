@@ -11,8 +11,20 @@ import { LeaderboardSyncService } from './leaderboard-sync.service';
 import { LeaderboardResetService } from './leaderboard-reset.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ContestMember, Contest, User, LeaderboardArchive]), UsersModule],
-  providers: [LeaderboardRedisService, LeaderboardSyncService, LeaderboardResetService],
+  imports: [
+    TypeOrmModule.forFeature([
+      ContestMember,
+      Contest,
+      User,
+      LeaderboardArchive,
+    ]),
+    UsersModule,
+  ],
+  providers: [
+    LeaderboardRedisService,
+    LeaderboardSyncService,
+    LeaderboardResetService,
+  ],
   controllers: [LeaderboardController],
   exports: [LeaderboardRedisService, LeaderboardResetService],
 })

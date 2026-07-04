@@ -174,7 +174,9 @@ describe('GamificationService', () => {
       expect(result.prizePoints).toBe(0);
       expect(result.tier).toBe('');
       expect(result.canSpinAgain).toBe(false);
-      expect(result.message).toBe('Daily spin limit reached. Come back tomorrow!');
+      expect(result.message).toBe(
+        'Daily spin limit reached. Come back tomorrow!',
+      );
       expect(result.nextAvailableSpin).toBeTruthy();
 
       expect(mockUsersService.findById).not.toHaveBeenCalled();

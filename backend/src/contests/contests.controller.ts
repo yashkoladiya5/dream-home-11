@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Param, Query, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ContestsService } from './contests.service';
 import { ContestsGateway } from './contests.gateway';
@@ -30,7 +41,7 @@ export class ContestsController {
 
   @Get('winners/:contestId')
   @UseGuards(JwtAuthGuard)
-  async getContestWinnersDetail(@Param('contestId') contestId: string) {
+  async getContestWinnersDetail(@Param('contestId', ParseUUIDPipe) contestId: string) {
     return this.contestsService.getContestWinnersDetail(contestId);
   }
 
@@ -42,25 +53,25 @@ export class ContestsController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  async findById(@Param('id') id: string) {
+  async findById(@Param('id', ParseUUIDPipe) id: string) {
     return this.contestsService.findById(id);
   }
 
   @Get(':id/members')
   @UseGuards(JwtAuthGuard)
-  async getMembers(@Param('id') id: string) {
+  async getMembers(@Param('id', ParseUUIDPipe) id: string) {
     return this.contestsService.getMembers(id);
   }
 
   @Get(':id/completed')
   @UseGuards(JwtAuthGuard)
-  async getCompletedContestData(@Param('id') id: string) {
+  async getCompletedContestData(@Param('id', ParseUUIDPipe) id: string) {
     return this.contestsService.getCompletedContestData(id);
   }
 
   @Get(':id/leaderboard')
   @UseGuards(JwtAuthGuard)
-  async getLeaderboard(@Param('id') id: string) {
+  async getLeaderboard(@Param('id', ParseUUIDPipe) id: string) {
     return this.contestsService.getLeaderboard(id);
   }
 
@@ -80,7 +91,7 @@ export class ContestsController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async joinContest(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() joinContestDto: JoinContestDto,
     @GetUser() user: User,
   ) {

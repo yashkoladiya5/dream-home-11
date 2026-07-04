@@ -41,11 +41,15 @@ describe('ChatHistoryController', () => {
   describe('GET /chats', () => {
     it('returns user chats', async () => {
       const mockChats = [{ id: 'chat-1', name: 'Test Chat', type: 'group' }];
-      mockChatHistoryService.getUserChatsWithDetails.mockResolvedValue(mockChats);
+      mockChatHistoryService.getUserChatsWithDetails.mockResolvedValue(
+        mockChats,
+      );
 
       const result = await controller.getUserChats({ id: 'user-1' } as any);
 
-      expect(mockChatHistoryService.getUserChatsWithDetails).toHaveBeenCalledWith('user-1');
+      expect(
+        mockChatHistoryService.getUserChatsWithDetails,
+      ).toHaveBeenCalledWith('user-1');
       expect(result).toEqual(mockChats);
     });
   });
@@ -60,12 +64,16 @@ describe('ChatHistoryController', () => {
         limit: 30,
       });
 
-      const result = await controller.getMessages(
-        'chat-1',
-        { page: 1, limit: 30 } as QueryMessagesDto,
-      );
+      const result = await controller.getMessages('chat-1', {
+        page: 1,
+        limit: 30,
+      });
 
-      expect(mockChatHistoryService.getMessages).toHaveBeenCalledWith('chat-1', 1, 30);
+      expect(mockChatHistoryService.getMessages).toHaveBeenCalledWith(
+        'chat-1',
+        1,
+        30,
+      );
       expect(result).toEqual({
         data: messages,
         meta: { total: 1, page: 1, limit: 30, hasMore: false },
@@ -80,12 +88,16 @@ describe('ChatHistoryController', () => {
         limit: 10,
       });
 
-      await controller.getMessages(
-        'chat-1',
-        { page: 2, limit: 10 } as QueryMessagesDto,
-      );
+      await controller.getMessages('chat-1', {
+        page: 2,
+        limit: 10,
+      });
 
-      expect(mockChatHistoryService.getMessages).toHaveBeenCalledWith('chat-1', 2, 10);
+      expect(mockChatHistoryService.getMessages).toHaveBeenCalledWith(
+        'chat-1',
+        2,
+        10,
+      );
     });
 
     it('sets hasMore=true when more pages exist', async () => {
@@ -97,10 +109,10 @@ describe('ChatHistoryController', () => {
         limit: 10,
       });
 
-      const result = await controller.getMessages(
-        'chat-1',
-        { page: 1, limit: 10 } as QueryMessagesDto,
-      );
+      const result = await controller.getMessages('chat-1', {
+        page: 1,
+        limit: 10,
+      });
 
       expect(result.meta.hasMore).toBe(true);
     });

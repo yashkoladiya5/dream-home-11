@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Contest } from '../../contests/entities/contest.entity';
 
@@ -21,7 +28,11 @@ export class Reminder {
   @JoinColumn({ name: 'contest_id' })
   contest: Contest;
 
-  @Column({ name: 'remind_at', type: 'timestamp with time zone', nullable: false })
+  @Column({
+    name: 'remind_at',
+    type: 'timestamp with time zone',
+    nullable: false,
+  })
   remindAt: Date;
 
   @Column({ type: 'varchar', length: 50, default: 'pending' })

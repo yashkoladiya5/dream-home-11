@@ -1,5 +1,12 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, Unique, Index,
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Unique,
+  Index,
 } from 'typeorm';
 import { Contest } from '../../contests/entities/contest.entity';
 import { User } from '../../users/entities/user.entity';
@@ -32,7 +39,13 @@ export class CompensationLog {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ name: 'entry_fee_inr', type: 'numeric', precision: 10, scale: 2, nullable: false })
+  @Column({
+    name: 'entry_fee_inr',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+  })
   entryFeeInr: number;
 
   @Column({ name: 'compensation_points', type: 'integer', nullable: false })
@@ -45,9 +58,17 @@ export class CompensationLog {
   })
   status: CompensationStatus;
 
-  @Column({ name: 'processed_at', type: 'timestamp with time zone', nullable: true })
+  @Column({
+    name: 'processed_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
   processedAt: Date;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({
+    name: 'created_at',
+    type: 'timestamp with time zone',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   createdAt: Date;
 }

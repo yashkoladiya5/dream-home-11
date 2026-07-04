@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Body, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -24,7 +33,11 @@ export class PaymentsController {
     @Body('amount') amount: number,
     @Body('paymentMethod') paymentMethod?: string,
   ) {
-    const payment = await this.paymentsService.createOrder(user.id, amount, paymentMethod);
+    const payment = await this.paymentsService.createOrder(
+      user.id,
+      amount,
+      paymentMethod,
+    );
     return {
       orderId: payment.orderId,
       amount: Number(payment.amount),
@@ -40,9 +53,16 @@ export class PaymentsController {
     @Body('orderId') orderId: string,
     @Body('paymentId') paymentId: string,
   ) {
-    const { payment, bonusPoints } = await this.paymentsService.verifyPayment(user.id, orderId, paymentId);
+    const { payment, bonusPoints } = await this.paymentsService.verifyPayment(
+      user.id,
+      orderId,
+      paymentId,
+    );
 
-    let updatedUser = await this.usersService.addCash(user.id, Number(payment.amount));
+    let updatedUser = await this.usersService.addCash(
+      user.id,
+      Number(payment.amount),
+    );
 
     if (bonusPoints > 0) {
       updatedUser = await this.usersService.awardPoints(user.id, bonusPoints);

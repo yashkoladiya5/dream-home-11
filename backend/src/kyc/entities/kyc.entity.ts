@@ -30,7 +30,7 @@ export class Kyc {
     type: 'varchar',
     length: 12,
     unique: true,
-    nullable: false,
+    nullable: true,
   })
   aadhaarNumber: string;
 
@@ -39,7 +39,7 @@ export class Kyc {
     type: 'varchar',
     length: 10,
     unique: true,
-    nullable: false,
+    nullable: true,
   })
   panNumber: string;
 

@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SupportTicket } from './entities/support-ticket.entity';
 import { CreateTicketDto } from './dto/create-ticket.dto';
-import { ensureSupportUploadDir, SUPPORT_UPLOAD_DIR } from './support-uploads.config';
+import {
+  ensureSupportUploadDir,
+  SUPPORT_UPLOAD_DIR,
+} from './support-uploads.config';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, extname } from 'path';
 
@@ -52,7 +55,12 @@ export class SupportService {
     userId: string,
     page: number = 1,
     limit: number = 20,
-  ): Promise<{ tickets: SupportTicket[]; total: number; page: number; limit: number }> {
+  ): Promise<{
+    tickets: SupportTicket[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const [tickets, total] = await this.supportTicketRepository.findAndCount({
       where: { userId },
       order: { createdAt: 'DESC' },
@@ -63,7 +71,10 @@ export class SupportService {
     return { tickets, total, page, limit };
   }
 
-  async getTicketById(userId: string, ticketId: string): Promise<SupportTicket> {
+  async getTicketById(
+    userId: string,
+    ticketId: string,
+  ): Promise<SupportTicket> {
     const ticket = await this.supportTicketRepository.findOne({
       where: { id: ticketId, userId },
     });

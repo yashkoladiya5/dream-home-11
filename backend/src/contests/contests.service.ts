@@ -1,6 +1,18 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, Like, Between, MoreThanOrEqual, LessThanOrEqual, In } from 'typeorm';
+import {
+  Repository,
+  DataSource,
+  Like,
+  Between,
+  MoreThanOrEqual,
+  LessThanOrEqual,
+  In,
+} from 'typeorm';
 import { randomBytes } from 'crypto';
 import { Contest, ContestStatus, ContestType } from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
@@ -21,8 +33,25 @@ export class ContestsService {
     private readonly pointsEngineService: PointsEngineService,
   ) {}
 
-  async findAll(query: QueryContestsDto): Promise<{ contests: Contest[]; total: number; page: number; limit: number }> {
-    const { type, status, page = 1, limit = 20, search, sortBy, sortOrder, prizeMin, prizeMax, feeMin, feeMax } = query;
+  async findAll(query: QueryContestsDto): Promise<{
+    contests: Contest[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const {
+      type,
+      status,
+      page = 1,
+      limit = 20,
+      search,
+      sortBy,
+      sortOrder,
+      prizeMin,
+      prizeMax,
+      feeMin,
+      feeMax,
+    } = query;
     const where: Record<string, unknown> = {};
 
     if (type) {
@@ -66,9 +95,18 @@ export class ContestsService {
       skip: (page - 1) * limit,
       take: limit,
       select: {
-        id: true, title: true, entryFeeInr: true, prize: true, maxSlots: true,
-        filledSlots: true, status: true, startTime: true, endTime: true,
-        type: true, inviteCode: true,
+        id: true,
+        title: true,
+        entryFeeInr: true,
+        prize: true,
+        maxSlots: true,
+        filledSlots: true,
+        status: true,
+        startTime: true,
+        endTime: true,
+        type: true,
+        inviteCode: true,
+        rules: true,
       },
     });
 
@@ -78,7 +116,19 @@ export class ContestsService {
   async findById(id: string): Promise<Contest | null> {
     return this.contestRepository.findOne({
       where: { id },
-      select: { id: true, title: true, entryFeeInr: true, prize: true, maxSlots: true, filledSlots: true, status: true, startTime: true, endTime: true, type: true },
+      select: {
+        id: true,
+        title: true,
+        entryFeeInr: true,
+        prize: true,
+        maxSlots: true,
+        filledSlots: true,
+        status: true,
+        startTime: true,
+        endTime: true,
+        type: true,
+        rules: true,
+      },
     });
   }
 
@@ -86,10 +136,21 @@ export class ContestsService {
     return this.contestRepository.findOne({ where: { title: code } });
   }
 
-  async getMembers(contestId: string): Promise<{ members: ContestMember[]; total: number }> {
+  async getMembers(
+    contestId: string,
+  ): Promise<{ members: ContestMember[]; total: number }> {
     const contest = await this.contestRepository.findOne({
       where: { id: contestId },
-      select: { id: true, title: true, entryFeeInr: true, prize: true, maxSlots: true, filledSlots: true, startTime: true, status: true },
+      select: {
+        id: true,
+        title: true,
+        entryFeeInr: true,
+        prize: true,
+        maxSlots: true,
+        filledSlots: true,
+        startTime: true,
+        status: true,
+      },
     });
     if (!contest) {
       throw new NotFoundException('Contest not found');
@@ -102,10 +163,23 @@ export class ContestsService {
     return { members, total };
   }
 
-  async findByInviteCode(code: string): Promise<{ contest: Contest; canJoin: boolean; reason: string | null }> {
+  async findByInviteCode(
+    code: string,
+  ): Promise<{ contest: Contest; canJoin: boolean; reason: string | null }> {
     const contest = await this.contestRepository.findOne({
       where: { inviteCode: code.toUpperCase() },
-      select: { id: true, title: true, entryFeeInr: true, prize: true, maxSlots: true, filledSlots: true, status: true, startTime: true, type: true },
+      select: {
+        id: true,
+        title: true,
+        entryFeeInr: true,
+        prize: true,
+        maxSlots: true,
+        filledSlots: true,
+        status: true,
+        startTime: true,
+        type: true,
+        rules: true,
+      },
     });
     if (!contest) {
       throw new NotFoundException('Contest not found for this invite code');
@@ -142,10 +216,13 @@ export class ContestsService {
       prize: dto.prize,
       badgeText: 'PRIVATE',
       badgeColor: '#F97316',
-      rules: dto.rules || '1. Entry fee is non-refundable.\n2. This is a private contest — invite only.\n3. Winners will be announced after the contest ends.\n4. Must complete KYC within 7 days of winning.\n5. Dream11 reserves the right to modify these rules.\n6. By joining, you agree to all terms and conditions.',
+      rules:
+        dto.rules ||
+        '1. Entry fee is non-refundable.\n2. This is a private contest — invite only.\n3. Winners will be announced after the contest ends.\n4. Must complete KYC within 7 days of winning.\n5. Dream11 reserves the right to modify these rules.\n6. By joining, you agree to all terms and conditions.',
       inviteCode,
       startTime: dto.startTime || now,
-      endTime: dto.endTime || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+      endTime:
+        dto.endTime || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
       status: ContestStatus.RUNNING,
     });
 
@@ -197,7 +274,9 @@ export class ContestsService {
       averagePoints: number;
     };
   }> {
-    const contest = await this.contestRepository.findOne({ where: { id: contestId } });
+    const contest = await this.contestRepository.findOne({
+      where: { id: contestId },
+    });
     if (!contest) {
       throw new NotFoundException('Contest not found');
     }
@@ -216,7 +295,10 @@ export class ContestsService {
       rank: index + 1,
     }));
 
-    const totalPointsAwarded = members.reduce((sum, m) => sum + m.pointsEarned, 0);
+    const totalPointsAwarded = members.reduce(
+      (sum, m) => sum + m.pointsEarned,
+      0,
+    );
 
     return {
       contest,
@@ -224,12 +306,18 @@ export class ContestsService {
       stats: {
         totalParticipants: members.length,
         totalPointsAwarded,
-        averagePoints: members.length > 0 ? Math.round(totalPointsAwarded / members.length) : 0,
+        averagePoints:
+          members.length > 0
+            ? Math.round(totalPointsAwarded / members.length)
+            : 0,
       },
     };
   }
 
-  async joinContest(userId: string, contestId: string): Promise<{ user: User; contest: Contest; member: ContestMember }> {
+  async joinContest(
+    userId: string,
+    contestId: string,
+  ): Promise<{ user: User; contest: Contest; member: ContestMember }> {
     return this.dataSource.transaction(async (entityManager) => {
       const contest = await entityManager.findOne(Contest, {
         where: { id: contestId },
@@ -273,9 +361,15 @@ export class ContestsService {
         throw new BadRequestException('Already joined this contest');
       }
 
-      const multiplier = this.pointsEngineService.getMultiplier(user.currentTier);
-      const finalPoints = this.pointsEngineService.calculatePoints(contest.pointsToJoin, user.currentTier);
-      user.walletBalanceInr = Number(user.walletBalanceInr) - Number(contest.entryFeeInr);
+      const multiplier = this.pointsEngineService.getMultiplier(
+        user.currentTier,
+      );
+      const finalPoints = this.pointsEngineService.calculatePoints(
+        contest.pointsToJoin,
+        user.currentTier,
+      );
+      user.walletBalanceInr =
+        Number(user.walletBalanceInr) - Number(contest.entryFeeInr);
       user.pointsBalance = Number(user.pointsBalance) + finalPoints;
       user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
 
@@ -289,22 +383,33 @@ export class ContestsService {
 
       await entityManager.save(user);
 
-      await this.pointsEngineService.logPointActionWithEntityManager(entityManager, userId, 'contest_join', contest.pointsToJoin, multiplier, finalPoints);
-
-      await entityManager.save(Transaction, entityManager.create(Transaction, {
+      await this.pointsEngineService.logPointActionWithEntityManager(
+        entityManager,
         userId,
-        type: 'entry_fee',
-        cashAmount: Number(contest.entryFeeInr),
-        pointsAmount: finalPoints,
-        cashBalanceBefore: Number(user.walletBalanceInr) + Number(contest.entryFeeInr),
-        cashBalanceAfter: Number(user.walletBalanceInr),
-        pointsBalanceBefore: Number(user.pointsBalance) - finalPoints,
-        pointsBalanceAfter: Number(user.pointsBalance),
-        description: `Joined contest: ${contest.title}`,
-        referenceType: 'contest',
-        referenceId: contestId,
-        status: 'completed',
-      }));
+        'contest_join',
+        contest.pointsToJoin,
+        multiplier,
+        finalPoints,
+      );
+
+      await entityManager.save(
+        Transaction,
+        entityManager.create(Transaction, {
+          userId,
+          type: 'entry_fee',
+          cashAmount: Number(contest.entryFeeInr),
+          pointsAmount: finalPoints,
+          cashBalanceBefore:
+            Number(user.walletBalanceInr) + Number(contest.entryFeeInr),
+          cashBalanceAfter: Number(user.walletBalanceInr),
+          pointsBalanceBefore: Number(user.pointsBalance) - finalPoints,
+          pointsBalanceAfter: Number(user.pointsBalance),
+          description: `Joined contest: ${contest.title}`,
+          referenceType: 'contest',
+          referenceId: contestId,
+          status: 'completed',
+        }),
+      );
 
       const member = entityManager.create(ContestMember, {
         contestId,
@@ -326,9 +431,17 @@ export class ContestsService {
     prize: string;
     completedAt: Date;
     totalParticipants: number;
-    winners: { userId: string; userName: string; phoneNumber: string; points: number; rank: number }[];
+    winners: {
+      userId: string;
+      userName: string;
+      phoneNumber: string;
+      points: number;
+      rank: number;
+    }[];
   }> {
-    const contest = await this.contestRepository.findOne({ where: { id: contestId } });
+    const contest = await this.contestRepository.findOne({
+      where: { id: contestId },
+    });
     if (!contest) {
       throw new NotFoundException('Contest not found');
     }
@@ -348,7 +461,9 @@ export class ContestsService {
       rank: index + 1,
     }));
 
-    const totalParticipants = await this.contestMemberRepository.count({ where: { contestId } });
+    const totalParticipants = await this.contestMemberRepository.count({
+      where: { contestId },
+    });
 
     return {
       contestId: contest.id,
@@ -360,13 +475,20 @@ export class ContestsService {
     };
   }
 
-  async getWinnersHistory(): Promise<{
-    contestId: string;
-    contestTitle: string;
-    prize: string;
-    completedAt: Date;
-    winners: { userId: string; userName: string; points: number; rank: number }[];
-  }[]> {
+  async getWinnersHistory(): Promise<
+    {
+      contestId: string;
+      contestTitle: string;
+      prize: string;
+      completedAt: Date;
+      winners: {
+        userId: string;
+        userName: string;
+        points: number;
+        rank: number;
+      }[];
+    }[]
+  > {
     const completedContests = await this.contestRepository.find({
       where: { status: ContestStatus.COMPLETED },
       select: { id: true, title: true, endTime: true, prize: true },
@@ -376,7 +498,7 @@ export class ContestsService {
 
     if (completedContests.length === 0) return [];
 
-    const contestIds = completedContests.map(c => c.id);
+    const contestIds = completedContests.map((c) => c.id);
     const allMembers = await this.contestMemberRepository.find({
       where: { contestId: In(contestIds) },
       relations: { user: true },

@@ -29,6 +29,9 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
       state = AsyncValue.data(data);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
+      // Log the exact error to find which JSON field fails to parse
+      print('PROFILE_LOAD_ERROR: $e');
+      print(stack);
     }
   }
 

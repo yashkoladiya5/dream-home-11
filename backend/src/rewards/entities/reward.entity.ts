@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity('rewards')
 export class Reward {
@@ -20,7 +25,12 @@ export class Reward {
   @Column({ type: 'integer', nullable: true })
   stock: number | null;
 
-  @Column({ type: 'varchar', length: 50, nullable: false, default: 'gift_card' })
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: false,
+    default: 'gift_card',
+  })
   category: string;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })

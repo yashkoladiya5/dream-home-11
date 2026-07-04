@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Withdrawal, WithdrawalStatus } from './entities/withdrawal.entity';
@@ -34,12 +39,16 @@ export class WithdrawalsService {
     },
   ): Promise<Withdrawal> {
     if (amount <= 0) {
-      throw new BadRequestException('Withdrawal amount must be greater than zero');
+      throw new BadRequestException(
+        'Withdrawal amount must be greater than zero',
+      );
     }
 
     const minWithdrawal = 100;
     if (amount < minWithdrawal) {
-      throw new BadRequestException(`Minimum withdrawal amount is ₹${minWithdrawal}`);
+      throw new BadRequestException(
+        `Minimum withdrawal amount is ₹${minWithdrawal}`,
+      );
     }
 
     return this.dataSource.transaction(async (entityManager) => {
@@ -63,11 +72,15 @@ export class WithdrawalsService {
 
       const kyc = await entityManager.findOne(Kyc, { where: { userId } });
       if (!kyc || kyc.status !== 'approved') {
-        throw new ForbiddenException('KYC verification required for withdrawal');
+        throw new ForbiddenException(
+          'KYC verification required for withdrawal',
+        );
       }
 
       if (user.state && RESTRICTED_STATES.includes(user.state)) {
-        throw new ForbiddenException(`Withdrawals are not allowed from ${user.state}`);
+        throw new ForbiddenException(
+          `Withdrawals are not allowed from ${user.state}`,
+        );
       }
 
       const balanceBefore = Number(user.walletBalanceInr);
@@ -78,7 +91,8 @@ export class WithdrawalsService {
         userId,
         amount,
         status: WithdrawalStatus.PENDING,
-        bankAccountNumber: bankDetails.bankAccountNumber || user.bankAccountNumber || null,
+        bankAccountNumber:
+          bankDetails.bankAccountNumber || user.bankAccountNumber || null,
         bankIfsc: bankDetails.bankIfsc || user.bankIfsc || null,
         bankName: bankDetails.bankName || user.bankName || null,
         upiId: bankDetails.upiId || user.upiId || null,
@@ -102,7 +116,11 @@ export class WithdrawalsService {
     });
   }
 
-  async logWithdrawalRequest(userId: string, withdrawalId: string, amount: number): Promise<void> {
+  async logWithdrawalRequest(
+    userId: string,
+    withdrawalId: string,
+    amount: number,
+  ): Promise<void> {
     try {
       await this.auditService.log({
         userId,
@@ -111,15 +129,20 @@ export class WithdrawalsService {
         targetType: 'withdrawal',
         metadata: { amount },
       });
-    } catch {
-    }
+    } catch {}
   }
 
   async getWithdrawalHistory(
     userId: string,
     page: number = 1,
     limit: number = 20,
-  ): Promise<{ withdrawals: Withdrawal[]; total: number; page: number; totalPages: number; totalWithdrawn: number }> {
+  ): Promise<{
+    withdrawals: Withdrawal[];
+    total: number;
+    page: number;
+    totalPages: number;
+    totalWithdrawn: number;
+  }> {
     const [withdrawals, total] = await this.withdrawalRepo.findAndCount({
       where: { userId },
       order: { createdAt: 'DESC' },
@@ -139,7 +162,9 @@ export class WithdrawalsService {
       total,
       page,
       totalPages: Math.ceil(total / limit),
-      totalWithdrawn: result?.totalWithdrawn ? Number(result.totalWithdrawn) : 0,
+      totalWithdrawn: result?.totalWithdrawn
+        ? Number(result.totalWithdrawn)
+        : 0,
     };
   }
 
@@ -178,7 +203,9 @@ export class WithdrawalsService {
   }
 
   async getWithdrawalById(id: string, userId: string): Promise<Withdrawal> {
-    const withdrawal = await this.withdrawalRepo.findOne({ where: { id, userId } });
+    const withdrawal = await this.withdrawalRepo.findOne({
+      where: { id, userId },
+    });
     if (!withdrawal) {
       throw new NotFoundException('Withdrawal not found');
     }

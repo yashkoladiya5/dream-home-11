@@ -7,11 +7,7 @@ import { UsersModule } from '../users/users.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    UsersModule,
-    TransactionsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([User]), UsersModule, TransactionsModule],
   controllers: [GamificationController],
   providers: [GamificationService],
   exports: [GamificationService],

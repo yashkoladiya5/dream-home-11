@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Post } from './entities/post.entity';
@@ -114,7 +118,9 @@ export class FeedService {
     userId: string,
     postId: string,
   ): Promise<{ liked: boolean; likeCount: number }> {
-    const post = await this.postRepo.findOne({ where: { id: postId, isActive: true } });
+    const post = await this.postRepo.findOne({
+      where: { id: postId, isActive: true },
+    });
     if (!post) throw new NotFoundException('Post not found');
 
     const existing = await this.likeRepo.findOne({ where: { postId, userId } });
@@ -136,7 +142,9 @@ export class FeedService {
     postId: string,
     content: string,
   ): Promise<Comment> {
-    const post = await this.postRepo.findOne({ where: { id: postId, isActive: true } });
+    const post = await this.postRepo.findOne({
+      where: { id: postId, isActive: true },
+    });
     if (!post) throw new NotFoundException('Post not found');
 
     const comment = this.commentRepo.create({ postId, userId, content });
@@ -148,7 +156,9 @@ export class FeedService {
     page: number,
     limit: number,
   ): Promise<{ comments: any[]; total: number }> {
-    const post = await this.postRepo.findOne({ where: { id: postId, isActive: true } });
+    const post = await this.postRepo.findOne({
+      where: { id: postId, isActive: true },
+    });
     if (!post) throw new NotFoundException('Post not found');
 
     const [comments, total] = await this.commentRepo.findAndCount({

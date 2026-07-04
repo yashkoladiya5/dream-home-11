@@ -64,8 +64,8 @@ class KycProfile {
 
   factory KycProfile.fromJson(Map<String, dynamic> json) {
     return KycProfile(
-      id: json['id'] as String,
-      status: json['status'] as String? ?? 'pending',
+      id: json['id'] as String? ?? '',
+      status: json['status'] as String? ?? 'unverified',
       rejectionReason: json['rejectionReason'] as String?,
     );
   }

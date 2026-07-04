@@ -5,11 +5,12 @@ import { REDIS_CLIENT } from './redis.constants';
 
 @Injectable()
 export class RedisThrottlerStorageService implements ThrottlerStorage {
-  private fallbackStore = new Map<string, { count: number; expiresAt: number; blockedUntil?: number }>();
+  private fallbackStore = new Map<
+    string,
+    { count: number; expiresAt: number; blockedUntil?: number }
+  >();
 
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async increment(
     key: string,
@@ -17,10 +18,21 @@ export class RedisThrottlerStorageService implements ThrottlerStorage {
     limit: number,
     blockDuration: number,
     throttlerName: string,
-  ): Promise<{ totalHits: number; timeToExpire: number; isBlocked: boolean; timeToBlockExpire: number }> {
+  ): Promise<{
+    totalHits: number;
+    timeToExpire: number;
+    isBlocked: boolean;
+    timeToBlockExpire: number;
+  }> {
     // Graceful fallback if Redis is not connected or ready
     if (this.redis.status !== 'ready') {
-      return this.fallbackIncrement(key, ttl, limit, blockDuration, throttlerName);
+      return this.fallbackIncrement(
+        key,
+        ttl,
+        limit,
+        blockDuration,
+        throttlerName,
+      );
     }
 
     try {
@@ -31,7 +43,8 @@ export class RedisThrottlerStorageService implements ThrottlerStorage {
       const isBlockedVal = await this.redis.get(blockKey);
       if (isBlockedVal) {
         const ttlRemaining = await this.redis.ttl(blockKey);
-        const blockTtlMs = ttlRemaining > 0 ? ttlRemaining * 1000 : blockDuration;
+        const blockTtlMs =
+          ttlRemaining > 0 ? ttlRemaining * 1000 : blockDuration;
         return {
           totalHits: limit + 1,
           timeToExpire: blockTtlMs,
@@ -53,7 +66,9 @@ export class RedisThrottlerStorageService implements ThrottlerStorage {
       const incrResult = results[0];
       const pttlResult = results[1];
 
-      const count = Number(Array.isArray(incrResult) ? incrResult[1] : incrResult);
+      const count = Number(
+        Array.isArray(incrResult) ? incrResult[1] : incrResult,
+      );
       let pttl = Number(Array.isArray(pttlResult) ? pttlResult[1] : pttlResult);
 
       if (pttl < 0) {
@@ -80,7 +95,13 @@ export class RedisThrottlerStorageService implements ThrottlerStorage {
       };
     } catch (_) {
       // Fallback on any runtime Redis error
-      return this.fallbackIncrement(key, ttl, limit, blockDuration, throttlerName);
+      return this.fallbackIncrement(
+        key,
+        ttl,
+        limit,
+        blockDuration,
+        throttlerName,
+      );
     }
   }
 
@@ -90,7 +111,12 @@ export class RedisThrottlerStorageService implements ThrottlerStorage {
     limit: number,
     blockDuration: number,
     throttlerName: string,
-  ): { totalHits: number; timeToExpire: number; isBlocked: boolean; timeToBlockExpire: number } {
+  ): {
+    totalHits: number;
+    timeToExpire: number;
+    isBlocked: boolean;
+    timeToBlockExpire: number;
+  } {
     const now = Date.now();
     const mapKey = `throttler:${throttlerName}:${key}`;
     const record = this.fallbackStore.get(mapKey);

@@ -9,7 +9,11 @@ import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contest, ContestMember]), UsersModule, AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([Contest, ContestMember]),
+    UsersModule,
+    AuthModule,
+  ],
   providers: [ContestsService, ContestsGateway],
   controllers: [ContestsController],
   exports: [TypeOrmModule, ContestsService, ContestsGateway],

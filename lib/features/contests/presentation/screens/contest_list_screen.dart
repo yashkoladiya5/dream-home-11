@@ -478,7 +478,6 @@ class _ContestListScreenState extends ConsumerState<ContestListScreen>
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             itemCount: filtered.length,
-            itemExtent: 160,
             cacheExtent: 400,
             itemBuilder: (context, index) {
               final contest = filtered[index];

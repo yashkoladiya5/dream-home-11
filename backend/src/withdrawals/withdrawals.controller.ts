@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { WithdrawalsService } from './withdrawals.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,14 +31,23 @@ export class WithdrawalsController {
     @Body('bankName') bankName?: string,
     @Body('upiId') upiId?: string,
   ) {
-    const parsedAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    const withdrawal = await this.withdrawalsService.requestWithdrawal(user.id, parsedAmount, {
-      bankAccountNumber,
-      bankIfsc,
-      bankName,
-      upiId,
-    });
-    await this.withdrawalsService.logWithdrawalRequest(user.id, withdrawal.id, parsedAmount);
+    const parsedAmount =
+      typeof amount === 'string' ? parseFloat(amount) : amount;
+    const withdrawal = await this.withdrawalsService.requestWithdrawal(
+      user.id,
+      parsedAmount,
+      {
+        bankAccountNumber,
+        bankIfsc,
+        bankName,
+        upiId,
+      },
+    );
+    await this.withdrawalsService.logWithdrawalRequest(
+      user.id,
+      withdrawal.id,
+      parsedAmount,
+    );
     return {
       id: withdrawal.id,
       amount: Number(withdrawal.amount),
@@ -45,7 +64,11 @@ export class WithdrawalsController {
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 20;
-    return this.withdrawalsService.getWithdrawalHistory(user.id, pageNum, limitNum);
+    return this.withdrawalsService.getWithdrawalHistory(
+      user.id,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Get('withdraw/stats')
@@ -54,10 +77,7 @@ export class WithdrawalsController {
   }
 
   @Get('withdraw/:id')
-  async getWithdrawalById(
-    @GetUser() user: User,
-    @Param('id') id: string,
-  ) {
+  async getWithdrawalById(@GetUser() user: User, @Param('id') id: string) {
     return this.withdrawalsService.getWithdrawalById(id, user.id);
   }
 }

@@ -58,7 +58,10 @@ describe('ContestsGateway', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ContestsGateway,
-        { provide: JwtService, useValue: { verify: jest.fn(), sign: jest.fn() } },
+        {
+          provide: JwtService,
+          useValue: { verify: jest.fn(), sign: jest.fn() },
+        },
         { provide: UsersService, useValue: { findById: jest.fn() } },
       ],
     }).compile();
@@ -93,7 +96,9 @@ describe('ContestsGateway', () => {
 
   it('handleConnection — invalid token should disconnect', async () => {
     mockClient.handshake.auth.token = 'bad-token';
-    jwtService.verify.mockImplementation(() => { throw new Error('jwt error'); });
+    jwtService.verify.mockImplementation(() => {
+      throw new Error('jwt error');
+    });
 
     await (gateway as any).handleConnection(mockClient);
 

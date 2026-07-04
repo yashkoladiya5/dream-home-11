@@ -28,7 +28,9 @@ export class StreakService {
     if (lastDate) {
       const last = new Date(lastDate);
       last.setHours(0, 0, 0, 0);
-      const diffDays = Math.round((today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.round(
+        (today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24),
+      );
 
       if (diffDays === 0) {
         return {
@@ -107,7 +109,7 @@ export class StreakService {
       lastStreakDate: user.lastStreakDate
         ? typeof user.lastStreakDate === 'string'
           ? user.lastStreakDate
-          : (user.lastStreakDate as Date).toISOString()
+          : user.lastStreakDate.toISOString()
         : null,
       nextMilestone,
       daysToNextMilestone,
@@ -122,7 +124,7 @@ export class StreakService {
 
     const users = await this.userRepo.find({
       where: {
-        lastStreakDate: LessThan(twoDaysAgo) as any,
+        lastStreakDate: LessThan(twoDaysAgo),
         isActive: true,
       },
     });

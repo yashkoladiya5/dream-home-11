@@ -3,7 +3,12 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager } from 'typeorm';
 import { ContestsService } from './contests.service';
-import { Contest, ContestStatus, ContestType, CompensationStatus } from './entities/contest.entity';
+import {
+  Contest,
+  ContestStatus,
+  ContestType,
+  CompensationStatus,
+} from './entities/contest.entity';
 import { ContestMember } from './entities/contest-member.entity';
 import { User, UserLevel, UserRole } from '../users/entities/user.entity';
 import { PointsEngineService } from '../points/points-engine.service';
@@ -11,7 +16,9 @@ import { PointsEngineService } from '../points/points-engine.service';
 describe('ContestsService', () => {
   let service: ContestsService;
   let contestRepo: Partial<Record<keyof Repository<Contest>, jest.Mock>>;
-  let contestMemberRepo: Partial<Record<keyof Repository<ContestMember>, jest.Mock>>;
+  let contestMemberRepo: Partial<
+    Record<keyof Repository<ContestMember>, jest.Mock>
+  >;
   let dataSource: Partial<Record<keyof DataSource, jest.Mock>>;
   let mockEntityManager: Partial<Record<keyof EntityManager, jest.Mock>>;
 
@@ -34,7 +41,7 @@ describe('ContestsService', () => {
     referredBy: null as any,
     currentStreak: 0,
     longestStreak: 0,
-    lastStreakDate: null as any,
+    lastStreakDate: null,
     state: null as any,
     bankAccountNumber: null as any,
     bankIfsc: null as any,
@@ -73,9 +80,11 @@ describe('ContestsService', () => {
     };
 
     dataSource = {
-      transaction: jest.fn().mockImplementation(async (cb: (em: EntityManager) => Promise<any>) => {
-        return cb(mockEntityManager as unknown as EntityManager);
-      }),
+      transaction: jest
+        .fn()
+        .mockImplementation(async (cb: (em: EntityManager) => Promise<any>) => {
+          return cb(mockEntityManager as unknown as EntityManager);
+        }),
     };
 
     contestRepo = {
@@ -87,7 +96,9 @@ describe('ContestsService', () => {
 
     const mockPointsEngineService = {
       getMultiplier: jest.fn().mockReturnValue(1.0),
-      calculatePoints: jest.fn().mockImplementation((basePoints: number) => basePoints),
+      calculatePoints: jest
+        .fn()
+        .mockImplementation((basePoints: number) => basePoints),
       logPointAction: jest.fn().mockResolvedValue({}),
       logPointActionWithEntityManager: jest.fn().mockResolvedValue({}),
       getTierInfo: jest.fn(),
@@ -98,7 +109,10 @@ describe('ContestsService', () => {
       providers: [
         ContestsService,
         { provide: getRepositoryToken(Contest), useValue: contestRepo },
-        { provide: getRepositoryToken(ContestMember), useValue: contestMemberRepo },
+        {
+          provide: getRepositoryToken(ContestMember),
+          useValue: contestMemberRepo,
+        },
         { provide: DataSource, useValue: dataSource },
         { provide: PointsEngineService, useValue: mockPointsEngineService },
       ],
@@ -121,7 +135,10 @@ describe('ContestsService', () => {
         .mockResolvedValueOnce(user)
         .mockResolvedValueOnce(null);
 
-      (mockEntityManager.create as jest.Mock).mockReturnValue({ contestId: 'contest-1', userId: 'user-1' });
+      (mockEntityManager.create as jest.Mock).mockReturnValue({
+        contestId: 'contest-1',
+        userId: 'user-1',
+      });
       (mockEntityManager.save as jest.Mock).mockResolvedValue({});
 
       const result = await service.joinContest('user-1', 'contest-1');
@@ -136,24 +153,27 @@ describe('ContestsService', () => {
     it('should throw NotFoundException when contest does not exist', async () => {
       (mockEntityManager.findOne as jest.Mock).mockResolvedValueOnce(null);
 
-      await expect(service.joinContest('user-1', 'contest-1'))
-        .rejects.toThrow(NotFoundException);
+      await expect(service.joinContest('user-1', 'contest-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException when contest is not running', async () => {
       const contest = { ...mockContest, status: ContestStatus.UPCOMING };
       (mockEntityManager.findOne as jest.Mock).mockResolvedValueOnce(contest);
 
-      await expect(service.joinContest('user-1', 'contest-1'))
-        .rejects.toThrow(BadRequestException);
+      await expect(service.joinContest('user-1', 'contest-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when contest is full', async () => {
       const contest = { ...mockContest, filledSlots: 100, maxSlots: 100 };
       (mockEntityManager.findOne as jest.Mock).mockResolvedValueOnce(contest);
 
-      await expect(service.joinContest('user-1', 'contest-1'))
-        .rejects.toThrow(BadRequestException);
+      await expect(service.joinContest('user-1', 'contest-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw NotFoundException when user does not exist', async () => {
@@ -161,8 +181,9 @@ describe('ContestsService', () => {
         .mockResolvedValueOnce(mockContest)
         .mockResolvedValueOnce(null);
 
-      await expect(service.joinContest('user-1', 'contest-1'))
-        .rejects.toThrow(NotFoundException);
+      await expect(service.joinContest('user-1', 'contest-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException when user account is suspended', async () => {
@@ -171,8 +192,9 @@ describe('ContestsService', () => {
         .mockResolvedValueOnce(mockContest)
         .mockResolvedValueOnce(user);
 
-      await expect(service.joinContest('user-1', 'contest-1'))
-        .rejects.toThrow(BadRequestException);
+      await expect(service.joinContest('user-1', 'contest-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when user has insufficient balance', async () => {
@@ -181,8 +203,9 @@ describe('ContestsService', () => {
         .mockResolvedValueOnce(mockContest)
         .mockResolvedValueOnce(user);
 
-      await expect(service.joinContest('user-1', 'contest-1'))
-        .rejects.toThrow(BadRequestException);
+      await expect(service.joinContest('user-1', 'contest-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when user already joined', async () => {
@@ -191,8 +214,9 @@ describe('ContestsService', () => {
         .mockResolvedValueOnce(mockUser)
         .mockResolvedValueOnce({ id: 'member-1' });
 
-      await expect(service.joinContest('user-1', 'contest-1'))
-        .rejects.toThrow(BadRequestException);
+      await expect(service.joinContest('user-1', 'contest-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should upgrade tier to SILVER at 1000 lifetime points', async () => {

@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LeaderboardRedisService, LeaderboardEntry } from './leaderboard-redis.service';
+import {
+  LeaderboardRedisService,
+  LeaderboardEntry,
+} from './leaderboard-redis.service';
 
 describe('LeaderboardRedisService', () => {
   let service: LeaderboardRedisService;
@@ -9,37 +12,49 @@ describe('LeaderboardRedisService', () => {
     const mockData = new Map<string, Map<string, number>>();
 
     mockRedis = {
-      zadd: jest.fn().mockImplementation((key: string, score: number, member: string) => {
-        if (!mockData.has(key)) mockData.set(key, new Map());
-        mockData.get(key)!.set(member, score);
-        return Promise.resolve(1);
-      }),
-      zincrby: jest.fn().mockImplementation((key: string, increment: number, member: string) => {
-        if (!mockData.has(key)) mockData.set(key, new Map());
-        const current = mockData.get(key)!.get(member) || 0;
-        const newScore = current + increment;
-        mockData.get(key)!.set(member, newScore);
-        return Promise.resolve(newScore);
-      }),
-      zrevrange: jest.fn().mockImplementation((key: string, start: number, end: number, withScores?: string) => {
-        const members = mockData.get(key);
-        if (!members) return Promise.resolve([]);
-        const sorted = [...members.entries()]
-          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-          .slice(start, end + 1 >= 0 ? end + 1 : undefined);
-        if (withScores === 'WITHSCORES') {
-          const result: string[] = [];
-          sorted.forEach(([member, score]) => {
-            result.push(member, score.toString());
-          });
-          return Promise.resolve(result);
-        }
-        return Promise.resolve(sorted.map(([member]) => member));
-      }),
+      zadd: jest
+        .fn()
+        .mockImplementation((key: string, score: number, member: string) => {
+          if (!mockData.has(key)) mockData.set(key, new Map());
+          mockData.get(key)!.set(member, score);
+          return Promise.resolve(1);
+        }),
+      zincrby: jest
+        .fn()
+        .mockImplementation(
+          (key: string, increment: number, member: string) => {
+            if (!mockData.has(key)) mockData.set(key, new Map());
+            const current = mockData.get(key)!.get(member) || 0;
+            const newScore = current + increment;
+            mockData.get(key)!.set(member, newScore);
+            return Promise.resolve(newScore);
+          },
+        ),
+      zrevrange: jest
+        .fn()
+        .mockImplementation(
+          (key: string, start: number, end: number, withScores?: string) => {
+            const members = mockData.get(key);
+            if (!members) return Promise.resolve([]);
+            const sorted = [...members.entries()]
+              .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+              .slice(start, end + 1 >= 0 ? end + 1 : undefined);
+            if (withScores === 'WITHSCORES') {
+              const result: string[] = [];
+              sorted.forEach(([member, score]) => {
+                result.push(member, score.toString());
+              });
+              return Promise.resolve(result);
+            }
+            return Promise.resolve(sorted.map(([member]) => member));
+          },
+        ),
       zrevrank: jest.fn().mockImplementation((key: string, member: string) => {
         const members = mockData.get(key);
         if (!members || !members.has(member)) return Promise.resolve(null);
-        const sorted = [...members.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        const sorted = [...members.entries()].sort(
+          (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+        );
         const idx = sorted.findIndex(([m]) => m === member);
         return Promise.resolve(idx >= 0 ? idx : null);
       }),
@@ -64,10 +79,12 @@ describe('LeaderboardRedisService', () => {
         return Promise.resolve(existed ? 1 : 0);
       }),
       pipeline: jest.fn().mockReturnValue({
-        zadd: jest.fn().mockImplementation((key: string, score: number, member: string) => {
-          if (!mockData.has(key)) mockData.set(key, new Map());
-          mockData.get(key)!.set(member, score);
-        }),
+        zadd: jest
+          .fn()
+          .mockImplementation((key: string, score: number, member: string) => {
+            if (!mockData.has(key)) mockData.set(key, new Map());
+            mockData.get(key)!.set(member, score);
+          }),
         exec: jest.fn().mockResolvedValue([]),
       }),
     };
@@ -188,7 +205,12 @@ describe('LeaderboardRedisService', () => {
     });
 
     it('should return entries, user rank, and total count', async () => {
-      const result = await service.getTopWithUserRank('test:lb', 'user-1', 1, 10);
+      const result = await service.getTopWithUserRank(
+        'test:lb',
+        'user-1',
+        1,
+        10,
+      );
       expect(result.entries).toHaveLength(3);
       expect(result.userRank).not.toBeNull();
       expect(result.userRank!.rank).toBe(2);
@@ -196,7 +218,12 @@ describe('LeaderboardRedisService', () => {
     });
 
     it('should return null userRank for non-member', async () => {
-      const result = await service.getTopWithUserRank('test:lb', 'nonexistent', 1, 10);
+      const result = await service.getTopWithUserRank(
+        'test:lb',
+        'nonexistent',
+        1,
+        10,
+      );
       expect(result.userRank).toBeNull();
       expect(result.totalCount).toBe(3);
     });
@@ -232,9 +259,15 @@ describe('LeaderboardRedisService', () => {
     });
 
     it('static getCycleKey should work without instance', () => {
-      expect(LeaderboardRedisService.getStaticCycleKey('weekly')).toBe('leaderboard:global:weekly');
-      expect(LeaderboardRedisService.getStaticCycleKey('monthly')).toBe('leaderboard:global:monthly');
-      expect(LeaderboardRedisService.getStaticCycleKey('all_time')).toBe('leaderboard:global');
+      expect(LeaderboardRedisService.getStaticCycleKey('weekly')).toBe(
+        'leaderboard:global:weekly',
+      );
+      expect(LeaderboardRedisService.getStaticCycleKey('monthly')).toBe(
+        'leaderboard:global:monthly',
+      );
+      expect(LeaderboardRedisService.getStaticCycleKey('all_time')).toBe(
+        'leaderboard:global',
+      );
     });
   });
 

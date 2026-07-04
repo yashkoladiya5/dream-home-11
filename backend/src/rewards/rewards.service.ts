@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Reward } from './entities/reward.entity';
@@ -31,11 +35,16 @@ export class RewardsService {
     return reward;
   }
 
-  async redeemReward(userId: string, rewardId: string): Promise<RewardRedemption> {
+  async redeemReward(
+    userId: string,
+    rewardId: string,
+  ): Promise<RewardRedemption> {
     const reward = await this.rewardRepo.findOne({ where: { id: rewardId } });
     if (!reward) throw new NotFoundException('Reward not found');
-    if (!reward.isActive) throw new BadRequestException('Reward is no longer available');
-    if (reward.stock !== null && reward.stock <= 0) throw new BadRequestException('Reward is out of stock');
+    if (!reward.isActive)
+      throw new BadRequestException('Reward is no longer available');
+    if (reward.stock !== null && reward.stock <= 0)
+      throw new BadRequestException('Reward is out of stock');
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
