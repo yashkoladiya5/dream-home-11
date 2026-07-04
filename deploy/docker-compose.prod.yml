@@ -106,6 +106,32 @@ services:
       retries: 3
       start_period: 40s
 
+  # Admin panel
+  admin:
+    build:
+      context: ../admin
+      dockerfile: Dockerfile
+    container_name: dream_home_11_admin
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - dream_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # nginx reverse proxy
   nginx:
     image: nginx:1.25-alpine
@@ -123,8 +149,10 @@ services:
       - ./nginx/includes:/etc/nginx/includes:ro
       - certbot-data:/var/www/certbot
       - uploads:/var/www/uploads:ro
+      - admin-nginx-data:/var/www/admin:ro
     depends_on:
       - app
+      - admin
     logging:
       driver: json-file
       options:
@@ -218,4 +246,6 @@ volumes:
   certbot-data:
     driver: local
   fluentd-buffers:
+    driver: local
+  admin-nginx-data:
     driver: local

@@ -156,6 +156,25 @@ export class AdminController {
     return this.adminService.getSupportTickets(query);
   }
 
+  @Patch('support-tickets/:id/status')
+  async updateTicketStatus(
+    @Param('id') id: string,
+    @Body() dto: { status: string },
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
+    const result = await this.adminService.updateTicketStatus(id, dto.status);
+    await this.auditService.log({
+      adminId: admin.id,
+      action: AuditAction.UPDATE_TICKET_STATUS,
+      targetId: id,
+      targetType: 'ticket',
+      metadata: { status: dto.status },
+      ipAddress: req.ip,
+    });
+    return result;
+  }
+
   @Post('contests/:id/compensate')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   async compensateContest(
