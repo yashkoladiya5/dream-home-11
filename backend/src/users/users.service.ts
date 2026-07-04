@@ -56,6 +56,7 @@ export class UsersService {
         currentTier: true,
         avatarUrl: true,
         isActive: true,
+        role: true,
         kyc: { status: true, aadhaarNumber: true, panNumber: true },
       },
     });

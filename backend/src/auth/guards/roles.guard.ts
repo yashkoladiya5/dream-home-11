@@ -21,11 +21,18 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     const { user } = context.switchToHttp().getRequest();
+    console.log('[RolesGuard] Authorizing request:', {
+      requiredRoles,
+      userId: user?.id,
+      userPhone: user?.phoneNumber,
+      userRole: user?.role,
+    });
     if (!user) {
       throw new ForbiddenException('Access denied.');
     }
     const hasRole = requiredRoles.some((role) => user.role === role);
     if (!hasRole) {
+      console.log(`[RolesGuard] Forbidden: User role is ${user.role}, but required roles are: ${requiredRoles.join(', ')}`);
       throw new ForbiddenException(
         'Insufficient permissions. Admin access required.',
       );

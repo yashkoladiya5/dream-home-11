@@ -142,6 +142,63 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         createdAt: savedMessage.createdAt,
         isRead: savedMessage.isRead,
       });
+
+      // Automated auto-responder bot logic for single-developer aggressive testing
+      try {
+        const chatDetail = await this.chatHistoryService.getChatDetail(payload.chatId, userId);
+        const otherParticipant = chatDetail.participants.find((p) => p.id !== userId);
+
+        if (otherParticipant) {
+          const botUserId = otherParticipant.id;
+
+          // 1. Trigger typing indicator on client
+          setTimeout(() => {
+            this.server.to(`chat:${payload.chatId}`).emit('userTyping', {
+              userId: botUserId,
+              chatId: payload.chatId,
+              isTyping: true,
+            });
+          }, 800);
+
+          // 2. Clear typing indicator and emit bot message reply
+          setTimeout(async () => {
+            this.server.to(`chat:${payload.chatId}`).emit('userTyping', {
+              userId: botUserId,
+              chatId: payload.chatId,
+              isTyping: false,
+            });
+
+            const botAnswers = [
+              'Hey! Glad to connect here. How is your Dream Home team doing?',
+              'Real-time messaging via WebSockets is working perfectly!',
+              'I am aiming for the top spot in the weekly leaderboard. What about you?',
+              'Did you try the daily spin wheel today? Got some extra points!',
+              'Awesome! Let me know if you want to test typing and read receipts as well.',
+            ];
+            const randomAnswer = botAnswers[Math.floor(Math.random() * botAnswers.length)];
+
+            const savedBotMsg = await this.chatHistoryService.saveMessage({
+              chatId: payload.chatId,
+              senderId: botUserId,
+              content: randomAnswer,
+              type: 'text',
+            });
+
+            this.server.to(`chat:${payload.chatId}`).emit('newMessage', {
+              id: savedBotMsg.id,
+              chatId: savedBotMsg.chatId,
+              senderId: savedBotMsg.senderId,
+              content: savedBotMsg.content,
+              type: savedBotMsg.type,
+              createdAt: savedBotMsg.createdAt,
+              isRead: savedBotMsg.isRead,
+            });
+          }, 2200);
+        }
+      } catch (err) {
+        this.logger.warn(`Could not trigger bot response: ${err.message}`);
+      }
+
     } catch (error) {
       this.logger.error(`Failed to save message: ${error}`);
     }

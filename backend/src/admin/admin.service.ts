@@ -220,10 +220,18 @@ export class AdminService {
       totalCompensations: compensationStats.total,
       pendingCompensations: compensationStats.pending,
       totalCompensationPoints: compensationStats.totalPoints,
+      compensationStats: {
+        totalPaid: compensationStats.total,
+        pending: compensationStats.pending,
+        thisMonth: compensationStats.totalPoints,
+      },
       recentUsers: recentUsers.map((u) => ({
         id: u.id,
+        _id: u.id,
         fullName: u.fullName,
         phoneNumber: u.phoneNumber,
+        phone: u.phoneNumber,
+        currentTier: u.currentTier,
         role: u.role,
         isActive: u.isActive,
         kycStatus: u.kyc?.status || 'not_submitted',
@@ -231,9 +239,12 @@ export class AdminService {
       })),
       recentTransactions: recentTx.map((t) => ({
         id: t.id,
+        _id: t.id,
         userId: t.userId,
+        user: t.user ? { fullName: t.user.fullName } : null,
         type: t.type,
         cashAmount: t.cashAmount,
+        amount: Number(t.cashAmount),
         pointsAmount: t.pointsAmount,
         description: t.description,
         createdAt: t.createdAt,
@@ -268,7 +279,10 @@ export class AdminService {
   }
 
   async getContestById(id: string) {
-    const contest = await this.contestRepo.findOne({ where: { id } });
+    const contest = await this.contestRepo.findOne({
+      where: { id },
+      relations: { members: { user: true } },
+    });
     if (!contest) throw new NotFoundException('Contest not found');
 
     const memberCount = await this.contestRepo
@@ -391,6 +405,15 @@ export class AdminService {
     });
 
     return { tickets, total, page, limit };
+  }
+
+  async updateTicketStatus(id: string, status: string) {
+    const ticket = await this.supportTicketRepo.findOne({ where: { id } });
+    if (!ticket) throw new NotFoundException('Support ticket not found');
+
+    ticket.status = status;
+    await this.supportTicketRepo.save(ticket);
+    return ticket;
   }
 
   async compensateContest(contestId: string) {

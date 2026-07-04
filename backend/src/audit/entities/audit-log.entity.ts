@@ -22,6 +22,7 @@ export enum AuditAction {
   PAYMENT_VERIFIED = 'payment_verified',
   POINTS_EARNED = 'points_earned',
   PROFILE_UPDATED = 'profile_updated',
+  UPDATE_TICKET_STATUS = 'update_ticket_status',
 }
 
 @Entity('audit_logs')
