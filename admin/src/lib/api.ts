@@ -210,6 +210,7 @@ const mapApiObject = (item: any): any => {
       totalPrize = mapped.prize;
     }
     mapped.totalPrize = totalPrize;
+    mapped.compensated = mapped.compensationStatus === 'processed';
   }
 
   // Recursively map any nested properties

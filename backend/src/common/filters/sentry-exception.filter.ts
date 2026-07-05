@@ -67,7 +67,10 @@ export class SentryExceptionFilter implements ExceptionFilter {
       );
     }
 
-    this.logger.error(`${request.method} ${request.url} - ${status}`);
+    this.logger.error(
+      `${request.method} ${request.url} - ${status}`,
+      exception instanceof Error ? exception.stack : exception,
+    );
 
     const error = statusText[status] || 'Error';
     const requestId = (request as any).requestId || 'unknown';

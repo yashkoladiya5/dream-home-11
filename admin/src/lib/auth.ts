@@ -9,7 +9,7 @@ export interface StoredUser {
 
 export async function login(phoneNumber: string, role: string = 'admin') {
   const { data } = await api.post('/auth/mock-login', { phoneNumber, role });
-  const { accessToken: token, user } = data;
+  const { accessToken: token, user } = data.data;
   localStorage.setItem('admin_token', token);
   localStorage.setItem('admin_user', JSON.stringify(user));
   return user;
