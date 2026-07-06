@@ -6,8 +6,6 @@ import helmet from 'helmet';
 import * as Sentry from '@sentry/node';
 import { AppModule } from './app.module';
 import { SanitizePipe } from './common/pipes/sanitize.pipe';
-import { SentryExceptionFilter } from './common/filters/sentry-exception.filter';
-import { SentryInterceptor } from './common/interceptors/sentry.interceptor';
 import { PinoLoggerService } from './common/logger/pino-logger.service';
 import { createSwaggerConfig } from './common/config/swagger.config';
 import { createValidationPipe } from './common/pipes/validation-pipe.config';
@@ -67,9 +65,6 @@ async function bootstrap() {
       },
     });
   }
-
-  app.useGlobalFilters(new SentryExceptionFilter());
-  app.useGlobalInterceptors(new SentryInterceptor());
 
   app.set('trust proxy', 1);
 

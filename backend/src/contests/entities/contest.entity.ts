@@ -15,8 +15,10 @@ export enum ContestType {
 }
 
 export enum ContestStatus {
+  DRAFT = 'draft',
   UPCOMING = 'upcoming',
   RUNNING = 'running',
+  FILLED = 'filled',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
 }

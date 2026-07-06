@@ -33,17 +33,22 @@ The project consists of three main parts:
 - **Min OS:** Android 8.0 / iOS 15.0
 
 ### Backend (API Server)
-- **Runtime:** Node.js (NestJS framework)
-- **Database:** PostgreSQL (via TypeORM)
-- **Cache:** Redis (sessions, rate limiting, throttling)
-- **WebSocket:** Socket.IO (contest live updates, chat)
-- **Auth:** JWT (JSON Web Tokens) + bcrypt
-- **Payments:** Razorpay integration
-- **SMS:** MSG91 / Twilio integration
-- **Rate Limiting:** @nestjs/throttler + Redis storage
-- **Scheduling:** @nestjs/schedule (cron jobs)
-- **API Docs:** Swagger (dev only)
-- **Monitoring:** Prometheus metrics, Sentry error tracking, Checkly
+- **Runtime:** Node.js (NestJS v11.0.1)
+- **Database:** PostgreSQL 16 (via TypeORM with migrations)
+- **Cache:** Redis (ioredis) — response cache, leaderboard sorted sets, rate limiting, daily spin locks
+- **Real-time:** Socket.IO v4 (two namespaces: `/contests` for live leaderboards, `/chat` for messaging)
+- **Auth:** Firebase Phone OTP + Custom JWT (7-day access tokens, no refresh tokens yet)
+- **Payments:** Razorpay integration (order creation + payment verification)
+- **SMS:** Mock implementation (console.log + macOS Messages) — needs Twilio integration
+- **Rate Limiting:** 4 layers: global throttler (30/min), per-endpoint `@Throttle()`, per-user Redis groups, API key throttling
+- **Scheduling:** @nestjs/schedule (6 cron jobs: streak reset, leaderboard sync/reset, compensation processing, reminders)
+- **Background Jobs:** ❌ Not implemented — Bull/BullMQ needed for FCM, SMS, compensation
+- **Event Bus:** ❌ Not implemented — `@nestjs/event-emitter` needed to decouple modules
+- **API Docs:** Swagger (OpenAPI v3, dev only, bearer + apiKey auth)
+- **Monitoring:** Prometheus metrics (12 custom metrics), Sentry error tracking, 4 health endpoints, periodic health metrics (30s)
+- **Logging:** Pino structured JSON (requestId/correlationId via AsyncLocalStorage, redacts secrets)
+- **Middleware:** Helmet (strict CSP), CORS (prod-specific origins), Compression, RequestId, CorrelationId, RequestLogging (sampled), ETag (MD5), RequestSizeLimiter
+- **Error Tracking:** Sentry (>=500 only), Prometheus error counters
 
 ### Admin Panel (Web)
 - **Framework:** React 18 + TypeScript
@@ -566,196 +571,69 @@ The admin panel is a **standalone web application** at `admin/` directory. It ha
 
 ---
 
-## 6. Backend API — Complete Endpoint Reference
+## 6. Backend Architecture — Assessment & Production Gaps
 
-Base URL: `http://localhost:3000/api/v1` (dev) or `https://dreamhome11.com/api/v1` (prod)
+> **Full specification:** See `BACKEND_ARCHITECTURE.md` (separate document) for the complete production-ready backend specification covering queues, events, caching, transactions, monitoring, error handling, authorization, validation, API design, and deployment.
 
-### 6.1 Auth Endpoints
+### 6.1 Module Inventory (38 Modules)
 
-| Method | Endpoint | Auth | Rate Limit | Description |
-|--------|----------|------|------------|-------------|
-| POST | `/auth/request-otp` | No | 5/min | Send OTP to phone number |
-| POST | `/auth/verify-otp` | No | default | Verify OTP → returns JWT |
-| POST | `/auth/mock-login` | No | 1000/min | Dev-only mock login |
+The backend has 38 modules across 199 TypeScript files covering: Auth, Users, Contests (with WebSocket gateway), Payments, Transactions, Withdrawals, KYC, Rewards, Points (engine + streak system + cron), Leaderboard (Redis real-time + cron sync/reset), Chat (HTTP + WebSocket gateway), Feed, Notifications (FCM + reminders), Banners, Prize Homes, Achievements, Polls, Gamification (spin wheel), Share Tracker, Referral, Compensation (cron-driven), Support, Payment Methods, Config, SMS (mock), Audit, Admin, Health, Custom Metrics, Redis (cache + throttler), Common (guards, filters, interceptors, pipes, middleware), Batch, Seed, Database, Migrations, AppConfig, Shutdown.
 
-### 6.2 User Endpoints
+### 6.2 Current State Assessment
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/users/me` | JWT | Get current user profile |
-| GET | `/users/me/multiplier` | JWT | Get multiplier info |
-| GET | `/users/me/stats` | JWT | Get lifetime stats |
-| GET | `/users/me/contests` | JWT | Get user's joined contests |
-| GET | `/users/me/compensations` | JWT | Get compensation history |
-| GET | `/users/contests/home` | JWT | Home screen contests |
-| PATCH | `/users/profile` | JWT | Update name/avatar |
-| PATCH | `/users/bank-details` | JWT | Update bank/UPI details |
-| GET | `/users/profile` | JWT | Get extended profile |
-| GET | `/users/search` | JWT | Search users |
+| Category | Status | Details |
+|----------|--------|---------|
+| **Middleware Pipeline** | ✅ Production-ready | 7 middleware: requestId, correlationId, request logging (Pino, sampled), compression, ETag, request size limiter, Helmet |
+| **Input Validation** | ✅ Production-ready | Global ValidationPipe (whitelist + forbidNonWhitelisted + transform) + SanitizePipe (XSS, NoSQL injection, control chars) |
+| **Security** | ✅ Production-ready | Helmet (strict CSP), CORS (prod-specific origins), 4-layer rate limiting, audit logging, JWT auth, API key auth |
+| **Monitoring** | ✅ Production-ready | 12 Prometheus metrics, Sentry, 4 health endpoints, periodic (30s) health metrics, graceful shutdown |
+| **Transactions** | ✅ Production-ready | TypeORM pessimistic locking on joinContest, withdrawal, referral, compensation |
+| **Caching** | ✅ Partially | Redis cache interceptor (GET, skips auth), leaderboard sorted sets, configurable TTLs. **Missing:** decorators never applied, no graceful degradation |
+| **Cron Jobs** | ✅ Production-ready | 6 schedules: streak penalty (midnight), leaderboard sync (5min) + weekly reset + monthly reset, compensation (5min), reminders (1min) |
+| **WebSocket** | ✅ Partially | 2 gateways with JWT auth, room-based. **Issues:** `CORS: origin='*'` on contests, debug auto-responder in chat |
+| **Auth** | ⚠️ Partial | Firebase OTP + JWT (7d). **P0 Gaps:** no refresh tokens, in-memory OTP (lost on restart), missing rate limit on verify-otp |
+| **Error Handling** | ⚠️ Needs consolidation | 3 overlapping exception filters (SentryExceptionFilter suppresses AllExceptionsFilter). QueryTimingMiddleware defined but not registered |
+| **Response Structure** | ❌ Missing | No standard success envelope. No pagination response standard. Each service returns raw data differently |
+| **Job Queue** | ❌ Missing | No Bull/BullMQ. FCM notifications, SMS, compensation run synchronously. No retry on failure |
+| **Event Bus** | ❌ Missing | No `@nestjs/event-emitter`. All inter-service communication via direct injection (tight coupling) |
+| **Distributed Tracing** | ❌ Missing | No OpenTelemetry |
 
-### 6.3 Contest Endpoints
+### 6.3 Critical Production Gaps (P0 — Must Fix Before Launch)
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/contests` | JWT | List/filter contests |
-| GET | `/contests/winners` | JWT | Winners history |
-| GET | `/contests/winners/:contestId` | JWT | Contest winners detail |
-| GET | `/contests/code/:code` | JWT | Lookup contest by invite code |
-| GET | `/contests/:id` | JWT | Get contest by ID |
-| GET | `/contests/:id/members` | JWT | Get contest members |
-| GET | `/contests/:id/completed` | JWT | Completed contest results |
-| GET | `/contests/:id/leaderboard` | JWT | Contest leaderboard |
-| POST | `/contests/private` | JWT | Create private contest |
-| POST | `/contests/:id/join` | JWT | Join contest |
+| # | Gap | Impact | Specification |
+|---|-----|--------|---------------|
+| 1 | **No Job Queue** | FCM notifications, SMS, compensation processing block request cycle. No retry on failure. No backpressure. | Add Bull/BullMQ with 6 queues (fcm-notifications, sms-delivery, compensation-processing, leaderboard-sync, reminder-execution, email-delivery). Redis backend, 3 retry attempts, exponential backoff. |
+| 2 | **No Event Bus** | Tight coupling: CompensationService directly calls NotificationsService + SmsService. ContestsService directly calls PointsEngineService. Cannot scale independently. | Add `@nestjs/event-emitter` with 10 domain events (UserRegistered, ContestJoined, ContestCompleted, ContestCancelled, KycApproved, PaymentCompleted, PointsAwarded, ReferralSettled, ReminderDue). |
+| 3 | **No Response Envelope** | Controllers return raw data. No `{ success, data, message, timestamp }`. No pagination standard. | Add global ResponseInterceptor wrapping all responses. Standard pagination: `{ items, total, page, limit, totalPages, hasNextPage }`. Standard error: `{ success: false, statusCode, message, fields?, requestId, correlationId, timestamp }`. |
+| 4 | **No Refresh Tokens** | Single 7-day JWT. Token leak = permanent access. No logout-invalidate-other-sessions. | Short-lived access token (15min) + 24h refresh token. Redis blacklist on logout. Rotation on each refresh. |
+| 5 | **In-Memory OTP** | OTP store is Map in AuthService. Lost on restart. Not shared across instances. No per-IP tracking. | Move to Redis with 5min TTL. Per-IP rate limiting. Max 3 attempts per phone+IP. |
+| 6 | **Mock SMS Provider** | `console.log` only. No actual SMS delivery. | Integrate Twilio/MSG91. Queue-backed delivery. Provider failover. |
+| 7 | **verify-otp No Rate Limit** | No `@Throttle()` on verify-otp. Brute-force across phone numbers possible. | Add 5 req/min. Per-IP tracking. |
+| 8 | **WebSocket CORS: `*`** | Any website can open WS connection to `/contests`. | Restrict to known dashboard origins. |
+| 9 | **Duplicate Exception Filters** | 3 overlapping filters. `AllExceptionsFilter` (Pino-based) never fires. SentryExceptionFilter catches everything. | Consolidate to single filter: Pino logging + Sentry (>=500) + standard error envelope. |
+| 10 | **Reminders Use setTimeout** | In-memory setTimeout lost on restart. All pending reminders destroyed. | Move to Bull delayed jobs with persistence. |
 
-**WebSocket** (namespace `/contests`):
-- `joinContestRoom` / `leaveContestRoom` — Subscribe/unsubscribe to live updates
-- `contest.pointUpdate` — Real-time point changes
-- `contest.leaderboardUpdate` — Real-time leaderboard changes
+### 6.4 Endpoint Reference
 
-### 6.4 Payment & Wallet Endpoints
+Full endpoint list preserved in `BACKEND_ARCHITECTURE.md`. Summary:
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/payments/order` | JWT | Create payment order |
-| POST | `/payments/verify` | JWT | Verify completed payment |
-| GET | `/payments/history` | JWT | Payment history |
-| POST | `/payments/withdraw` | JWT | Request withdrawal |
-| GET | `/payments/withdraw/history` | JWT | Withdrawal history |
-| GET | `/payments/withdraw/stats` | JWT | Withdrawal stats |
-| GET | `/payments/withdraw/:id` | JWT | Get withdrawal by ID |
-| GET | `/transactions` | JWT | Transaction history |
-| GET | `/transactions/balance` | JWT | Balance summary |
+| Category | Endpoints | Auth |
+|----------|-----------|------|
+| **Auth** | `POST request-otp`, `POST verify-otp`, `POST mock-login` (dev) | None (mock-login: dev only) |
+| **Users** | `GET me`, `GET me/*`, `PATCH me/profile`, `PATCH me/referral-code`, `GET :id/preview` | JWT |
+| **Contests** | `GET /`, `GET winners`, `GET code/:code`, `GET :id`, `POST /private`, `POST :id/join` | JWT |
+| **Payments** | `POST order`, `POST verify` | JWT |
+| **KYC** | `POST submit`, `POST upload-document`, `GET status` | JWT |
+| **Points** | `GET actions/today`, `GET streak`, `POST action` | JWT |
+| **Leaderboard** | `GET /`, `GET weekly/monthly/lifetime`, `GET contest/:id`, `POST sync` (admin) | JWT |
+| **Notifications** | `POST fcm-token`, `GET reminders`, `POST reminders`, `GET /` | JWT |
+| **Feed** | `GET /`, `POST /`, `POST :id/like`, `POST :id/comment` | JWT |
+| **Chat** | `GET /`, `GET :id/messages` (HTTP) + WebSocket `/chat` | JWT |
+| **Admin** | 18 endpoints: dashboard, users, contests, KYC, config, tickets, compensations, broadcast, audit logs | JWT + ADMIN role |
+| **Health** | `GET /health`, `/health/ready`, `/health/live`, `/health/detailed` | None |
+| **Metrics** | `GET /metrics` | None |
 
-### 6.5 KYC Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/kyc/submit` | JWT | Submit KYC info |
-| GET | `/kyc/status` | JWT | Get KYC status |
-| GET | `/kyc/details` | JWT | Get full KYC details |
-| POST | `/kyc/upload-document` | JWT | Upload document image |
-
-### 6.6 Points, Rewards, Leaderboard
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/points/actions/today` | JWT | Today's completed actions |
-| GET | `/points/streak` | JWT | Streak info |
-| POST | `/points/action` | JWT | Perform daily action |
-| GET | `/rewards` | JWT | Rewards catalog |
-| GET | `/rewards/redemptions` | JWT | User's redemptions |
-| GET | `/rewards/:id` | JWT | Reward detail |
-| POST | `/rewards/:id/redeem` | JWT | Redeem reward |
-| GET | `/leaderboard` | JWT | Global leaderboard |
-| GET | `/leaderboard/search` | JWT | Search leaderboard |
-| GET | `/leaderboard/contest/:contestId` | JWT | Contest leaderboard |
-| GET | `/leaderboard/series/:contestId` | JWT | Series leaderboard |
-| GET | `/leaderboard/me` | JWT | My rank |
-| POST | `/leaderboard/sync` | Admin | Sync full leaderboard |
-| POST | `/leaderboard/sync/contest/:id` | Admin | Sync contest leaderboard |
-| POST | `/leaderboard/reset/:type` | Admin | Reset weekly/monthly |
-
-### 6.7 Social Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/feed` | JWT | Get feed posts |
-| POST | `/feed` | JWT | Create post |
-| POST | `/feed/:id/like` | JWT | Toggle like |
-| POST | `/feed/:id/comment` | JWT | Add comment |
-| GET | `/feed/:id/comments` | JWT | Get comments |
-| GET | `/chats` | JWT | Chat list |
-| GET | `/chats/:id` | JWT | Chat detail |
-| GET | `/chats/:id/messages` | JWT | Chat messages |
-
-**WebSocket** (namespace `/chat`):
-- `sendMessage`, `typing`, `markRead` — Client events
-- `newMessage`, `userTyping`, `messageRead` — Server events
-
-### 6.8 Notification Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/notifications/fcm-token` | JWT | Register FCM token |
-| GET | `/notifications/reminders` | JWT | Get reminders |
-| POST | `/notifications/reminders` | JWT | Create reminder |
-| DELETE | `/notifications/reminders/:id` | JWT | Delete reminder |
-| GET | `/notifications` | JWT | Notification history |
-| GET | `/notifications/unread-count` | JWT | Unread count |
-| PATCH | `/notifications/:id/read` | JWT | Mark as read |
-| POST | `/notifications/read-all` | JWT | Mark all as read |
-
-### 6.9 Admin Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/admin/dashboard` | Dashboard stats |
-| GET | `/admin/users` | List users |
-| GET | `/admin/users/:id` | Get user |
-| PATCH | `/admin/users/:id` | Update user |
-| GET | `/admin/contests` | List contests |
-| GET | `/admin/contests/:id` | Get contest |
-| GET | `/admin/kyc` | List KYC submissions |
-| PATCH | `/admin/kyc/:id/approve` | Approve KYC |
-| PATCH | `/admin/kyc/:id/reject` | Reject KYC |
-| PATCH | `/admin/config` | Update system config |
-| GET | `/admin/support-tickets` | List tickets |
-| PATCH | `/admin/support-tickets/:id/status` | Update ticket |
-| POST | `/admin/contests/:id/compensate` | Compensate contest |
-| POST | `/admin/compensations/process-pending` | Process pending compensations |
-| GET | `/admin/compensations` | List compensations |
-| GET | `/admin/compensations/stats` | Compensation stats |
-| GET | `/admin/compensations/export` | Export CSV |
-| POST | `/admin/notifications/broadcast` | Send push notification |
-| POST | `/admin/notifications/broadcast-sms` | Send SMS |
-| GET | `/admin/audit-logs` | List audit logs |
-
-### 6.10 Other Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/config` | No | Public system config |
-| GET | `/config/maintenance` | No | Maintenance status |
-| GET | `/config/feature/:key` | No | Feature flag check |
-| PATCH | `/config` | Admin | Update config |
-| GET | `/banners` | JWT | Active banners |
-| GET | `/prize-homes` | JWT | Prize homes catalog |
-| GET | `/prize-homes/cities` | JWT | Available cities |
-| GET | `/prize-homes/featured` | JWT | Featured prize homes |
-| GET | `/prize-homes/:id` | JWT | Prize home detail |
-| GET | `/achievements` | JWT | Achievements with progress |
-| POST | `/achievements/check` | JWT | Check new achievements |
-| GET | `/polls/active` | JWT | Active poll |
-| GET | `/polls/:id/results` | JWT | Poll results |
-| POST | `/polls/vote` | JWT | Cast vote |
-| POST | `/gamification/spin` | JWT | Spin wheel |
-| GET | `/gamification/spin/status` | JWT | Spin availability |
-| POST | `/shares` | JWT | Log share event |
-| GET | `/shares/history` | JWT | Share history |
-| GET | `/shares/stats` | JWT | Share stats |
-| POST | `/referral/apply` | JWT | Apply referral code |
-| GET | `/referral/stats` | JWT | Referral stats |
-| GET | `/referral/history` | JWT | Referral history |
-| POST | `/support/tickets` | JWT | Create ticket |
-| GET | `/support/tickets` | JWT | User's tickets |
-| GET | `/support/tickets/:id` | JWT | Ticket detail |
-| GET | `/payment-methods/categories` | JWT | Payment categories |
-| GET | `/payment-methods` | JWT | Saved payment methods |
-| POST | `/payment-methods` | JWT | Save payment method |
-| DELETE | `/payment-methods/:id` | JWT | Remove payment method |
-| POST | `/batch` | No | Batch multiple requests |
-
-### 6.11 Health & Metrics (no `/api/v1` prefix)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Welcome message |
-| GET | `/health` | Basic health (status, uptime) |
-| GET | `/health/ready` | Readiness (DB + Redis ping) |
-| GET | `/health/live` | Liveness check |
-| GET | `/health/detailed` | Detailed (memory, CPU, DB, Redis) |
-| GET | `/metrics` | Prometheus metrics |
+**WebSocket namespaces:** `/contests` (contest room join/leave, point updates, leaderboard updates), `/chat` (sendMessage, typing, markRead, newMessage, userTyping, messageRead)
 
 ---
 
@@ -923,49 +801,67 @@ Dashboard → sees overview stats
 ### 8.3 Technology Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────┐
-│              Flutter Mobile App              │
-│  (Android + iOS)                             │
-│                                              │
-│  ┌─────────┐  ┌──────────┐  ┌───────────┐  │
-│  │ Riverpod │  │ GoRouter │  │    Dio    │  │
-│  │ (State)  │  │  (Nav)   │  │  (HTTP)   │  │
-│  └─────────┘  └──────────┘  └─────┬─────┘  │
-│                                   │         │
-└───────────────────────────────────┼─────────┘
-                                    │
-                    ┌───────────────┼───────────────┐
-                    │               │               │
-                    ▼               ▼               ▼
-          ┌─────────────────────────────────────────────┐
-          │           NestJS Backend API                 │
-          │                                              │
-          │  ┌─────────┐  ┌────────┐  ┌─────────────┐  │
-          │  │ Contests│  │ Users  │  │ Payments    │  │
-          │  │ Module  │  │ Module │  │ Module      │  │
-          │  └────┬────┘  └───┬────┘  └──────┬──────┘  │
-          │       │           │               │         │
-          │  ┌────▼───────────▼───────────────▼──────┐  │
-          │  │         TypeORM (PostgreSQL)          │  │
-          │  └───────────────────────────────────────┘  │
-          │                                              │
-          │  ┌──────────────────────────────────────┐   │
-          │  │              Redis                    │   │
-          │  │  (Cache, Rate Limit, Session)         │   │
-          │  └──────────────────────────────────────┘   │
-          │                                              │
-          │  ┌──────────────────────────────────────┐   │
-          │  │         Socket.IO (WebSocket)         │   │
-          │  │  (/contests, /chat namespaces)        │   │
-          │  └──────────────────────────────────────┘   │
-          └─────────────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│              Flutter Mobile App                │
+│  (Android + iOS)                               │
+│                                                │
+│  ┌─────────┐  ┌──────────┐  ┌─────────────┐  │
+│  │ Riverpod │  │ GoRouter │  │  Dio + JWT  │  │
+│  │ (State)  │  │  (Nav)   │  │  (HTTP+WS)  │  │
+│  └─────────┘  └──────────┘  └──────┬──────┘  │
+│                                    │          │
+└────────────────────────────────────┼──────────┘
+                                     │
+                    ┌────────────────┼─────────────────┐
+                    │                │                  │
+                    ▼                ▼                  ▼
+       ┌─────────────────────────────────────────────────────┐
+       │              NestJS Backend API                      │
+       │                                                      │
+       │  ┌──────────────────────────────────────────────┐   │
+       │  │         Request Pipeline (per request)        │   │
+       │  │  Helmet → CORS → Compression → RequestId →   │   │
+       │  │  CorrelationId → RequestLogging → Etag →     │   │
+       │  │  SizeLimiter → Guards → Interceptors →       │   │
+       │  │  Pipes → Controller → Service → Response     │   │
+       │  └──────────────────────────────────────────────┘   │
+       │                                                      │
+       │  ┌─────────┐ ┌────────┐ ┌──────────┐ ┌──────────┐ │
+       │  │Contests │ │ Users  │ │ Payments │ │ 18 more  │ │
+       │  │ Module  │ │ Module │ │  Module  │ │ Modules  │ │
+       │  └────┬────┘ └───┬────┘ └────┬─────┘ └────┬─────┘ │
+       │       │           │           │             │       │
+       │  ┌────▼───────────▼───────────▼─────────────▼────┐ │
+       │  │            TypeORM (PostgreSQL)               │ │
+       │  │  31 entities, migrations, composite indexes   │ │
+       │  └───────────────────────────────────────────────┘ │
+       │                                                      │
+       │  ┌──────────────────────────────────────────────┐  │
+       │  │              Redis (ioredis)                  │  │
+       │  │  Cache response | Leaderboard ZSET |         │  │
+       │  │  Rate limit | Throttler | Daily spin lock    │  │
+       │  └──────────────────────────────────────────────┘  │
+       │                                                      │
+       │  ┌──────────────────────────────────────────────┐  │
+       │  │      Socket.IO (WebSocket) — 2 namespaces     │  │
+       │  │  /contests → point/leaderboard updates       │  │
+       │  │  /chat → messages, typing, read receipts     │  │
+       │  └──────────────────────────────────────────────┘  │
+       │                                                      │
+       │  ┌──────────────────────────────────────────────┐  │
+       │  │     [MISSING] Bull Queue + Event Bus         │  │
+       │  │  FCM/SMS/Compensation ← queues (async)      │  │
+       │  │  Module decoupling ← events (pub/sub)        │  │
+       │  └──────────────────────────────────────────────┘  │
+       └─────────────────────────────────────────────────────┘
                             │
-                            ▼
-          ┌─────────────────────────────────────────────┐
-          │         Admin Web Panel (React)             │
-          │  Served via Vite → Docker → Nginx            │
-          │  Proxies /api → backend                      │
-          └─────────────────────────────────────────────┘
+             ┌──────────────┼──────────────┐
+             ▼              ▼              ▼
+       ┌──────────┐ ┌────────────┐ ┌──────────────┐
+       │ Admin    │ │ Prometheus │ │   Sentry    │
+       │ Web UI  │ │ /metrics   │ │ Error Track │
+       │ (React)  │ │ + Grafana │ │ + Checkly   │
+       └──────────┘ └────────────┘ └──────────────┘
 ```
 
 ### 8.4 External Services
