@@ -14,6 +14,10 @@ import {
   X,
   DollarSign,
   Award,
+  Home,
+  Image,
+  AlertTriangle,
+  Siren,
 } from 'lucide-react';
 import { getStoredUser, logout } from '@/lib/auth';
 
@@ -21,10 +25,14 @@ const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/users', label: 'Users', icon: Users },
   { to: '/contests', label: 'Contests', icon: Trophy },
+  { to: '/prize-homes', label: 'Prize Homes', icon: Home },
+  { to: '/banners', label: 'Banners', icon: Image },
   { to: '/leaderboard', label: 'Leaderboard', icon: Award },
   { to: '/kyc', label: 'KYC', icon: ShieldCheck },
   { to: '/config', label: 'Config', icon: Settings },
   { to: '/support', label: 'Support', icon: HeadphonesIcon },
+  { to: '/warnings', label: 'Warnings', icon: AlertTriangle },
+  { to: '/fraud', label: 'Fraud', icon: Siren },
   { to: '/notifications', label: 'Notifications', icon: Bell },
   { to: '/compensations', label: 'Compensations', icon: DollarSign },
   { to: '/audit-logs', label: 'Audit Logs', icon: ClipboardList },

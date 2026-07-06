@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class LanguageScreen extends StatefulWidget {
@@ -11,6 +12,7 @@ class LanguageScreen extends StatefulWidget {
 
 class _LanguageScreenState extends State<LanguageScreen> {
   String _selectedLanguage = 'en';
+  bool _isLoading = true;
 
   final List<Map<String, String>> _languages = [
     {
@@ -28,6 +30,31 @@ class _LanguageScreenState extends State<LanguageScreen> {
       'description': 'हिन्दी में जारी रखें'
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage();
+  }
+
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('app_language');
+    if (saved != null && mounted) {
+      setState(() {
+        _selectedLanguage = saved;
+        _isLoading = false;
+      });
+    } else if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _continueToLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('app_language', _selectedLanguage);
+    if (mounted) context.go('/login');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -261,7 +288,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                       ],
                     ),
                     child: ElevatedButton(
-                      onPressed: () => context.go('/login'),
+                      onPressed: _isLoading ? null : _continueToLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,

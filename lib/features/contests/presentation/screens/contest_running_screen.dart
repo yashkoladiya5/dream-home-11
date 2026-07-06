@@ -7,7 +7,9 @@ import '../../../../core/theme/app_theme.dart';
 import '../../data/models/contest_model.dart';
 import '../../data/models/activity_event.dart';
 import '../../data/models/leaderboard_entry.dart';
+import '../../data/services/contest_socket_service.dart';
 import '../providers/contest_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class ContestRunningScreen extends ConsumerStatefulWidget {
   final String contestId;
@@ -26,16 +28,9 @@ class _ContestRunningScreenState extends ConsumerState<ContestRunningScreen> {
   Timer? _timer;
   bool _isLoading = true;
   String? _error;
-
-  ActivityEvent _createActivityEvent(String id, String type, String description, int points, Duration ago) {
-    return ActivityEvent(
-      id: id,
-      type: type,
-      description: description,
-      points: points,
-      timestamp: DateTime.now().subtract(ago),
-    );
-  }
+  StreamSubscription<ActivityEvent>? _activitySub;
+  StreamSubscription<List<LeaderboardEntry>>? _leaderboardSub;
+  final ContestSocketService _socketService = ContestSocketService();
 
   @override
   void initState() {
@@ -46,7 +41,28 @@ class _ContestRunningScreenState extends ConsumerState<ContestRunningScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _activitySub?.cancel();
+    _leaderboardSub?.cancel();
+    _socketService.dispose();
     super.dispose();
+  }
+
+  void _connectSocket() {
+    final authState = ref.read(authProvider);
+    final token = authState.sessionToken;
+    if (token != null) {
+      _socketService.connect(token, widget.contestId);
+      _activitySub = _socketService.onActivity.listen((event) {
+        if (mounted) {
+          setState(() => _activities.insert(0, event));
+        }
+      });
+      _leaderboardSub = _socketService.onLeaderboardUpdate.listen((entries) {
+        if (mounted) {
+          setState(() => _leaderboard = entries);
+        }
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -69,18 +85,9 @@ class _ContestRunningScreenState extends ConsumerState<ContestRunningScreen> {
       _updateRemaining(contest);
       _startTimer();
 
-      final mockActivities = [
-        _createActivityEvent('1', 'contest_joined', 'Joined the contest', 0, const Duration(minutes: 15)),
-        _createActivityEvent('2', 'bonus', 'Daily login bonus', 10, const Duration(minutes: 12)),
-        _createActivityEvent('3', 'points_earned', 'Completed profile', 25, const Duration(minutes: 8)),
-        _createActivityEvent('4', 'rank_up', 'Moved to #3 position', 0, const Duration(minutes: 5)),
-        _createActivityEvent('5', 'milestone', 'Crossed 50 points', 50, const Duration(minutes: 2)),
-        _createActivityEvent('6', 'points_earned', 'Referral bonus', 15, const Duration(seconds: 30)),
-      ];
-
       setState(() {
         _contest = contest;
-        _activities = mockActivities;
+        _activities = [];
       });
 
       final lb = await ref.read(contestListProvider.notifier).fetchLeaderboard(widget.contestId);
@@ -90,6 +97,8 @@ class _ContestRunningScreenState extends ConsumerState<ContestRunningScreen> {
           _isLoading = false;
         });
       }
+
+      _connectSocket();
     } catch (e) {
       if (mounted) {
         setState(() {

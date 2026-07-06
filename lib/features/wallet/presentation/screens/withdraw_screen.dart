@@ -124,6 +124,8 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen>
     final userState = profileAsync.value?.state;
     final restrictedMessage = getRestrictedStateMessage(userState);
     final isRestricted = restrictedMessage != null;
+    final kycStatus = profileAsync.value?.kyc?.status ?? 'unverified';
+    final isKycApproved = kycStatus == 'approved';
 
     return Scaffold(
       backgroundColor: AppTheme.darkSlate,
@@ -143,6 +145,8 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen>
             const SizedBox(height: 24),
             if (isRestricted)
               _buildRestrictedWarning(theme, restrictedMessage)
+            else if (!isKycApproved)
+              _buildKycWarning(theme, kycStatus)
             else ...[
               _buildAmountSection(theme),
               const SizedBox(height: 20),
@@ -411,6 +415,56 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen>
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.greyLight),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKycWarning(ThemeData theme, String kycStatus) {
+    final isPending = kycStatus == 'pending';
+    final icon = isPending ? Icons.access_time_rounded : Icons.gpp_bad_rounded;
+    final color = isPending ? AppTheme.goldYellow : AppTheme.primaryRed;
+    final title = isPending ? 'KYC Pending' : 'KYC Not Verified';
+    final message = isPending
+        ? 'Your KYC documents are being reviewed. Please wait for approval to withdraw.'
+        : 'Complete your KYC verification to enable withdrawals.';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 48),
+          const SizedBox(height: 12),
+          Text(title, style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          )),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.greyLight),
+          ),
+          if (!isPending) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => context.push('/kyc'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryRed,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: const Text('Complete KYC', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
         ],
       ),
     );
