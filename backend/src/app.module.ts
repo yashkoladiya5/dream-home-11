@@ -15,6 +15,7 @@ import { EtagMiddleware } from './common/middleware/etag.middleware';
 import { RequestSizeLimiterMiddleware } from './common/middleware/request-size-limiter.middleware';
 import { BatchModule } from './common/controllers/batch.module';
 import { HealthModule } from './health/health.module';
+import { QueueModule } from './queue/queue.module';
 import { User } from './users/entities/user.entity';
 import { Kyc } from './kyc/entities/kyc.entity';
 import { Contest } from './contests/entities/contest.entity';
@@ -77,6 +78,7 @@ import { CompensationModule } from './compensation/compensation.module';
 import { SmsModule } from './sms/sms.module';
 import { AuditLog } from './audit/entities/audit-log.entity';
 import { AuditModule } from './audit/audit.module';
+import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { CommonModule } from './common/common.module';
 import { MetricsModule } from './common/metrics/metrics.module';
 
@@ -129,6 +131,7 @@ import { MetricsModule } from './common/metrics/metrics.module';
           SystemConfig,
           CompensationLog,
           AuditLog,
+          RefreshToken,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
         autoLoadEntities: false,
@@ -196,6 +199,7 @@ import { MetricsModule } from './common/metrics/metrics.module';
     HealthModule,
     MetricsModule,
     BatchModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [

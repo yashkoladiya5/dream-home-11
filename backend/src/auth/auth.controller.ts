@@ -7,17 +7,24 @@ import {
   UsePipes,
   ValidationPipe,
   UnauthorizedException,
+  Headers,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
+import { RefreshTokenService } from './refresh-token.service';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { MockLoginDto } from './dto/mock-login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { User } from '../users/entities/user.entity';
+import { SkipEnvelope } from '../common/decorators/skip-envelope.decorator';
 
 @Controller('api/v1/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly refreshTokenService: RefreshTokenService,
+  ) {}
 
   @Post('request-otp')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
@@ -31,11 +38,12 @@ export class AuthController {
   }
 
   @Post('verify-otp')
+  @SkipEnvelope()
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async verifyOtp(
     @Body() verifyOtpDto: VerifyOtpDto,
-  ): Promise<{ token: string; user: User }> {
+  ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
     return this.authService.verifyOtp(
       verifyOtpDto.idToken,
       verifyOtpDto.deviceId,
@@ -44,7 +52,22 @@ export class AuthController {
     );
   }
 
+  @Post('refresh')
+  @SkipEnvelope()
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async refresh(
+    @Body() dto: RefreshTokenDto,
+    @Headers('x-device-id') deviceId?: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    return this.refreshTokenService.refreshAccessToken(
+      dto.refreshToken,
+      deviceId,
+    );
+  }
+
   @Post('mock-login')
+  @SkipEnvelope()
   @Throttle({ default: { ttl: 60000, limit: 1000 } })
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe({ whitelist: true }))
