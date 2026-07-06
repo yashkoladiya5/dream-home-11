@@ -11,6 +11,8 @@ import '../widgets/home_prize_card.dart';
 import '../../../dashboard/data/models/user_profile.dart';
 import '../../../dashboard/presentation/providers/user_profile_provider.dart';
 import '../../../dashboard/presentation/widgets/shimmer_widget.dart';
+import '../../../prize_homes/presentation/providers/prize_home_provider.dart';
+import '../../../prize_homes/data/models/prize_home.dart';
 
 class HomeContestScreen extends ConsumerStatefulWidget {
   const HomeContestScreen({super.key});
@@ -20,39 +22,6 @@ class HomeContestScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
-  final List<Map<String, String>> _sampleHomes = [
-    {
-      'name': '3 BHK Luxury Apartment',
-      'location': 'Mumbai, Maharashtra',
-      'value': '\u20B91.2 Cr',
-      'icon': '\u{1F3E0}',
-    },
-    {
-      'name': 'Premium Villa',
-      'location': 'Goa',
-      'value': '\u20B985 Lakhs',
-      'icon': '\u{1F3E1}',
-    },
-    {
-      'name': 'Beachfront Villa',
-      'location': 'Kerala',
-      'value': '\u20B92.5 Cr',
-      'icon': '\u{1F3D6}\uFE0F',
-    },
-    {
-      'name': 'Mountain Cottage',
-      'location': 'Manali, Himachal',
-      'value': '\u20B945 Lakhs',
-      'icon': '\u{1F3D4}\uFE0F',
-    },
-    {
-      'name': 'Sea-facing Penthouse',
-      'location': 'Goa',
-      'value': '\u20B93.8 Cr',
-      'icon': '\u{1F30A}',
-    },
-  ];
-
   Future<void> _joinContest(ContestModel contest) async {
     final result = await Navigator.of(context).push<String>(
       MaterialPageRoute(
@@ -111,6 +80,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
   @override
   Widget build(BuildContext context) {
     final contestsAsync = ref.watch(contestListProvider);
+    final prizeHomesAsync = ref.watch(prizeHomeProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Dream Homes'), centerTitle: true),
@@ -122,7 +92,11 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
           if (homeContests.isEmpty) {
             return _buildEmptyState();
           }
-          return _buildContent(homeContests);
+          return prizeHomesAsync.when(
+            loading: () => _buildLoadingSkeleton(),
+            error: (_, __) => _buildContent(homeContests, []),
+            data: (prizeHomes) => _buildContent(homeContests, prizeHomes),
+          );
         },
       ),
     );
@@ -242,7 +216,10 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
     );
   }
 
-  Widget _buildContent(List<ContestModel> homeContests) {
+  Widget _buildContent(List<ContestModel> homeContests, List<PrizeHome> prizeHomes) {
+    final availableHomes = prizeHomes.where((p) => p.isActive).toList();
+    final displayHomes = availableHomes.isNotEmpty ? availableHomes : _fallbackHomes();
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
@@ -268,7 +245,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildFeaturedHome(homeContests.first),
+          _buildFeaturedHome(displayHomes.first),
           const SizedBox(height: 28),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -285,16 +262,16 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: _sampleHomes.length,
+              itemCount: displayHomes.length,
               itemBuilder: (context, index) {
-                final home = _sampleHomes[index];
+                final home = displayHomes[index];
                 return _AnimatedSlideFadeItem(
                   index: index,
                   child: HomePrizeCard(
-                    name: home['name']!,
-                    location: home['location']!,
-                    value: home['value']!,
-                    emoji: home['icon']!,
+                    name: home.title,
+                    location: home.locationDisplay,
+                    value: home.formattedValue,
+                    emoji: home.emoji ?? '\u{1F3E0}',
                     onTap: () => context.push('/prize-homes'),
                   ),
                 );
@@ -314,7 +291,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
           const SizedBox(height: 14),
           ...List.generate(homeContests.length, (index) {
             final contest = homeContests[index];
-            final homeData = _sampleHomes[index % _sampleHomes.length];
+            final homeData = displayHomes[index % displayHomes.length];
             return _AnimatedSlideFadeItem(
               index: index,
               child: Padding(
@@ -332,8 +309,40 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
     );
   }
 
-  Widget _buildFeaturedHome(ContestModel contest) {
-    final featured = _sampleHomes[0];
+  List<PrizeHome> _fallbackHomes() {
+    return [
+      PrizeHome(
+        id: 'fallback-1',
+        title: '3 BHK Luxury Apartment',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        valueInr: 12000000,
+        emoji: '\u{1F3E0}',
+        isActive: true,
+        createdAt: DateTime.now(),
+      ),
+      PrizeHome(
+        id: 'fallback-2',
+        title: 'Premium Villa',
+        city: 'Goa',
+        valueInr: 8500000,
+        emoji: '\u{1F3E1}',
+        isActive: true,
+        createdAt: DateTime.now(),
+      ),
+      PrizeHome(
+        id: 'fallback-3',
+        title: 'Beachfront Villa',
+        city: 'Kerala',
+        valueInr: 25000000,
+        emoji: '\u{1F3D6}\uFE0F',
+        isActive: true,
+        createdAt: DateTime.now(),
+      ),
+    ];
+  }
+
+  Widget _buildFeaturedHome(PrizeHome featured) {
     return GestureDetector(
       onTap: () => context.push('/prize-homes'),
       child: Container(
@@ -406,7 +415,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      featured['name']!,
+                      featured.title,
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontWeight: FontWeight.bold,
@@ -423,7 +432,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          featured['location']!,
+                          featured.locationDisplay,
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(
                                 color: AppTheme.greyLight,
@@ -452,7 +461,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Estimated Value: ${featured['value']!}',
+                            'Estimated Value: ${featured.formattedValue}',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   color: AppTheme.goldYellow,
@@ -475,7 +484,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
 
   Widget _buildHomeContestCard(
     ContestModel contest,
-    Map<String, String> homeData,
+    PrizeHome homeData,
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -502,7 +511,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
                     ),
                     child: Center(
                       child: Text(
-                        homeData['icon']!,
+                        homeData.emoji ?? '\u{1F3E0}',
                         style: const TextStyle(fontSize: 22),
                       ),
                     ),
@@ -521,7 +530,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          homeData['name']!,
+                          homeData.title,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: AppTheme.goldYellow,
@@ -542,7 +551,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      homeData['value']!,
+                      homeData.formattedValue,
                       style: const TextStyle(
                         color: AppTheme.white,
                         fontSize: 12,

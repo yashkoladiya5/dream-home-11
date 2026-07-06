@@ -187,31 +187,46 @@ class NavigationDrawerWidget extends ConsumerWidget {
                     context,
                     icon: Icons.play_circle_outline_rounded,
                     title: 'How to Play',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/how-to-play');
+                    },
                   ),
                   _buildDrawerItem(
                     context,
                     icon: Icons.gavel_rounded,
                     title: 'Legality',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/legality');
+                    },
                   ),
                   _buildDrawerItem(
                     context,
                     icon: Icons.help_outline_rounded,
                     title: 'FAQs',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/faq');
+                    },
                   ),
                   _buildDrawerItem(
                     context,
                     icon: Icons.support_agent_rounded,
                     title: 'Support & Help Desk',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/support');
+                    },
                   ),
                   _buildDrawerItem(
                     context,
                     icon: Icons.description_outlined,
                     title: 'Terms & Conditions',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/terms-of-service');
+                    },
                   ),
                   if (isAdmin)
                     _buildDrawerItem(

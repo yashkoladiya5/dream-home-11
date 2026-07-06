@@ -8,6 +8,11 @@ import UsersPage from '@/pages/UsersPage';
 import UserDetailPage from '@/pages/UserDetailPage';
 import ContestsPage from '@/pages/ContestsPage';
 import ContestDetailPage from '@/pages/ContestDetailPage';
+import ContestCreatePage from '@/pages/ContestCreatePage';
+import PrizeHomesPage from '@/pages/PrizeHomesPage';
+import BannersPage from '@/pages/BannersPage';
+import WarningsPage from '@/pages/WarningsPage';
+import FraudDashboardPage from '@/pages/FraudDashboardPage';
 import KycPage from '@/pages/KycPage';
 import ConfigPage from '@/pages/ConfigPage';
 import SupportPage from '@/pages/SupportPage';
@@ -35,7 +40,13 @@ export default function App() {
           <Route path="users" element={<UsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="contests" element={<ContestsPage />} />
+          <Route path="contests/create" element={<ContestCreatePage />} />
           <Route path="contests/:id" element={<ContestDetailPage />} />
+          <Route path="contests/:id/edit" element={<ContestCreatePage />} />
+          <Route path="prize-homes" element={<PrizeHomesPage />} />
+          <Route path="banners" element={<BannersPage />} />
+          <Route path="warnings" element={<WarningsPage />} />
+          <Route path="fraud" element={<FraudDashboardPage />} />
           <Route path="kyc" element={<KycPage />} />
           <Route path="config" element={<ConfigPage />} />
           <Route path="support" element={<SupportPage />} />

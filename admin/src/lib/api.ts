@@ -120,6 +120,82 @@ export interface Compensation {
   processedAt?: string;
 }
 
+export interface PrizeHome {
+  _id: string;
+  name: string;
+  description: string;
+  images: string[];
+  location: string;
+  city: string;
+  value: number;
+  bhk?: number;
+  area?: string;
+  amenities?: string[];
+  specs?: Record<string, string>;
+  isActive: boolean;
+  featured: boolean;
+  createdAt: string;
+}
+
+export interface Banner {
+  _id: string;
+  title: string;
+  subtitle?: string;
+  imageUrl: string;
+  linkUrl?: string;
+  linkType?: 'contest' | 'prize_home' | 'web' | 'none';
+  linkId?: string;
+  isActive: boolean;
+  order: number;
+  bgColor?: string;
+  createdAt: string;
+}
+
+export interface Warning {
+  _id: string;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  level: 1 | 2 | 3;
+  reason: string;
+  pointsDeducted: number;
+  status: 'active' | 'expired' | 'resolved';
+  issuedBy: string;
+  issuedByName: string;
+  expiresAt?: string;
+  resolvedAt?: string;
+  createdAt: string;
+}
+
+export interface FraudAlert {
+  _id: string;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  rule: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  evidence: string;
+  status: 'open' | 'investigating' | 'resolved' | 'dismissed';
+  resolvedBy?: string;
+  resolvedAt?: string;
+  ipAddress?: string;
+  deviceId?: string;
+  flaggedField?: string;
+  score: number;
+  createdAt: string;
+}
+
+export interface FraudStats {
+  totalAlerts: number;
+  openAlerts: number;
+  criticalAlerts: number;
+  resolvedToday: number;
+  alertsBySeverity: { severity: string; count: number }[];
+  topRules: { rule: string; count: number }[];
+  alertsByDay: { date: string; count: number }[];
+}
+
 const api = axios.create({
   baseURL: '/api/v1',
   headers: { 'Content-Type': 'application/json' },
