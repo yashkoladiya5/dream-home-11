@@ -75,6 +75,14 @@ export class RefreshTokenService {
     });
 
     if (!storedToken) {
+      const revokedToken = await this.refreshTokenRepo.findOne({
+        where: { tokenHash },
+        select: { id: true, family: true, revoked: true },
+      });
+      if (revokedToken) {
+        await this.revokeFamily(revokedToken.family);
+        this.logger.warn(`Refresh token replay detected — family ${revokedToken.family} revoked`);
+      }
       throw new UnauthorizedException('Invalid refresh token');
     }
 

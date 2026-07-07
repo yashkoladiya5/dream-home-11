@@ -9,6 +9,7 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { createWebSocketCorsConfig } from '../common/config/websocket-cors.config';
 
 interface JwtPayload {
   sub: string;
@@ -17,10 +18,7 @@ interface JwtPayload {
 
 @WebSocketGateway({
   namespace: '/contests',
-  cors: {
-    origin: '*',
-    credentials: true,
-  },
+  cors: createWebSocketCorsConfig(),
 })
 export class ContestsGateway
   implements OnGatewayConnection, OnGatewayDisconnect

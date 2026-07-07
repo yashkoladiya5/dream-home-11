@@ -22,8 +22,20 @@ async function bootstrap() {
     'DB_USERNAME',
     'DB_PASSWORD',
     'DB_DATABASE',
+    'REDIS_HOST',
+    'REDIS_PORT',
+    'CORS_ORIGINS',
   ];
-  const nonCriticalVars = ['PORT', 'NODE_ENV'];
+  const nonCriticalVars = [
+    'PORT',
+    'NODE_ENV',
+    'SENTRY_DSN',
+    'JWT_ACCESS_EXPIRY',
+    'JWT_REFRESH_EXPIRY_DAYS',
+    'HEALTH_SECRET',
+    'CDN_DOMAIN',
+    'WEBHOOK_SECRET',
+  ];
 
   const missingCritical = criticalVars.filter((v) => !process.env[v]);
   const missingNonCritical = nonCriticalVars.filter((v) => !process.env[v]);

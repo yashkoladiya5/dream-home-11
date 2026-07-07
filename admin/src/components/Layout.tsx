@@ -18,6 +18,11 @@ import {
   Image,
   AlertTriangle,
   Siren,
+  Banknote,
+  Gift,
+  Share2,
+  Vote,
+  FileText,
 } from 'lucide-react';
 import { getStoredUser, logout } from '@/lib/auth';
 
@@ -36,6 +41,12 @@ const navItems = [
   { to: '/notifications', label: 'Notifications', icon: Bell },
   { to: '/compensations', label: 'Compensations', icon: DollarSign },
   { to: '/audit-logs', label: 'Audit Logs', icon: ClipboardList },
+  { to: '/payments', label: 'Payments', icon: Banknote },
+  { to: '/withdrawals', label: 'Withdrawals', icon: DollarSign },
+  { to: '/rewards', label: 'Rewards', icon: Gift },
+  { to: '/referrals', label: 'Referrals', icon: Share2 },
+  { to: '/polls', label: 'Polls', icon: Vote },
+  { to: '/reports', label: 'Reports', icon: FileText },
 ];
 
 export default function Layout() {

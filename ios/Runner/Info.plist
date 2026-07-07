@@ -47,5 +47,13 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera is used for KYC verification and profile photos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is used for profile photos and KYC documents</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access may be used for video KYC verification</string>
+	<key>NSNotificationUsageDescription</key>
+	<string>Notifications are used to alert you about contest results and rewards</string>
 </dict>
 </plist>

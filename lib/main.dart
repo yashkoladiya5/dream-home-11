@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'core/i18n/locale_provider.dart';
 import 'core/network/connectivity_state.dart';
 import 'core/performance/app_startup.dart';
 import 'core/router/app_router.dart';
@@ -153,6 +155,7 @@ class _DreamHomeAppState extends ConsumerState<DreamHomeApp> {
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final tracker = ref.watch(scrollTrackerProvider);
+    final locale = ref.watch(localeProvider);
 
     return TrackedScrollConfiguration(
       tracker: tracker,
@@ -161,6 +164,16 @@ class _DreamHomeAppState extends ConsumerState<DreamHomeApp> {
           title: 'Dream Home 11',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.darkTheme,
+          locale: locale,
+          supportedLocales: const [
+            Locale('en'),
+            Locale('hi'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           routerConfig: router,
           builder: (context, child) {
             return Stack(
