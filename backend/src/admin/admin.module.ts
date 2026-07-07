@@ -9,6 +9,10 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { SupportTicket } from '../support/entities/support-ticket.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
+import { Banner } from '../banners/entities/banner.entity';
+import { PrizeHome } from '../prize-homes/entities/prize-home.entity';
+import { Warning } from './entities/warning.entity';
+import { FraudAlert } from './entities/fraud-alert.entity';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 import { CompensationModule } from '../compensation/compensation.module';
@@ -26,6 +30,10 @@ import { AuditModule } from '../audit/audit.module';
       Withdrawal,
       SupportTicket,
       SystemConfig,
+      Banner,
+      PrizeHome,
+      Warning,
+      FraudAlert,
     ]),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),

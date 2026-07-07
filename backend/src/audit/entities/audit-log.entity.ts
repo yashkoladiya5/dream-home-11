@@ -23,6 +23,9 @@ export enum AuditAction {
   POINTS_EARNED = 'points_earned',
   PROFILE_UPDATED = 'profile_updated',
   UPDATE_TICKET_STATUS = 'update_ticket_status',
+  CREATE_CONTEST = 'create_contest',
+  UPDATE_CONTEST = 'update_contest',
+  DELETE_CONTEST = 'delete_contest',
 }
 
 @Entity('audit_logs')

@@ -1,0 +1,519 @@
+{
+  "report_metadata": {
+    "project": "Dream Home 11 - Flutter Mobile App",
+    "audit_date": "2026-07-07",
+    "total_features": 24,
+    "total_expected_screens": 82,
+    "total_actual_screens": 82,
+    "auditor": "OpenCode Production Readiness Audit"
+  },
+  "summary": {
+    "total_features": 24,
+    "complete": 0,
+    "partial": 18,
+    "missing": 6,
+    "core_layer_issues": [
+      "CRITICAL: No ARB/localization files exist (0 *.arb files found)",
+      "CRITICAL: flutter_localizations and intl packages not installed in pubspec.yaml",
+      "CRITICAL: No Semantics widgets across entire app (zero accessibility)",
+      "CRITICAL: permission_handler package not installed",
+      "CRITICAL: Zero feature tests - 13 test files only cover core infrastructure (api_client, connectivity, security, optimizer, preloader, startup, profiler, monitor, analyzer, tracker, validators)",
+      "HIGH: app_links/uni_links packages not installed - no native deep link intent filters configured",
+      "HIGH: SettingsScreen uses Navigator.push instead of GoRouter for child screens (EditProfile, sub-pages)",
+      "HIGH: SentryConfig.configure() called inside apiClientProvider Provider - architectural misuse",
+      "HIGH: Hardcoded `useMockAuth = true` in auth_provider.dart",
+      "HIGH: Hardcoded `'mock-device-uuid-999'` in otp_screen.dart",
+      "MEDIUM: No runZonedGuarded in main() for global async error catch-all",
+      "MEDIUM: 200+ ad-hoc debugPrint() calls - no structured logging service",
+      "MEDIUM: Route transitions all pop without animation",
+      "MEDIUM: No EmptyState widgets for HomeScreen and LeaderboardScreen when data is empty (though error/loading handled)",
+      "MEDIUM: OfflineBanner only at app level - no per-screen offline awareness",
+      "MEDIUM: No device_info_plus package for anti-fraud device fingerprinting",
+      "MEDIUM: No app_links package for native deep linking",
+      "LOW: No code generation - all 30+ models hand-written with manual JSON parsing (no freezed/json_serializable)",
+      "LOW: UpdateService returns hardcoded version data - no API call to check actual app version",
+      "LOW: `dart:io Platform` used directly in api_config.dart (not web-safe, though web not a target)"
+    ],
+    "estimated_effort_days": {
+      "localization_i18n": 3.0,
+      "accessibility_semantics": 2.0,
+      "permission_handler": 1.0,
+      "repository_layer_unification": 3.0,
+      "model_validation_codegen": 3.0,
+      "feature_tests": 5.0,
+      "offline_per_screen": 2.0,
+      "deep_links_native": 1.0,
+      "global_error_handling": 0.5,
+      "structured_logging": 1.0,
+      "route_transitions": 0.5,
+      "legal_data_layer": 0.5,
+      "misc_hardcoded_values": 0.5,
+      "total_days": 22.0
+    },
+    "overall_assessment": "All 82 screens exist with full implementations across all 24 feature modules. 10 wallet screens, 11 contest screens, 11 admin screens, 9 legal screens - all fully built with Riverpod state management, proper loading/error states, and GoRouter routes. The core layer (security, performance, networking, theme, widgets) is production-ready. However, critical production gaps exist: NO localization (0 ARB files, no intl/flutter_localizations), NO accessibility (zero Semantics), NO permission handling, and NO feature tests. The repository/API-service layer is inconsistent - only 5 of 24 features have dedicated repositories. The app is functionally complete but needs ~22 days of hardening for production readiness."
+  },
+  "features": {
+    "auth": {
+      "status": "PARTIAL",
+      "expected_screens": ["SplashScreen", "LanguageScreen", "LoginScreen", "OtpScreen"],
+      "actual_screens": ["splash_screen.dart", "language_screen.dart", "login_screen.dart", "otp_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/auth_repository.dart", "data/services/auth_api_service.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No dedicated AuthRepository or AuthApiService - AuthNotifier directly uses Dio",
+        "Hardcoded useMockAuth = true (should be environment-configured)",
+        "Hardcoded mock-device-uuid-999 in otp_screen.dart",
+        "No model validation in UserRole.fromString",
+        "No token refresh logic in provider (though JWT is used)",
+        "No logout logic wired in SettingsScreen - commented out with '// In production...' comment",
+        "No permission_handler usage for camera/storage"
+      ]
+    },
+    "dashboard": {
+      "status": "PARTIAL",
+      "expected_screens": ["DashboardLayout", "HomeScreen", "EditProfileScreen", "PerformanceScreen", "SettingsScreen"],
+      "actual_screens": ["dashboard_layout.dart", "home_screen.dart", "edit_profile_screen.dart", "performance_screen.dart", "settings_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/user_repository.dart", "data/services/user_api_service.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No UserRepository - UserProfileNotifier directly uses Dio",
+        "SettingsScreen uses Navigator.push for child screens instead of GoRouter (breaks deep links)",
+        "SettingsScreen logout uses commented-out code note: '// In production, we'd clear local storage'",
+        "HomeScreen has no empty-state handling when profile data exists but has no active contests",
+        "ShimmerWidget in dashboard/widgets is used - but no centralized ShimmerList/ShimmerGrid shared widget",
+        "No dedicated EmptyState widget usage on HomeScreen (though error state exists)"
+      ]
+    },
+    "contests": {
+      "status": "PARTIAL",
+      "expected_screens": ["OurContestsScreen", "MegaContestScreen", "HomeContestScreen", "CreateContestScreen", "EnterCodeScreen", "ContestRunningScreen", "CompletedContestScreen", "MyHomeContestScreen", "ContestRulesScreen", "JoinSuccessScreen", "ContestListScreen"],
+      "actual_screens": ["our_contests_screen.dart", "mega_contest_screen.dart", "home_contest_screen.dart", "create_contest_screen.dart", "enter_code_screen.dart", "contest_running_screen.dart", "completed_contest_screen.dart", "my_home_contest_screen.dart", "contest_rules_screen.dart", "join_success_screen.dart", "contest_list_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/contest_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No ContestRepository - ContestListNotifier directly uses Dio",
+        "ContestSocketService is well-implemented but not abstracted behind a repository interface",
+        "No model validation in any contest model fromJson",
+        "ContestRules and JoinSuccess are modals (per docs) - navigated without proper route history"
+      ]
+    },
+    "wallet": {
+      "status": "PARTIAL",
+      "expected_screens": ["WalletScreen", "MyBalanceScreen", "AddCashScreen", "PaymentOptionsScreen", "WithdrawScreen", "WithdrawHistoryScreen", "ManagePaymentScreen", "ContestTransactionsScreen", "DepositTransactionsScreen", "OtherTransactionsScreen"],
+      "actual_screens": ["wallet_screen.dart", "my_balance_screen.dart", "add_cash_screen.dart", "payment_options_screen.dart", "withdraw_screen.dart", "withdraw_history_screen.dart", "manage_payment_screen.dart", "contest_transactions_screen.dart", "deposit_transactions_screen.dart", "other_transactions_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/wallet_repository.dart", "data/repositories/transaction_repository.dart", "data/services/payment_api_service.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No WalletRepository - providers directly use Dio",
+        "No PaymentApiService",
+        "No Razorpay SDK integration (mock payment flow in user_profile_provider.dart deposit())",
+        "WithdrawScreen is fully implemented (550 lines) with restricted states awareness",
+        "No model validation in TransactionModel.fromJson (all nullable casts)"
+      ]
+    },
+    "kyc": {
+      "status": "PARTIAL",
+      "expected_screens": ["KycDetailsScreen"],
+      "actual_screens": ["kyc_details_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/kyc_repository.dart", "data/services/kyc_api_service.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No KycRepository - KycNotifier directly uses Dio",
+        "No permission_handler - image_picker called without runtime permission check",
+        "KycImagePicker widget exists but camera access not guarded",
+        "No document upload progress indicator in provider (returns null on error)"
+      ]
+    },
+    "rewards": {
+      "status": "PARTIAL",
+      "expected_screens": ["RewardsCatalogScreen", "RewardDetailScreen"],
+      "actual_screens": ["rewards_catalog_screen.dart", "reward_detail_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/reward_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No RewardRepository - reward_provider directly uses Dio",
+        "No model validation in Reward/RewardRedemption fromJson"
+      ]
+    },
+    "points": {
+      "status": "PARTIAL",
+      "expected_screens": ["EarnPointsScreen", "MultiplierScreen", "StreakScreen"],
+      "actual_screens": ["earn_points_screen.dart", "multiplier_screen.dart", "streak_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/points_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No PointsRepository - providers directly use Dio",
+        "No model validation in daily_action/multiplier_info/streak_info models"
+      ]
+    },
+    "leaderboard": {
+      "status": "COMPLETE",
+      "expected_screens": ["LeaderboardScreen", "SeriesLeaderboardScreen"],
+      "actual_screens": ["leaderboard_screen.dart", "series_leaderboard_screen.dart"],
+      "missing_screens": [],
+      "missing_files": [],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "Has proper LeaderboardRepository with typed methods",
+        "No empty-state handling when leaderboard has no entries",
+        "No model validation in LeaderboardResponse.fromJson"
+      ]
+    },
+    "chat": {
+      "status": "COMPLETE",
+      "expected_screens": ["ChatDebugScreen", "ChatListScreen", "DirectChatScreen", "GroupChatScreen"],
+      "actual_screens": ["chat_debug_screen.dart", "chat_list_screen.dart", "direct_chat_screen.dart", "group_chat_screen.dart"],
+      "missing_screens": [],
+      "missing_files": [],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "Has proper ChatRepository and ChatHistoryRepository",
+        "ChatDebugScreen is a developer tool - should be behind a feature flag in production",
+        "No model validation in chat models"
+      ]
+    },
+    "feed": {
+      "status": "PARTIAL",
+      "expected_screens": ["FeedScreen", "FindPeopleScreen"],
+      "actual_screens": ["feed_screen.dart", "find_people_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/feed_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No FeedRepository - providers directly use Dio",
+        "No model validation in FeedPost model"
+      ]
+    },
+    "notifications": {
+      "status": "PARTIAL",
+      "expected_screens": ["NotificationInboxScreen", "RemindersScreen", "CreateReminderScreen", "NotificationPreferencesScreen"],
+      "actual_screens": ["notification_inbox_screen.dart", "reminders_screen.dart", "create_reminder_screen.dart", "notification_preferences_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/notification_repository.dart", "data/repositories/reminder_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No NotificationRepository - providers directly use Dio",
+        "Has robust NotificationsNotifier with markAsRead/readAll",
+        "Has dedicated FCM service and NotificationHandler",
+        "No permission_handler for push notification opt-in"
+      ]
+    },
+    "admin": {
+      "status": "COMPLETE",
+      "expected_screens": ["AdminDashboardScreen", "AdminUsersScreen", "AdminUserDetailScreen", "AdminKycScreen", "AdminContestsScreen", "AdminContestDetailScreen", "AdminConfigScreen", "AdminSupportTicketsScreen", "AdminCompensationsScreen", "AdminBroadcastScreen", "AdminAuditLogsScreen"],
+      "actual_screens": ["admin_dashboard_screen.dart", "admin_users_screen.dart", "admin_user_detail_screen.dart", "admin_kyc_screen.dart", "admin_contests_screen.dart", "admin_contest_detail_screen.dart", "admin_config_screen.dart", "admin_support_tickets_screen.dart", "admin_compensations_screen.dart", "admin_broadcast_screen.dart", "admin_audit_logs_screen.dart"],
+      "missing_screens": [],
+      "missing_files": [],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "Has proper AdminApiService with dedicated data layer",
+        "No model validation in admin models",
+        "Admin is legacy (Flutter in-app) - newer React web admin is recommended per docs"
+      ]
+    },
+    "achievements": {
+      "status": "PARTIAL",
+      "expected_screens": ["AchievementsScreen"],
+      "actual_screens": ["achievements_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/achievement_repository.dart", "data/services/achievement_api_service.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No AchievementRepository - provider directly uses Dio",
+        "No model validation in Achievement model"
+      ]
+    },
+    "referral": {
+      "status": "PARTIAL",
+      "expected_screens": ["InviteScreen"],
+      "actual_screens": ["invite_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/referral_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No ReferralRepository - referral_provider directly uses Dio",
+        "No model validation in ReferralStats model"
+      ]
+    },
+    "prize_homes": {
+      "status": "PARTIAL",
+      "expected_screens": ["PrizeHomesGalleryScreen", "HomeSpecDetailScreen", "LocationSelectionScreen"],
+      "actual_screens": ["home_gallery_screen.dart", "home_spec_detail_screen.dart", "location_selection_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/prize_home_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No PrizeHomeRepository - provider directly uses Dio",
+        "No model validation in PrizeHome model"
+      ]
+    },
+    "winners": {
+      "status": "PARTIAL",
+      "expected_screens": ["WinnersHistoryScreen", "WinnerProfileScreen"],
+      "actual_screens": ["winners_history_screen.dart", "winner_profile_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/winner_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No WinnerRepository - winners_provider directly uses Dio",
+        "No model validation in Winner model"
+      ]
+    },
+    "share_tracker": {
+      "status": "PARTIAL",
+      "expected_screens": ["ShareTrackerScreen"],
+      "actual_screens": ["share_tracker_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/share_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No ShareRepository - share_provider directly uses Dio",
+        "No model validation in ShareEvent model"
+      ]
+    },
+    "polls": {
+      "status": "COMPLETE",
+      "expected_screens": ["VoteScreen"],
+      "actual_screens": ["vote_screen.dart"],
+      "missing_screens": [],
+      "missing_files": [],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "Has proper PollsRepository",
+        "No model validation in PollModels"
+      ]
+    },
+    "gamification": {
+      "status": "COMPLETE",
+      "expected_screens": ["SpinScreen"],
+      "actual_screens": ["spin_screen.dart"],
+      "missing_screens": [],
+      "missing_files": [],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "Has proper GamificationRepository",
+        "Has custom SpinWheelPainter and ConfettiPainter widgets",
+        "No model validation in SpinModels"
+      ]
+    },
+    "compensations": {
+      "status": "PARTIAL",
+      "expected_screens": [],
+      "actual_screens": ["compensation_history_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/compensation_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No CompensationRepository - provider directly uses Dio",
+        "Screen exists (/compensation-history) but is not listed in the requirements document",
+        "No model validation in CompensationLog model"
+      ]
+    },
+    "config": {
+      "status": "COMPLETE",
+      "expected_screens": [],
+      "actual_screens": ["maintenance_screen.dart"],
+      "missing_screens": [],
+      "missing_files": [],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "Has proper ConfigService (in data/services/)",
+        "ConfigGate is used during app startup for maintenance mode checks",
+        "Infrastructure feature - no user-facing screens needed beyond maintenance screen"
+      ]
+    },
+    "help": {
+      "status": "PARTIAL",
+      "expected_screens": ["FaqScreen", "SupportScreen", "HowToPlayScreen", "CommunityGuidelinesScreen"],
+      "actual_screens": ["faq_screen.dart", "support_screen.dart", "how_to_play_screen.dart", "community_guidelines_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/repositories/support_repository.dart"],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "No SupportRepository - support_provider directly uses Dio",
+        "No model validation in SupportTicket model"
+      ]
+    },
+    "legal": {
+      "status": "PARTIAL",
+      "expected_screens": ["TermsOfServiceScreen", "PrivacyPolicyScreen", "ResponsibleGamingScreen", "LegalityScreen", "AboutScreen", "ContactScreen", "VersionScreen", "JobsScreen", "MoreScreen"],
+      "actual_screens": ["terms_of_service_screen.dart", "privacy_policy_screen.dart", "responsible_gaming_screen.dart", "legality_screen.dart", "about_screen.dart", "contact_screen.dart", "version_screen.dart", "jobs_screen.dart", "more_screen.dart"],
+      "missing_screens": [],
+      "missing_files": ["data/ directory (entirely missing)", "data/models/*.dart", "data/repositories/*.dart", "data/services/*.dart", "presentation/providers/*.dart"],
+      "missing_providers": ["legal_provider.dart (entire presentation/providers/ directory missing)"],
+      "missing_routes": [],
+      "issues": [
+        "CRITICAL: No data/ directory at all - only presentation/ exists",
+        "No providers, models, repositories, or services for legal feature",
+        "Screens use hardcoded inline data (TermsSection, PrivacySection lists) instead of being fetched from API",
+        "Screens are rich with content but should be driven by API-backed providers"
+      ]
+    },
+    "banners": {
+      "status": "COMPLETE",
+      "expected_screens": [],
+      "actual_screens": [],
+      "missing_screens": [],
+      "missing_files": [],
+      "missing_providers": [],
+      "missing_routes": [],
+      "issues": [
+        "Has proper Banner model and BannerProvider",
+        "Used by Dashboard's BannerCarousel widget",
+        "Infrastructure feature - no user-facing screens needed"
+      ]
+    }
+  },
+  "core_layer": {
+    "theme": {
+      "status": "COMPLETE",
+      "files": ["app_theme.dart"],
+      "issues": [
+        "Dark theme only - no light theme defined",
+        "No ThemeExtension for custom app-specific theme properties"
+      ]
+    },
+    "router": {
+      "status": "COMPLETE",
+      "files": ["app_router.dart", "deep_links.dart"],
+      "issues": [
+        "All 82 screens have registered routes",
+        "Auth redirect guard implemented (splash check on authProvider status)",
+        "Admin route guard implemented (role check)",
+        "No route transitions (all routes pop without animation)",
+        "DeepLinkConfig.configure() exists but no app_links/uni_links native config",
+        "No route-level error handling (no errorPage in GoRouter)"
+      ]
+    },
+    "network": {
+      "status": "COMPLETE",
+      "files": ["api_client.dart", "api_config.dart", "certificate_pinning.dart", "connectivity_service.dart", "connectivity_state.dart", "offline_request_queue.dart"],
+      "issues": [
+        "JWT interceptor, SSL pinning, offline queue, Sentry interceptor all configured",
+        "Offline queue with 3 retries and 5s delay is production-ready",
+        "ConnectivityService uses connectivity_plus properly",
+        "dart:io Platform used directly (not web-safe - acceptable for mobile-only)",
+        "SentryConfig.configure() called inside apiClientProvider Provider (should be called once in main)"
+      ]
+    },
+    "security": {
+      "status": "COMPLETE",
+      "files": ["device_security_service.dart", "security_guard_screen.dart", "sensitive_screen_mixin.dart", "sensitive_screen_wrapper.dart"],
+      "issues": [
+        "Root detection via MethodChannel",
+        "Screenshot protection mixin exists",
+        "SecurityGuardScreen blocks rooted devices",
+        "No permission_handler package installed"
+      ]
+    },
+    "analytics": {
+      "status": "COMPLETE",
+      "files": ["sentry_config.dart", "sentry_dio_interceptor.dart"],
+      "issues": [
+        "Sentry configured with PII sanitization, DSN from --dart-define",
+        "SentryFlutter.init called with empty appRunner in configure() method",
+        "No Firebase Analytics or custom analytics events beyond Sentry"
+      ]
+    },
+    "performance": {
+      "status": "COMPLETE",
+      "files": ["app_performance_config.dart", "app_startup.dart", "image_preloader.dart", "lazy_init.dart", "memory_profiler.dart", "performance_monitor.dart", "performance_overlay.dart", "rendering_analyzer.dart", "scroll_tracker.dart"],
+      "issues": [
+        "Comprehensive 4-phase startup, frame monitoring, memory profiler, scroll tracker",
+        "Performance overlay toggle for dev mode",
+        "Image preloader for common CDN images",
+        "Lazy initialization framework for deferred services"
+      ]
+    },
+    "updater": {
+      "status": "PARTIAL",
+      "files": ["app_update_service.dart", "app_version.dart"],
+      "issues": [
+        "AppUpdateService returns hardcoded default versions (1.0.0)",
+        "No actual API call to check minimum/latest app version",
+        "UpdateDialog UI is well-implemented with required vs recommended states",
+        "Need backend endpoint for version check"
+      ]
+    },
+    "utils": {
+      "status": "COMPLETE",
+      "files": ["asset_version.dart", "cdn_asset.dart", "cdn_manifest.dart", "image_cache_manager.dart", "image_compressor.dart", "image_optimizer.dart", "validators.dart"],
+      "issues": [
+        "CDN asset URL builder with responsive width/height/format params",
+        "Validators for phone, email, required, min/max length, amount",
+        "Image compressor and optimizer for uploads",
+        "Cache manager with custom config"
+      ]
+    },
+    "widgets": {
+      "status": "PARTIAL",
+      "files": ["error_boundary.dart", "offline_banner.dart", "offline_placeholder.dart", "retry_widget.dart"],
+      "issues": [
+        "ErrorBoundary with retry capability exists",
+        "OfflineBanner at app level only (not per-screen)",
+        "OfflinePlaceholder and RetryWidget available but underused",
+        "Missing shared widgets: AsyncScreen, ShimmerList, EmptyState, AppScaffold, CachedImage, AnimatedCounter",
+        "No centralized shimmer widget library (ShimmerWidget exists in dashboard only)"
+      ]
+    }
+  },
+  "cross_cutting_gaps": {
+    "localization": {
+      "status": "MISSING",
+      "detail": "No flutter_localizations, no intl package, no ARB files, all strings hardcoded in English. LanguageScreen exists but does not actually switch locale. 7 Indian languages planned per STATUS.md."
+    },
+    "accessibility": {
+      "status": "MISSING",
+      "detail": "Zero Semantics widgets across all 200+ Dart files. No screen reader support, no accessibility feature detection."
+    },
+    "permissions": {
+      "status": "MISSING",
+      "detail": "No permission_handler package. image_picker used without runtime checks. Will crash on Android 13+."
+    },
+    "testing": {
+      "status": "PARTIAL",
+      "detail": "13 test files exist in test/core/ covering infrastructure only. Zero tests for any feature (auth, contests, wallet, feed, etc.). No widget tests, no integration tests for features."
+    },
+    "repository_layer": {
+      "status": "PARTIAL",
+      "detail": "Only 5/24 features have dedicated repositories: leaderboard, chat, polls, gamification, admin. All others have providers directly using Dio."
+    },
+    "model_validation": {
+      "status": "MISSING",
+      "detail": "All 30+ models use manual fromJson with nullable casts and no validation. Using as String?/as int? without try/catch at field level. No freezed/json_serializable codegen."
+    },
+    "offline_per_screen": {
+      "status": "MISSING",
+      "detail": "OfflineBanner exists at app level only. 0/18 audited screens adapt UI for offline state per STATUS.md."
+    }
+  }
+}

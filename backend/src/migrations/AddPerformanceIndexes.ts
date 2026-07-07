@@ -4,7 +4,7 @@ export class AddPerformanceIndexes implements MigrationInterface {
   name = 'AddPerformanceIndexes';
 
   async up(queryRunner: QueryRunner): Promise<void> {
-    // contest_members composite indexes
+    // contest_members composite index
     await queryRunner.createIndex(
       'contest_members',
       new TableIndex({
@@ -12,12 +12,6 @@ export class AddPerformanceIndexes implements MigrationInterface {
         columnNames: ['user_id', 'contest_id'],
       }),
     );
-
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_contest_members_contest_status"
-      ON "contest_members" ("contest_id", "status")
-      WHERE "status" IS NOT NULL
-    `);
 
     // transactions composite and partial indexes
     await queryRunner.createIndex(
@@ -56,12 +50,6 @@ export class AddPerformanceIndexes implements MigrationInterface {
     );
 
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_point_logs_contest_user"
-      ON "point_logs" ("contest_id", "user_id")
-      WHERE "contest_id" IS NOT NULL
-    `);
-
-    await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "idx_point_logs_weekly"
       ON "point_logs" ("user_id", "created_at" DESC)
       WHERE "created_at" >= NOW() - INTERVAL '7 days'
@@ -82,7 +70,7 @@ export class AddPerformanceIndexes implements MigrationInterface {
       WHERE "admin_id" IS NOT NULL
     `);
 
-    // chat_messages composite indexes
+    // chat_messages composite index
     await queryRunner.createIndex(
       'chat_messages',
       new TableIndex({
@@ -90,18 +78,6 @@ export class AddPerformanceIndexes implements MigrationInterface {
         columnNames: ['chat_id', 'created_at'],
       }),
     );
-
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_chat_messages_sender_receiver"
-      ON "chat_messages" ("sender_id", "receiver_id", "created_at" DESC)
-      WHERE "receiver_id" IS NOT NULL
-    `);
-
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_chat_messages_unread"
-      ON "chat_messages" ("receiver_id", "created_at" DESC)
-      WHERE NOT "is_read"
-    `);
 
     // posts composite indexes
     await queryRunner.createIndex(
@@ -179,19 +155,15 @@ export class AddPerformanceIndexes implements MigrationInterface {
 
   async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropIndex('contest_members', 'idx_contest_members_user_contest');
-    await queryRunner.query('DROP INDEX IF EXISTS "idx_contest_members_contest_status"');
     await queryRunner.dropIndex('transactions', 'idx_transactions_user_type_created');
     await queryRunner.query('DROP INDEX IF EXISTS "idx_transactions_user_deposits"');
     await queryRunner.query('DROP INDEX IF EXISTS "idx_transactions_user_withdrawals"');
     await queryRunner.query('DROP INDEX IF EXISTS "idx_transactions_user_contest_joins"');
     await queryRunner.dropIndex('point_logs', 'idx_point_logs_user_created');
-    await queryRunner.query('DROP INDEX IF EXISTS "idx_point_logs_contest_user"');
     await queryRunner.query('DROP INDEX IF EXISTS "idx_point_logs_weekly"');
     await queryRunner.dropIndex('audit_logs', 'idx_audit_logs_user_action_created');
     await queryRunner.query('DROP INDEX IF EXISTS "idx_audit_logs_admin_action_created"');
     await queryRunner.dropIndex('chat_messages', 'idx_chat_messages_chat_created_desc');
-    await queryRunner.query('DROP INDEX IF EXISTS "idx_chat_messages_sender_receiver"');
-    await queryRunner.query('DROP INDEX IF EXISTS "idx_chat_messages_unread"');
     await queryRunner.dropIndex('posts', 'idx_posts_user_created');
     await queryRunner.query('DROP INDEX IF EXISTS "idx_posts_active_created"');
     await queryRunner.dropIndex('withdrawals', 'idx_withdrawals_user_status_created');

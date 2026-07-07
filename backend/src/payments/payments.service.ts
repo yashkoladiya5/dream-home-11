@@ -2,23 +2,36 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { Payment } from './entities/payment.entity';
 import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class PaymentsService {
-  private readonly webhookSecret =
-    process.env.WEBHOOK_SECRET || 'dream11_webhook_secret_key_2026';
+  private readonly logger = new Logger(PaymentsService.name);
+  private readonly webhookSecret: string;
 
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
     private readonly transactionsService: TransactionsService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    const secret = this.configService.get<string>('WEBHOOK_SECRET');
+    if (!secret) {
+      this.logger.error('WEBHOOK_SECRET environment variable is not set');
+      throw new InternalServerErrorException('Payment service misconfigured');
+    }
+    this.webhookSecret = secret;
+  }
+
+
 
   async createOrder(
     userId: string,

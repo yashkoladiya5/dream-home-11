@@ -10,6 +10,7 @@ import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { ChatHistoryService } from './chat-history.service';
+import { createWebSocketCorsConfig } from '../common/config/websocket-cors.config';
 
 interface JwtPayload {
   sub: string;
@@ -34,10 +35,7 @@ interface MarkReadPayload {
 
 @WebSocketGateway({
   namespace: '/chat',
-  cors: {
-    origin: '*',
-    credentials: true,
-  },
+  cors: createWebSocketCorsConfig(),
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

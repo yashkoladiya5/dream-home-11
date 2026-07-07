@@ -17,6 +17,7 @@ export const DomainEventNames = {
   WITHDRAWAL_COMPLETED: 'withdrawal.completed',
   REFERRAL_APPLIED: 'referral.applied',
   PRIZE_DISTRIBUTED: 'prize.distributed',
+  CONTEST_SETTLED: 'contest.settled',
   FRAUD_ALERT_TRIGGERED: 'fraud.alert.triggered',
   WARNING_ISSUED: 'warning.issued',
 };
