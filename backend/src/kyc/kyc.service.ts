@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Kyc, KycStatus } from './entities/kyc.entity';
 import { User } from '../users/entities/user.entity';
 import { ReferralService } from '../referral/referral.service';
@@ -27,6 +27,7 @@ export class KycService {
     private readonly referralService: ReferralService,
     private readonly auditService: AuditService,
     private readonly encryptionService: EncryptionService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async submitKyc(
@@ -48,6 +49,10 @@ export class KycService {
     });
 
     const saved = await this.kycRepository.save(kyc);
+
+    if (fullName) {
+      await this.userRepository.update(userId, { fullName });
+    }
 
     await this.auditService.log({
       userId,
@@ -135,62 +140,45 @@ export class KycService {
         throw new BadRequestException(`Invalid document type: ${documentType}`);
       }
 
-      let kyc = await this.kycRepository.findOne({ where: { userId } });
-      if (!kyc) {
-        console.log(`[KYC Upload] No KYC record found. Creating a new one for user: ${userId}`);
-        kyc = this.kycRepository.create({
-          userId,
-          status: KycStatus.PENDING,
+      const fileData = this.extractFileBuffer(file);
+
+      const url = await this.dataSource.transaction(async (entityManager) => {
+        let kyc = await entityManager.findOne(Kyc, {
+          where: { userId },
+          lock: { mode: 'pessimistic_write' },
         });
-        kyc = await this.kycRepository.save(kyc);
-      }
 
-      console.log(`[KYC Upload] Ensuring upload directory: ${KYC_UPLOAD_DIR}`);
-      ensureUploadDir();
-      const userDir = join(KYC_UPLOAD_DIR, userId);
-      if (!existsSync(userDir)) {
-        console.log(`[KYC Upload] Creating user-specific directory: ${userDir}`);
-        mkdirSync(userDir, { recursive: true });
-      }
-
-      const ext = extname(file.originalname) || '.jpg';
-      const filename = `${documentType}${ext}`;
-      const filePath = join(userDir, filename);
-      console.log(`[KYC Upload] Preparing file buffer for write...`);
-      console.log(`[KYC Upload] file.buffer type: ${typeof file.buffer}`);
-      console.log(`[KYC Upload] file.buffer constructor: ${file.buffer?.constructor?.name}`);
-      console.log(`[KYC Upload] file.buffer keys: ${Object.keys(file.buffer || {}).join(', ')}`);
-      
-      let fileData: Buffer;
-      if (Buffer.isBuffer(file.buffer)) {
-        fileData = file.buffer;
-      } else if (file.buffer && typeof file.buffer === 'object') {
-        const rawObj = file.buffer as any;
-        if (rawObj.type === 'Buffer' && Array.isArray(rawObj.data)) {
-          fileData = Buffer.from(rawObj.data);
-        } else if (Array.isArray(rawObj.data)) {
-          fileData = Buffer.from(rawObj.data);
-        } else if (rawObj.data && Array.isArray(rawObj.data.data)) {
-          fileData = Buffer.from(rawObj.data.data);
-        } else if (rawObj instanceof Uint8Array || rawObj.constructor?.name === 'Uint8Array' || rawObj.constructor?.name === 'Buffer') {
-          fileData = Buffer.from(rawObj);
-        } else if (rawObj.buffer && rawObj.buffer instanceof ArrayBuffer) {
-          fileData = Buffer.from(rawObj.buffer);
-        } else {
-          console.warn('[KYC Upload] Unknown buffer object format. Attempting conversion of keys:', Object.keys(rawObj));
-          fileData = Buffer.from(JSON.stringify(rawObj));
+        if (!kyc) {
+          console.log(`[KYC Upload] No KYC record found. Creating a new one for user: ${userId}`);
+          kyc = entityManager.create(Kyc, {
+            userId,
+            status: KycStatus.PENDING,
+          });
+          kyc = await entityManager.save(kyc);
         }
-      } else {
-        fileData = Buffer.from((file.buffer as any) || '');
-      }
 
-      console.log(`[KYC Upload] Writing file of size ${fileData.length} bytes to: ${filePath}`);
-      writeFileSync(filePath, fileData);
+        console.log(`[KYC Upload] Ensuring upload directory: ${KYC_UPLOAD_DIR}`);
+        ensureUploadDir();
+        const userDir = join(KYC_UPLOAD_DIR, userId);
+        if (!existsSync(userDir)) {
+          console.log(`[KYC Upload] Creating user-specific directory: ${userDir}`);
+          mkdirSync(userDir, { recursive: true });
+        }
 
-      const url = `/uploads/kyc/${userId}/${filename}`;
-      (kyc as any)[column] = url;
-      console.log(`[KYC Upload] Updating KYC database record...`);
-      await this.kycRepository.save(kyc);
+        const ext = extname(file.originalname) || '.jpg';
+        const filename = `${documentType}${ext}`;
+        const filePath = join(userDir, filename);
+
+        console.log(`[KYC Upload] Writing file of size ${fileData.length} bytes to: ${filePath}`);
+        writeFileSync(filePath, fileData);
+
+        const url = `/uploads/kyc/${userId}/${filename}`;
+        (kyc as any)[column] = url;
+        console.log(`[KYC Upload] Updating KYC database record...`);
+        await entityManager.save(kyc);
+
+        return url;
+      });
 
       console.log(`[KYC Upload] Upload successfully completed.`);
       return { url };
@@ -198,5 +186,32 @@ export class KycService {
       console.error('[KYC Upload] CRITICAL ERROR ENCOUNTERED:', error);
       throw error;
     }
+  }
+
+  private extractFileBuffer(file: Express.Multer.File): Buffer {
+    if (Buffer.isBuffer(file.buffer)) {
+      return file.buffer;
+    }
+    if (file.buffer && typeof file.buffer === 'object') {
+      const rawObj = file.buffer as any;
+      if (rawObj.type === 'Buffer' && Array.isArray(rawObj.data)) {
+        return Buffer.from(rawObj.data);
+      }
+      if (Array.isArray(rawObj.data)) {
+        return Buffer.from(rawObj.data);
+      }
+      if (rawObj.data && Array.isArray(rawObj.data.data)) {
+        return Buffer.from(rawObj.data.data);
+      }
+      if (rawObj instanceof Uint8Array || rawObj.constructor?.name === 'Uint8Array' || rawObj.constructor?.name === 'Buffer') {
+        return Buffer.from(rawObj);
+      }
+      if (rawObj.buffer && rawObj.buffer instanceof ArrayBuffer) {
+        return Buffer.from(rawObj.buffer);
+      }
+      console.warn('[KYC Upload] Unknown buffer object format. Attempting conversion of keys:', Object.keys(rawObj));
+      return Buffer.from(JSON.stringify(rawObj));
+    }
+    return Buffer.from((file.buffer as any) || '');
   }
 }

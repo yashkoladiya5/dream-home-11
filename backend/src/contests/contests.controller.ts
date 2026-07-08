@@ -105,4 +105,11 @@ export class ContestsController {
     });
     return result;
   }
+
+  @Post(':id/complete')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async completeContest(@Param('id', ParseUUIDPipe) id: string) {
+    return this.contestsService.completeContest(id);
+  }
 }

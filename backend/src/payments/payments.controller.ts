@@ -4,9 +4,11 @@ import {
   Get,
   Body,
   Param,
+  Headers,
   UseGuards,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
@@ -15,6 +17,8 @@ import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { TransactionsService } from '../transactions/transactions.service';
+import { SkipEnvelope } from '../common/decorators/skip-envelope.decorator';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller('api/v1/payments')
 @UseGuards(JwtAuthGuard)
@@ -83,6 +87,27 @@ export class PaymentsController {
       walletBalance: Number(updatedUser.walletBalanceInr),
       pointsBalance: Number(updatedUser.pointsBalance),
     };
+  }
+
+  @Post('webhook')
+  @Public()
+  @SkipEnvelope()
+  @HttpCode(HttpStatus.OK)
+  async handleWebhook(@Headers() headers: any, @Body() body: any) {
+    const signature = headers['x-webhook-signature'];
+
+    const isValid = this.paymentsService.verifyWebhookSignature(
+      JSON.stringify(body),
+      signature,
+    );
+
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid webhook signature');
+    }
+
+    await this.paymentsService.handleWebhookEvent(body);
+
+    return { received: true };
   }
 
   @Get('history')

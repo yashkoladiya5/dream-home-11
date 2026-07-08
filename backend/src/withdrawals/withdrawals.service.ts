@@ -12,8 +12,8 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 import { Kyc } from '../kyc/entities/kyc.entity';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '../audit/entities/audit-log.entity';
-
-const RESTRICTED_STATES = ['Assam', 'Odisha', 'Telangana'];
+import { EncryptionService } from '../common/encryption/encryption.service';
+import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class WithdrawalsService {
@@ -26,6 +26,8 @@ export class WithdrawalsService {
     private readonly transactionRepo: Repository<Transaction>,
     private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
+    private readonly encryptionService: EncryptionService,
+    private readonly configService: ConfigService,
   ) {}
 
   async requestWithdrawal(
@@ -44,12 +46,15 @@ export class WithdrawalsService {
       );
     }
 
-    const minWithdrawal = 100;
+    const config = await this.configService.getConfig();
+    const minWithdrawal = Number(config.minWithdrawalAmount);
     if (amount < minWithdrawal) {
       throw new BadRequestException(
         `Minimum withdrawal amount is ₹${minWithdrawal}`,
       );
     }
+
+    const restrictedStates = config.restrictedStates || [];
 
     return this.dataSource.transaction(async (entityManager) => {
       const user = await entityManager.findOne(User, {
@@ -77,7 +82,7 @@ export class WithdrawalsService {
         );
       }
 
-      if (user.state && RESTRICTED_STATES.includes(user.state)) {
+      if (user.state && restrictedStates.includes(user.state)) {
         throw new ForbiddenException(
           `Withdrawals are not allowed from ${user.state}`,
         );
@@ -87,12 +92,16 @@ export class WithdrawalsService {
       user.walletBalanceInr = balanceBefore - amount;
       await entityManager.save(user);
 
+      const rawBankAccount = bankDetails.bankAccountNumber || user.bankAccountNumber || null;
+      const encryptedBankAccount = rawBankAccount
+        ? this.encryptionService.encrypt(rawBankAccount)
+        : null;
+
       const savedWithdrawal = await entityManager.save(Withdrawal, {
         userId,
         amount,
         status: WithdrawalStatus.PENDING,
-        bankAccountNumber:
-          bankDetails.bankAccountNumber || user.bankAccountNumber || null,
+        bankAccountNumber: encryptedBankAccount,
         bankIfsc: bankDetails.bankIfsc || user.bankIfsc || null,
         bankName: bankDetails.bankName || user.bankName || null,
         upiId: bankDetails.upiId || user.upiId || null,

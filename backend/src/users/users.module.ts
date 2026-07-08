@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
@@ -8,6 +8,7 @@ import { CompensationLog } from '../compensation/entities/compensation.entity';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { EncryptionModule } from '../common/encryption/encryption.module';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { EncryptionModule } from '../common/encryption/encryption.module';
       CompensationLog,
     ]),
     EncryptionModule,
+    forwardRef(() => WalletModule),
   ],
   providers: [UsersService],
   controllers: [UsersController],

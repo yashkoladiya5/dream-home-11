@@ -82,10 +82,12 @@ import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { Warning } from './admin/entities/warning.entity';
 import { FraudAlert } from './admin/entities/fraud-alert.entity';
 import { LeaderboardArchive } from './leaderboard/entities/leaderboard-archive.entity';
+import { GdprModule } from './gdpr/gdpr.module';
 import { CommonModule } from './common/common.module';
 import { MetricsModule } from './common/metrics/metrics.module';
 import { Wallet } from './wallet/entities/wallet.entity';
 import { WalletModule } from './wallet/wallet.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -210,6 +212,8 @@ import { WalletModule } from './wallet/wallet.module';
     BatchModule,
     QueueModule,
     WalletModule,
+    GdprModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [

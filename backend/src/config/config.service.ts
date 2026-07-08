@@ -56,6 +56,12 @@ export class ConfigService implements OnApplicationBootstrap {
       'maxDailySpins',
       'supportEmail',
       'restrictedStates',
+      'bonusTier1Threshold',
+      'bonusTier1Points',
+      'bonusTier2Threshold',
+      'bonusTier2Points',
+      'bonusTier3Threshold',
+      'bonusTier3Points',
     ];
     const filtered: Partial<SystemConfig> = {};
     for (const key of allowedFields) {

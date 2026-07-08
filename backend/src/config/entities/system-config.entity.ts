@@ -65,6 +65,24 @@ export class SystemConfig {
   @Column('simple-array', { default: 'Assam,Odisha,Telangana' })
   restrictedStates: string[];
 
+  @Column('decimal', { precision: 10, scale: 2, default: 100 })
+  bonusTier1Threshold: number;
+
+  @Column({ type: 'integer', default: 20 })
+  bonusTier1Points: number;
+
+  @Column('decimal', { precision: 10, scale: 2, default: 500 })
+  bonusTier2Threshold: number;
+
+  @Column({ type: 'integer', default: 120 })
+  bonusTier2Points: number;
+
+  @Column('decimal', { precision: 10, scale: 2, default: 1000 })
+  bonusTier3Threshold: number;
+
+  @Column({ type: 'integer', default: 300 })
+  bonusTier3Points: number;
+
   @CreateDateColumn()
   createdAt: Date;
 
