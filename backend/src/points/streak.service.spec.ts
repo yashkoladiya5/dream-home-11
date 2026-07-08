@@ -35,6 +35,7 @@ describe('StreakService', () => {
     upiId: null as any,
     role: UserRole.USER,
     kyc: null as any,
+    wallet: null as any,
   };
 
   beforeEach(async () => {

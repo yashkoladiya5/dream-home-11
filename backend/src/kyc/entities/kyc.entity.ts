@@ -46,8 +46,8 @@ export class Kyc {
   panNumber: string;
 
   @Column({
-    type: 'enum',
-    enum: KycStatus,
+    type: 'varchar',
+    length: 20,
     default: KycStatus.PENDING,
   })
   status: KycStatus;

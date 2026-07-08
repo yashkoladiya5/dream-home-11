@@ -7,6 +7,7 @@ import {
   Index,
 } from 'typeorm';
 import { Kyc } from '../../kyc/entities/kyc.entity';
+import { Wallet } from '../../wallet/entities/wallet.entity';
 
 export enum UserLevel {
   BRONZE = 'bronze',
@@ -141,4 +142,7 @@ export class User {
 
   @OneToOne(() => Kyc, (kyc) => kyc.user)
   kyc: Kyc;
+
+  @OneToOne(() => Wallet, (wallet) => wallet.user)
+  wallet: Wallet;
 }

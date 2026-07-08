@@ -79,8 +79,13 @@ import { SmsModule } from './sms/sms.module';
 import { AuditLog } from './audit/entities/audit-log.entity';
 import { AuditModule } from './audit/audit.module';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
+import { Warning } from './admin/entities/warning.entity';
+import { FraudAlert } from './admin/entities/fraud-alert.entity';
+import { LeaderboardArchive } from './leaderboard/entities/leaderboard-archive.entity';
 import { CommonModule } from './common/common.module';
 import { MetricsModule } from './common/metrics/metrics.module';
+import { Wallet } from './wallet/entities/wallet.entity';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
@@ -132,6 +137,10 @@ import { MetricsModule } from './common/metrics/metrics.module';
           CompensationLog,
           AuditLog,
           RefreshToken,
+          Warning,
+          FraudAlert,
+          LeaderboardArchive,
+          Wallet,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
         autoLoadEntities: false,
@@ -200,6 +209,7 @@ import { MetricsModule } from './common/metrics/metrics.module';
     MetricsModule,
     BatchModule,
     QueueModule,
+    WalletModule,
   ],
   controllers: [AppController],
   providers: [

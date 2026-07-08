@@ -1,10 +1,6 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, ILike } from 'typeorm';
+import { Repository, DataSource, In, ILike } from 'typeorm';
 import { User, UserLevel } from './entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { Contest } from '../contests/entities/contest.entity';
@@ -28,6 +24,7 @@ export class UsersService {
     private readonly transactionRepo: Repository<Transaction>,
     @InjectRepository(CompensationLog)
     private readonly compensationLogRepo: Repository<CompensationLog>,
+    private readonly dataSource: DataSource,
     private readonly pointsEngineService: PointsEngineService,
     private readonly encryptionService: EncryptionService,
   ) {}
@@ -95,27 +92,32 @@ export class UsersService {
   }
 
   async addCash(userId: string, amount: number): Promise<User> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    const balanceBefore = Number(user.walletBalanceInr);
-    user.walletBalanceInr = balanceBefore + amount;
-    const saved = await this.userRepository.save(user);
+    return this.dataSource.transaction(async (entityManager) => {
+      const user = await entityManager.findOne(User, {
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const balanceBefore = Number(user.walletBalanceInr);
+      user.walletBalanceInr = balanceBefore + amount;
+      const saved = await entityManager.save(user);
 
-    await this.transactionRepo.save(
-      this.transactionRepo.create({
-        userId,
-        type: 'deposit',
-        cashAmount: amount,
-        cashBalanceBefore: balanceBefore,
-        cashBalanceAfter: Number(saved.walletBalanceInr),
-        description: `Deposit of \u20B9${amount}`,
-        status: 'completed',
-      }),
-    );
+      await entityManager.save(
+        entityManager.create(Transaction, {
+          userId,
+          type: 'deposit',
+          cashAmount: amount,
+          cashBalanceBefore: balanceBefore,
+          cashBalanceAfter: Number(saved.walletBalanceInr),
+          description: `Deposit of \u20B9${amount}`,
+          status: 'completed',
+        }),
+      );
 
-    return saved;
+      return saved;
+    });
   }
 
   async awardPoints(userId: string, points: number): Promise<User> {
