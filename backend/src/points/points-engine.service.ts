@@ -20,7 +20,7 @@ export class PointsEngineService {
     app_open: {
       name: 'App Open',
       description: 'Open the app daily',
-      basePoints: 10,
+      basePoints: 5,
       dailyCap: 1,
     },
     notification_on: {
@@ -32,8 +32,8 @@ export class PointsEngineService {
     feed_like_comment: {
       name: 'Feed Engagement',
       description: 'Like or comment on posts',
-      basePoints: 10,
-      dailyCap: 5,
+      basePoints: 3,
+      dailyCap: 10,
     },
     daily_login: {
       name: 'Daily Login',
@@ -45,6 +45,12 @@ export class PointsEngineService {
       name: 'Contest Completed',
       description: 'Complete a contest',
       basePoints: 100,
+      dailyCap: 20,
+    },
+    social_share: {
+      name: 'Social Share',
+      description: 'Share posts with friends',
+      basePoints: 50,
       dailyCap: 20,
     },
   };
@@ -101,9 +107,9 @@ export class PointsEngineService {
 
   getTierInfo(lifetimePoints: number): { tier: string; multiplier: number } {
     let tier: string;
-    if (lifetimePoints >= 5000) {
+    if (lifetimePoints >= 15000) {
       tier = 'platinum';
-    } else if (lifetimePoints >= 2000) {
+    } else if (lifetimePoints >= 5000) {
       tier = 'gold';
     } else if (lifetimePoints >= 1000) {
       tier = 'silver';
@@ -120,8 +126,8 @@ export class PointsEngineService {
   } {
     const thresholds = [
       { tier: 'silver', points: 1000, multiplier: 1.1 },
-      { tier: 'gold', points: 2000, multiplier: 1.25 },
-      { tier: 'platinum', points: 5000, multiplier: 1.5 },
+      { tier: 'gold', points: 5000, multiplier: 1.25 },
+      { tier: 'platinum', points: 15000, multiplier: 1.5 },
     ];
     for (const t of thresholds) {
       if (lifetimePoints < t.points) {

@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Share } from './entities/share.entity';
 import { PointsEngineService } from '../points/points-engine.service';
 
-export const SHARE_POINTS = 5;
+export const SHARE_POINTS = 50;
 
 @Injectable()
 export class ShareTrackerService {

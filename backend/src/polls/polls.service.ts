@@ -127,9 +127,9 @@ export class PollsService {
     user.pointsBalance = prevPoints + this.VOTE_POINTS;
     user.lifetimePoints = prevLifetime + this.VOTE_POINTS;
 
-    if (user.lifetimePoints >= 5000) {
+    if (user.lifetimePoints >= 15000) {
       user.currentTier = UserLevel.PLATINUM;
-    } else if (user.lifetimePoints >= 2000) {
+    } else if (user.lifetimePoints >= 5000) {
       user.currentTier = UserLevel.GOLD;
     } else if (user.lifetimePoints >= 1000) {
       user.currentTier = UserLevel.SILVER;

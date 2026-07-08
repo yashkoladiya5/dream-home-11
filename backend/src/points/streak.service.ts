@@ -55,8 +55,9 @@ export class StreakService {
     }
 
     let bonusPoints = 0;
-    if (streak === 7) bonusPoints = 100;
-    else if (streak === 30) bonusPoints = 600;
+    if (streak === 7) bonusPoints = 50;
+    else if (streak === 30) bonusPoints = 300;
+    else if (streak === 365) bonusPoints = 5000;
 
     if (bonusPoints > 0) {
       user.pointsBalance = Number(user.pointsBalance) + bonusPoints;
@@ -87,6 +88,7 @@ export class StreakService {
     const milestones = [
       { days: 7, reward: 100 },
       { days: 30, reward: 600 },
+      { days: 365, reward: 5000 },
     ];
 
     const streak = user.currentStreak || 0;

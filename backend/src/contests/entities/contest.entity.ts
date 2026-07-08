@@ -53,7 +53,7 @@ export class Contest {
   })
   entryFeeInr: number;
 
-  @Column({ name: 'points_to_join', type: 'integer', default: 0 })
+  @Column({ name: 'points_to_join', type: 'integer', default: 50 })
   pointsToJoin: number;
 
   @Column({ name: 'max_slots', type: 'integer', nullable: false })

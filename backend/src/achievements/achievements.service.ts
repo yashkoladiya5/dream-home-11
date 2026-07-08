@@ -151,9 +151,9 @@ export class AchievementsService {
           user.pointsBalance = Number(user.pointsBalance) + finalPoints;
           user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
 
-          if (user.lifetimePoints >= 5000) {
+          if (user.lifetimePoints >= 15000) {
             user.currentTier = 'platinum' as any;
-          } else if (user.lifetimePoints >= 2000) {
+          } else if (user.lifetimePoints >= 5000) {
             user.currentTier = 'gold' as any;
           } else if (user.lifetimePoints >= 1000) {
             user.currentTier = 'silver' as any;
