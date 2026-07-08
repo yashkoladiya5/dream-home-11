@@ -11,6 +11,7 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -23,6 +24,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Post('fcm-token')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async registerToken(
     @Req() req,
     @Body('token') token: string,
@@ -44,6 +46,7 @@ export class NotificationsController {
   }
 
   @Post('reminders')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async createReminder(
     @Req() req,
     @Body('contestId') contestId: string,
@@ -65,6 +68,7 @@ export class NotificationsController {
   }
 
   @Delete('reminders/:id')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async deleteReminder(@Req() req, @Param('id') id: string) {
     await this.notificationsService.deleteReminder(req.user.id, id);
     return { success: true };
@@ -91,6 +95,7 @@ export class NotificationsController {
   }
 
   @Patch(':id/read')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async markAsRead(@Req() req, @Param('id') id: string) {
     if (!UUID_REGEX.test(id))
       throw new BadRequestException('Invalid notification ID format');
@@ -102,6 +107,7 @@ export class NotificationsController {
   }
 
   @Post('read-all')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async readAllNotifications(@Req() req) {
     await this.notificationsService.markAllAsRead(req.user.id);
     return { success: true };

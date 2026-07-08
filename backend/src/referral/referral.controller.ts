@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ReferralService } from './referral.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -19,6 +20,7 @@ export class ReferralController {
   constructor(private readonly referralService: ReferralService) {}
 
   @Post('apply')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   async applyReferral(@GetUser() user: User, @Body() dto: ApplyReferralDto) {
     return this.referralService.applyReferral(user, dto.code);

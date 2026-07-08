@@ -7,6 +7,7 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 import { CompensationLog } from '../compensation/entities/compensation.entity';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { EncryptionModule } from '../common/encryption/encryption.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UsersController } from './users.controller';
       Transaction,
       CompensationLog,
     ]),
+    EncryptionModule,
   ],
   providers: [UsersService],
   controllers: [UsersController],

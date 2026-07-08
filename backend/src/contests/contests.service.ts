@@ -251,7 +251,6 @@ export class ContestsService {
     const leaderboard = members.map((member, index) => ({
       userId: member.userId,
       userName: member.user?.fullName || 'Anonymous',
-      phoneNumber: member.user?.phoneNumber || '',
       points: member.pointsEarned,
       rank: index + 1,
     }));
@@ -264,7 +263,6 @@ export class ContestsService {
     members: {
       userId: string;
       userName: string;
-      phoneNumber: string;
       points: number;
       rank: number;
     }[];
@@ -290,7 +288,6 @@ export class ContestsService {
     const memberList = members.map((m, index) => ({
       userId: m.userId,
       userName: m.user?.fullName || 'Anonymous',
-      phoneNumber: m.user?.phoneNumber || '',
       points: m.pointsEarned,
       rank: index + 1,
     }));
@@ -434,7 +431,6 @@ export class ContestsService {
     winners: {
       userId: string;
       userName: string;
-      phoneNumber: string;
       points: number;
       rank: number;
     }[];
@@ -456,7 +452,6 @@ export class ContestsService {
     const winners = members.map((m, index) => ({
       userId: m.userId,
       userName: m.user?.fullName || 'Anonymous',
-      phoneNumber: m.user?.phoneNumber || '',
       points: m.pointsEarned,
       rank: index + 1,
     }));

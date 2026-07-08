@@ -31,9 +31,7 @@ export class AuthService {
 
     this.redisOtpService.storeOtp(phoneNumber, otpCode);
 
-    console.log(
-      `[Nest] ✉️ Verification code for ${phoneNumber} is: ${otpCode}`,
-    );
+    this.logger.debug(`OTP stored for ${phoneNumber} (length: ${otpCode.length})`);
 
     this.queueService.add(QUEUES.OTP_SMS, { phoneNumber, code: otpCode });
 
@@ -51,9 +49,10 @@ export class AuthService {
   ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
     const { phoneNumber } = await this.firebaseService.verifyIdToken(idToken);
 
-    if (idToken.startsWith('mock-token-') && otpCode) {
-      await this.redisOtpService.verifyOtp(phoneNumber, otpCode);
+    if (!otpCode) {
+      throw new UnauthorizedException('OTP code is required');
     }
+    await this.redisOtpService.verifyOtp(phoneNumber, otpCode);
 
     const existingUser = await this.usersService.findByPhoneNumber(phoneNumber);
     const isNewUser = !existingUser;

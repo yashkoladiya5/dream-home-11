@@ -98,7 +98,7 @@ export class ContestsGateway
       this.connectedClients.set(payload.contestId, new Set());
     }
     this.connectedClients.get(payload.contestId)!.add(client.id);
-    console.log(`[ContestsGateway] Client ${client.id} joined room ${room}`);
+    this.logger.log(`Client ${client.id} joined room ${room}`);
   }
 
   @SubscribeMessage('leaveContestRoom')
@@ -113,7 +113,7 @@ export class ContestsGateway
         this.connectedClients.delete(payload.contestId);
       }
     }
-    console.log(`[ContestsGateway] Client ${client.id} left room ${room}`);
+    this.logger.log(`Client ${client.id} left room ${room}`);
   }
 
   emitPointUpdate(

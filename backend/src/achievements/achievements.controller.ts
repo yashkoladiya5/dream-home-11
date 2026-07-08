@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AchievementsService } from './achievements.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -13,6 +14,7 @@ export class AchievementsController {
   }
 
   @Post('check')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async checkAndAward(@Req() req) {
     return this.achievementsService.checkAndAwardAchievements(req.user.id);
   }

@@ -10,6 +10,7 @@ import {
   HttpStatus,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FeedService } from './feed.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { AddCommentDto } from './dto/add-comment.dto';
@@ -37,6 +38,7 @@ export class FeedController {
   }
 
   @Post()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.CREATED)
   async createPost(@GetUser() user: User, @Body() dto: CreatePostDto) {
     const post = await this.feedService.createPost(
@@ -48,6 +50,7 @@ export class FeedController {
   }
 
   @Post(':id/like')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   async toggleLike(
     @GetUser() user: User,
@@ -57,6 +60,7 @@ export class FeedController {
   }
 
   @Post(':id/comment')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.CREATED)
   async addComment(
     @GetUser() user: User,

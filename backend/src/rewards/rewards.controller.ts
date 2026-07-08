@@ -7,6 +7,7 @@ import {
   UseGuards,
   NotFoundException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { RewardsService } from './rewards.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -31,6 +32,7 @@ export class RewardsController {
   }
 
   @Post(':id/redeem')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   async redeemReward(@Req() req, @Param('id') id: string) {
     return this.rewardsService.redeemReward(req.user.id, id);
   }

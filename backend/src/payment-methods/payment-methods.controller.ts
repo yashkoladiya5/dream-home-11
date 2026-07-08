@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { PaymentMethodsService } from './payment-methods.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -31,6 +32,7 @@ export class PaymentMethodsController {
   }
 
   @Post()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @GetUser() user: User,
@@ -46,6 +48,7 @@ export class PaymentMethodsController {
   }
 
   @Delete(':id')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   async remove(@GetUser() user: User, @Param('id') id: string) {
     await this.service.remove(user.id, id);

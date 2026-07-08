@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Body, Req, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ShareTrackerService } from './share-tracker.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -8,6 +9,7 @@ export class ShareTrackerController {
   constructor(private readonly shareTrackerService: ShareTrackerService) {}
 
   @Post()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async logShare(
     @Req() req,
     @Body('contestId') contestId: string,

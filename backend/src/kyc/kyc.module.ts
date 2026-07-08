@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
 import { ReferralModule } from '../referral/referral.module';
 import { AuditModule } from '../audit/audit.module';
+import { EncryptionModule } from '../common/encryption/encryption.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuditModule } from '../audit/audit.module';
     UsersModule,
     ReferralModule,
     AuditModule,
+    EncryptionModule,
   ],
   controllers: [KycController],
   providers: [KycService],

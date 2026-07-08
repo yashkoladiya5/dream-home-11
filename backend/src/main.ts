@@ -16,6 +16,7 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   const criticalVars = [
+    'ENCRYPTION_KEY',
     'JWT_SECRET',
     'DB_HOST',
     'DB_PORT',

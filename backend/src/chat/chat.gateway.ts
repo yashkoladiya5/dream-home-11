@@ -81,7 +81,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.join(`user:${user.id}`);
 
       this.logger.log(
-        `Client ${client.id} connected as user ${user.id} (${user.phoneNumber})`,
+        `Client ${client.id} connected as user ${user.id}`,
       );
     } catch (error) {
       this.logger.error(
