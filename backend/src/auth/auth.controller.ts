@@ -38,6 +38,7 @@ export class AuthController {
   }
 
   @Post('verify-otp')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @SkipEnvelope()
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -53,6 +54,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @SkipEnvelope()
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -72,7 +74,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async mockLogin(@Body() dto: MockLoginDto) {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV !== 'development') {
       throw new UnauthorizedException('Not available in production');
     }
     return this.authService.createMockToken(dto.phoneNumber, dto.role);

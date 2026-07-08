@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import { Kyc, KycStatus } from './entities/kyc.entity';
 import { User } from '../users/entities/user.entity';
 import { ReferralService } from '../referral/referral.service';
+import { EncryptionService } from '../common/encryption/encryption.service';
+import { maskAadhaar, maskPan } from '../common/encryption/pii-transform';
 import { ensureUploadDir, KYC_UPLOAD_DIR } from './kyc-uploads.config';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, extname } from 'path';
@@ -24,6 +26,7 @@ export class KycService {
     private readonly userRepository: Repository<User>,
     private readonly referralService: ReferralService,
     private readonly auditService: AuditService,
+    private readonly encryptionService: EncryptionService,
   ) {}
 
   async submitKyc(
@@ -39,8 +42,8 @@ export class KycService {
 
     const kyc = this.kycRepository.create({
       userId,
-      aadhaarNumber,
-      panNumber,
+      aadhaarNumber: this.encryptionService.encrypt(aadhaarNumber),
+      panNumber: this.encryptionService.encrypt(panNumber),
       status: KycStatus.PENDING,
     });
 
@@ -76,18 +79,33 @@ export class KycService {
         status: 'unverified' as any,
       };
     }
+    let decryptedAadhaar: string | undefined;
+    let decryptedPan: string | undefined;
+    try {
+      if (kyc.aadhaarNumber) {
+        decryptedAadhaar = this.encryptionService.decrypt(kyc.aadhaarNumber);
+      }
+    } catch {
+      decryptedAadhaar = undefined;
+    }
+    try {
+      if (kyc.panNumber) {
+        decryptedPan = this.encryptionService.decrypt(kyc.panNumber);
+      }
+    } catch {
+      decryptedPan = undefined;
+    }
+
     return {
       id: kyc.id,
       userId: kyc.userId,
       status: kyc.status,
       verifiedAt: kyc.verifiedAt,
       rejectionReason: kyc.rejectionReason,
-      aadhaarNumber: kyc.aadhaarNumber
-        ? `xxxx${kyc.aadhaarNumber.slice(-4)}`
+      aadhaarNumber: decryptedAadhaar
+        ? maskAadhaar(decryptedAadhaar)
         : undefined,
-      panNumber: kyc.panNumber
-        ? kyc.panNumber.slice(0, 2) + 'xxxx' + kyc.panNumber.slice(-2)
-        : undefined,
+      panNumber: decryptedPan ? maskPan(decryptedPan) : undefined,
       aadhaarFrontUrl: kyc.aadhaarFrontUrl,
       aadhaarBackUrl: kyc.aadhaarBackUrl,
       panCardUrl: kyc.panCardUrl,

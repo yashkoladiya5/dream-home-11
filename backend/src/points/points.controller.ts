@@ -7,6 +7,7 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { PointsEngineService } from './points-engine.service';
 import { StreakService } from './streak.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -35,6 +36,7 @@ export class PointsController {
   }
 
   @Post('action')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async performAction(@Req() req, @Body('action') action: string) {
     const userId = req.user.id;
     if (!action) {

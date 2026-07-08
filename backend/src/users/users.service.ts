@@ -11,6 +11,8 @@ import { Contest } from '../contests/entities/contest.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { CompensationLog } from '../compensation/entities/compensation.entity';
 import { PointsEngineService } from '../points/points-engine.service';
+import { EncryptionService } from '../common/encryption/encryption.service';
+import { maskBankAccount, maskUpi } from '../common/encryption/pii-transform';
 import { randomBytes } from 'crypto';
 
 @Injectable()
@@ -27,6 +29,7 @@ export class UsersService {
     @InjectRepository(CompensationLog)
     private readonly compensationLogRepo: Repository<CompensationLog>,
     private readonly pointsEngineService: PointsEngineService,
+    private readonly encryptionService: EncryptionService,
   ) {}
 
   async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
@@ -57,7 +60,7 @@ export class UsersService {
         avatarUrl: true,
         isActive: true,
         role: true,
-        kyc: { status: true, aadhaarNumber: true, panNumber: true },
+        kyc: { status: true },
       },
     });
   }
@@ -151,15 +154,16 @@ export class UsersService {
     }
 
     if (data.bankAccountNumber !== undefined)
-      user.bankAccountNumber = data.bankAccountNumber;
+      user.bankAccountNumber = this.encryptionService.encrypt(data.bankAccountNumber);
     if (data.bankIfsc !== undefined) user.bankIfsc = data.bankIfsc;
     if (data.bankName !== undefined) user.bankName = data.bankName;
-    if (data.upiId !== undefined) user.upiId = data.upiId;
+    if (data.upiId !== undefined)
+      user.upiId = this.encryptionService.encrypt(data.upiId);
 
     return this.userRepository.save(user);
   }
 
-  async getProfile(userId: string): Promise<User> {
+  async getProfile(userId: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: { kyc: true },
@@ -167,7 +171,52 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user;
+
+    let decryptedBankAccount: string | undefined;
+    let decryptedUpi: string | undefined;
+    try {
+      if (user.bankAccountNumber) {
+        decryptedBankAccount = this.encryptionService.decrypt(user.bankAccountNumber);
+      }
+    } catch {
+      decryptedBankAccount = undefined;
+    }
+    try {
+      if (user.upiId) {
+        decryptedUpi = this.encryptionService.decrypt(user.upiId);
+      }
+    } catch {
+      decryptedUpi = undefined;
+    }
+
+    return {
+      id: user.id,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      fullName: user.fullName,
+      avatarUrl: user.avatarUrl,
+      createdAt: user.createdAt,
+      currentTier: user.currentTier,
+      lifetimePoints: user.lifetimePoints,
+      weeklyPoints: user.weeklyPoints,
+      monthlyPoints: user.monthlyPoints,
+      walletBalanceInr: user.walletBalanceInr,
+      pointsBalance: user.pointsBalance,
+      isActive: user.isActive,
+      state: user.state,
+      referralCode: user.referralCode,
+      role: user.role,
+      currentStreak: user.currentStreak,
+      longestStreak: user.longestStreak,
+      lastStreakDate: user.lastStreakDate,
+      bankAccountNumber: decryptedBankAccount
+        ? maskBankAccount(decryptedBankAccount)
+        : null,
+      bankIfsc: user.bankIfsc,
+      bankName: user.bankName,
+      upiId: decryptedUpi ? maskUpi(decryptedUpi) : null,
+      kyc: user.kyc,
+    };
   }
 
   async updateProfile(

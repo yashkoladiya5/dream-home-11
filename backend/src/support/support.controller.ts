@@ -10,6 +10,7 @@ import {
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SupportService } from './support.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -23,6 +24,7 @@ export class SupportController {
   constructor(private readonly supportService: SupportService) {}
 
   @Post('tickets')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @UseInterceptors(FileInterceptor('attachment'))
   async createTicket(
     @GetUser() user: User,

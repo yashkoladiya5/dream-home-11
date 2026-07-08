@@ -93,7 +93,7 @@ export class User {
   @Column({
     name: 'bank_account_number',
     type: 'varchar',
-    length: 30,
+    length: 255,
     nullable: true,
   })
   bankAccountNumber: string;
@@ -104,7 +104,7 @@ export class User {
   @Column({ name: 'bank_name', type: 'varchar', length: 100, nullable: true })
   bankName: string;
 
-  @Column({ name: 'upi_id', type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'upi_id', type: 'varchar', length: 512, nullable: true })
   upiId: string;
 
   @Column({

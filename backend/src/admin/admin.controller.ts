@@ -59,6 +59,7 @@ export class AdminController {
   }
 
   @Patch('users/:id')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async updateUser(
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
@@ -165,6 +166,7 @@ export class AdminController {
   }
 
   @Patch('support-tickets/:id/status')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async updateTicketStatus(
     @Param('id') id: string,
     @Body() dto: { status: string },

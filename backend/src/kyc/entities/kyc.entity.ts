@@ -30,7 +30,7 @@ export class Kyc {
   @Column({
     name: 'aadhaar_number',
     type: 'varchar',
-    length: 12,
+    length: 255,
     unique: true,
     nullable: true,
   })
@@ -39,7 +39,7 @@ export class Kyc {
   @Column({
     name: 'pan_number',
     type: 'varchar',
-    length: 10,
+    length: 255,
     unique: true,
     nullable: true,
   })

@@ -24,8 +24,8 @@ export class UsersController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getMe(@GetUser() user: User): User {
-    return user;
+  async getMe(@GetUser() user: User) {
+    return this.usersService.getProfile(user.id);
   }
 
   @Get('me/multiplier')
@@ -85,6 +85,7 @@ export class UsersController {
   }
 
   @Patch('bank-details')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async updateBankDetails(
