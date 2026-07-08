@@ -6,11 +6,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { Payment } from './entities/payment.entity';
-import { TransactionsService } from '../transactions/transactions.service';
+import { User } from '../users/entities/user.entity';
+import { Transaction } from '../transactions/entities/transaction.entity';
 
 @Injectable()
 export class PaymentsService {
@@ -20,7 +21,7 @@ export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
-    private readonly transactionsService: TransactionsService,
+    private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
   ) {
     const secret = this.configService.get<string>('WEBHOOK_SECRET');
@@ -60,29 +61,56 @@ export class PaymentsService {
     userId: string,
     orderId: string,
     paymentId: string,
-  ): Promise<{ payment: Payment; bonusPoints: number }> {
-    const payment = await this.paymentRepo.findOne({ where: { orderId } });
-    if (!payment) throw new NotFoundException('Payment order not found');
-    if (payment.userId !== userId)
-      throw new BadRequestException('Order does not belong to user');
-    if (payment.status !== 'pending')
-      throw new BadRequestException('Payment already processed');
+  ): Promise<{ payment: Payment; bonusPoints: number; user: User }> {
+    return this.dataSource.transaction(async (entityManager) => {
+      const payment = await entityManager.findOne(Payment, {
+        where: { orderId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!payment) throw new NotFoundException('Payment order not found');
+      if (payment.userId !== userId)
+        throw new BadRequestException('Order does not belong to user');
+      if (payment.status !== 'pending')
+        throw new BadRequestException('Payment already processed');
 
-    const payload = `${orderId}|${paymentId}|${payment.amount}|completed`;
-    const signature = crypto
-      .createHmac('sha256', this.webhookSecret)
-      .update(payload)
-      .digest('hex');
+      const payload = `${orderId}|${paymentId}|${payment.amount}|completed`;
+      const signature = crypto
+        .createHmac('sha256', this.webhookSecret)
+        .update(payload)
+        .digest('hex');
 
-    const bonusPoints = this.calculateBonusPoints(Number(payment.amount));
+      const bonusPoints = this.calculateBonusPoints(Number(payment.amount));
 
-    payment.paymentId = paymentId;
-    payment.status = 'completed';
-    payment.signature = signature;
-    payment.bonusPoints = bonusPoints;
+      payment.paymentId = paymentId;
+      payment.status = 'completed';
+      payment.signature = signature;
+      payment.bonusPoints = bonusPoints;
+      await entityManager.save(payment);
 
-    await this.paymentRepo.save(payment);
-    return { payment, bonusPoints };
+      const user = await entityManager.findOne(User, {
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!user) throw new NotFoundException('User not found');
+
+      const balanceBefore = Number(user.walletBalanceInr);
+      user.walletBalanceInr = balanceBefore + Number(payment.amount);
+      const savedUser = await entityManager.save(user);
+
+      await entityManager.save(
+        entityManager.create(Transaction, {
+          userId,
+          type: 'deposit',
+          cashAmount: Number(payment.amount),
+          cashBalanceBefore: balanceBefore,
+          cashBalanceAfter: Number(savedUser.walletBalanceInr),
+          description: `Deposit of \u20B9${Number(payment.amount)}`,
+          status: 'completed',
+        }),
+      );
+
+      return { payment, bonusPoints, user: savedUser };
+    });
   }
 
   calculateBonusPoints(amount: number): number {

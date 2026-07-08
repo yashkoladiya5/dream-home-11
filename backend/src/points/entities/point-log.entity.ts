@@ -30,7 +30,7 @@ export class PointLog {
   @Column({ name: 'base_points', type: 'integer', default: 0 })
   basePoints: number;
 
-  @Column({ type: 'decimal', precision: 3, scale: 2, default: 1.0 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 1.0 })
   multiplier: number;
 
   @Column({ name: 'final_points', type: 'integer', default: 0 })

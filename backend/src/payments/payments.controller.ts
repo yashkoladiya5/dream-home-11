@@ -53,15 +53,10 @@ export class PaymentsController {
     @Body('orderId') orderId: string,
     @Body('paymentId') paymentId: string,
   ) {
-    const { payment, bonusPoints } = await this.paymentsService.verifyPayment(
+    let { payment, bonusPoints, user: updatedUser } = await this.paymentsService.verifyPayment(
       user.id,
       orderId,
       paymentId,
-    );
-
-    let updatedUser = await this.usersService.addCash(
-      user.id,
-      Number(payment.amount),
     );
 
     if (bonusPoints > 0) {

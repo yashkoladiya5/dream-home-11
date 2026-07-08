@@ -49,6 +49,7 @@ describe('ContestsService', () => {
     upiId: null as any,
     role: UserRole.USER,
     kyc: null as any,
+    wallet: null as any,
   };
 
   const mockContest: Contest = {

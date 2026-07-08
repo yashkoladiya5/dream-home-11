@@ -2,15 +2,20 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('payments')
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   @Column({ name: 'user_id' })
   userId: string;
 
@@ -30,9 +35,7 @@ export class Payment {
   paymentMethod?: string;
 
   @Column({
-    type: 'numeric',
-    precision: 10,
-    scale: 2,
+    type: 'integer',
     name: 'bonus_points',
     default: 0,
   })

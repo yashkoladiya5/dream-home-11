@@ -36,6 +36,11 @@ import { SupportTicket } from '../support/entities/support-ticket.entity';
 import { CompensationLog } from '../compensation/entities/compensation.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
 import { AuditLog } from '../audit/entities/audit-log.entity';
+import { RefreshToken } from '../auth/entities/refresh-token.entity';
+import { Warning } from '../admin/entities/warning.entity';
+import { FraudAlert } from '../admin/entities/fraud-alert.entity';
+import { LeaderboardArchive } from '../leaderboard/entities/leaderboard-archive.entity';
+import { Wallet } from '../wallet/entities/wallet.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -77,6 +82,11 @@ export default new DataSource({
     CompensationLog,
     SystemConfig,
     AuditLog,
+    RefreshToken,
+    Warning,
+    FraudAlert,
+    LeaderboardArchive,
+    Wallet,
   ],
   migrations: ['dist/migrations/*.js'],
   migrationsTableName: 'typeorm_migrations',
