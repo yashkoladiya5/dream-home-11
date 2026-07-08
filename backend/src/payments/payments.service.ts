@@ -7,11 +7,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService as NestConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { Payment } from './entities/payment.entity';
 import { User } from '../users/entities/user.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import { WalletService } from '../wallet/wallet.service';
+import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class PaymentsService {
@@ -21,10 +23,14 @@ export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     private readonly dataSource: DataSource,
-    private readonly configService: ConfigService,
+    private readonly nestConfigService: NestConfigService,
+    private readonly appConfigService: ConfigService,
+    private readonly walletService: WalletService,
   ) {
-    const secret = this.configService.get<string>('WEBHOOK_SECRET');
+    const secret = this.nestConfigService.get<string>('WEBHOOK_SECRET');
     if (!secret) {
       this.logger.error('WEBHOOK_SECRET environment variable is not set');
       throw new InternalServerErrorException('Payment service misconfigured');
@@ -39,8 +45,11 @@ export class PaymentsService {
     amount: number,
     paymentMethod?: string,
   ): Promise<Payment> {
-    if (amount < 10 || amount > 50000) {
-      throw new BadRequestException('Amount must be between ₹10 and ₹50,000');
+    const config = await this.appConfigService.getConfig();
+    const minAmount = 10;
+    const maxAmount = Number(config.maxWithdrawalAmount) || 50000;
+    if (amount < minAmount || amount > maxAmount) {
+      throw new BadRequestException(`Amount must be between ₹${minAmount} and ₹${maxAmount}`);
     }
 
     const orderId = `ORD_${Date.now()}_${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
@@ -62,7 +71,7 @@ export class PaymentsService {
     orderId: string,
     paymentId: string,
   ): Promise<{ payment: Payment; bonusPoints: number; user: User }> {
-    return this.dataSource.transaction(async (entityManager) => {
+    const { payment, bonusPoints } = await this.dataSource.transaction(async (entityManager) => {
       const payment = await entityManager.findOne(Payment, {
         where: { orderId },
         lock: { mode: 'pessimistic_write' },
@@ -79,7 +88,7 @@ export class PaymentsService {
         .update(payload)
         .digest('hex');
 
-      const bonusPoints = this.calculateBonusPoints(Number(payment.amount));
+      const bonusPoints = await this.calculateBonusPoints(Number(payment.amount));
 
       payment.paymentId = paymentId;
       payment.status = 'completed';
@@ -87,37 +96,90 @@ export class PaymentsService {
       payment.bonusPoints = bonusPoints;
       await entityManager.save(payment);
 
-      const user = await entityManager.findOne(User, {
-        where: { id: userId },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!user) throw new NotFoundException('User not found');
-
-      const balanceBefore = Number(user.walletBalanceInr);
-      user.walletBalanceInr = balanceBefore + Number(payment.amount);
-      const savedUser = await entityManager.save(user);
-
-      await entityManager.save(
-        entityManager.create(Transaction, {
-          userId,
-          type: 'deposit',
-          cashAmount: Number(payment.amount),
-          cashBalanceBefore: balanceBefore,
-          cashBalanceAfter: Number(savedUser.walletBalanceInr),
-          description: `Deposit of \u20B9${Number(payment.amount)}`,
-          status: 'completed',
-        }),
-      );
-
-      return { payment, bonusPoints, user: savedUser };
+      return { payment, bonusPoints };
     });
+
+    const { wallet } = await this.walletService.creditBalance(userId, Number(payment.amount), {
+      type: 'payment',
+      id: payment.id,
+      description: `Deposit of \u20B9${Number(payment.amount)}`,
+    });
+
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    user.walletBalanceInr = Number(wallet.balanceInr);
+    const savedUser = await this.userRepo.save(user);
+
+    return { payment, bonusPoints, user: savedUser };
   }
 
-  calculateBonusPoints(amount: number): number {
-    if (amount >= 1000) return 300;
-    if (amount >= 500) return 120;
-    if (amount >= 100) return 20;
+  async calculateBonusPoints(amount: number): Promise<number> {
+    const config = await this.appConfigService.getConfig();
+    if (amount >= Number(config.bonusTier3Threshold)) return config.bonusTier3Points;
+    if (amount >= Number(config.bonusTier2Threshold)) return config.bonusTier2Points;
+    if (amount >= Number(config.bonusTier1Threshold)) return config.bonusTier1Points;
     return 0;
+  }
+
+  verifyWebhookSignature(payload: string, signature: string): boolean {
+    if (!signature) return false;
+    const computed = crypto
+      .createHmac('sha256', this.webhookSecret)
+      .update(payload)
+      .digest('hex');
+    if (computed.length !== signature.length) return false;
+    return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(signature));
+  }
+
+  async handleWebhookEvent(body: any): Promise<void> {
+    const event = body?.event;
+    if (!event) return;
+
+    if (event === 'payment.captured' || event === 'order.paid') {
+      const orderId = body?.order_id || body?.orderId;
+      const paymentId = body?.payment_id || body?.paymentId;
+      if (!orderId || !paymentId) return;
+
+      const payment = await this.paymentRepo.findOne({ where: { orderId } });
+      if (!payment || payment.status !== 'pending') return;
+
+      await this.dataSource.transaction(async (entityManager) => {
+        const lockedPayment = await entityManager.findOne(Payment, {
+          where: { orderId },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!lockedPayment || lockedPayment.status !== 'pending') return;
+
+        const bonusPoints = await this.calculateBonusPoints(Number(lockedPayment.amount));
+
+        lockedPayment.paymentId = paymentId;
+        lockedPayment.status = 'completed';
+        lockedPayment.bonusPoints = bonusPoints;
+        await entityManager.save(lockedPayment);
+
+        const user = await entityManager.findOne(User, {
+          where: { id: lockedPayment.userId },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!user) return;
+
+        const balanceBefore = Number(user.walletBalanceInr);
+        user.walletBalanceInr = balanceBefore + Number(lockedPayment.amount);
+        const savedUser = await entityManager.save(user);
+
+        await entityManager.save(
+          entityManager.create(Transaction, {
+            userId: lockedPayment.userId,
+            type: 'deposit',
+            cashAmount: Number(lockedPayment.amount),
+            cashBalanceBefore: balanceBefore,
+            cashBalanceAfter: Number(savedUser.walletBalanceInr),
+            description: `Deposit of ₹${Number(lockedPayment.amount)}`,
+            status: 'completed',
+          }),
+        );
+      });
+    }
   }
 
   async getPaymentByOrderId(orderId: string): Promise<Payment | null> {

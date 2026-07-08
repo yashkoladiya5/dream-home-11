@@ -47,7 +47,7 @@ export class Withdrawal {
   @Column({
     name: 'bank_account_number',
     type: 'varchar',
-    length: 30,
+    length: 512,
     nullable: true,
   })
   bankAccountNumber: string;

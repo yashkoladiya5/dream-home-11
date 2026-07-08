@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In, ILike } from 'typeorm';
 import { User, UserLevel } from './entities/user.entity';
@@ -9,6 +9,7 @@ import { CompensationLog } from '../compensation/entities/compensation.entity';
 import { PointsEngineService } from '../points/points-engine.service';
 import { EncryptionService } from '../common/encryption/encryption.service';
 import { maskBankAccount, maskUpi } from '../common/encryption/pii-transform';
+import { WalletService } from '../wallet/wallet.service';
 import { randomBytes } from 'crypto';
 
 @Injectable()
@@ -27,6 +28,8 @@ export class UsersService {
     private readonly dataSource: DataSource,
     private readonly pointsEngineService: PointsEngineService,
     private readonly encryptionService: EncryptionService,
+    @Inject(forwardRef(() => WalletService))
+    private readonly walletService: WalletService,
   ) {}
 
   async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
@@ -88,41 +91,29 @@ export class UsersService {
       isActive: true,
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    await this.walletService.initializeWallet(savedUser.id);
+    return savedUser;
   }
 
   async addCash(userId: string, amount: number): Promise<User> {
-    return this.dataSource.transaction(async (entityManager) => {
-      const user = await entityManager.findOne(User, {
-        where: { id: userId },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-      const balanceBefore = Number(user.walletBalanceInr);
-      user.walletBalanceInr = balanceBefore + amount;
-      const saved = await entityManager.save(user);
-
-      await entityManager.save(
-        entityManager.create(Transaction, {
-          userId,
-          type: 'deposit',
-          cashAmount: amount,
-          cashBalanceBefore: balanceBefore,
-          cashBalanceAfter: Number(saved.walletBalanceInr),
-          description: `Deposit of \u20B9${amount}`,
-          status: 'completed',
-        }),
-      );
-
-      return saved;
+    const { wallet } = await this.walletService.creditBalance(userId, amount, {
+      type: 'deposit',
+      id: '',
+      description: `Deposit of \u20B9${amount}`,
     });
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    user.walletBalanceInr = Number(wallet.balanceInr);
+    return this.userRepository.save(user);
   }
 
   async awardPoints(userId: string, points: number): Promise<User> {
     const user = await this.findById(userId);
     if (!user) throw new NotFoundException('User not found');
+
+    await this.walletService.creditPoints(userId, points);
+
     user.pointsBalance = Number(user.pointsBalance) + points;
     user.lifetimePoints = Number(user.lifetimePoints) + points;
 

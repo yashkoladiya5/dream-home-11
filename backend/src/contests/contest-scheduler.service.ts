@@ -1,13 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual, MoreThan, In } from 'typeorm';
+import { Repository, LessThanOrEqual } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Contest, ContestStatus } from './entities/contest.entity';
-import { ContestMember } from './entities/contest-member.entity';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import { QUEUES } from '../queue/queue.constants';
+import { ContestsService } from './contests.service';
 import { DomainEventNames, createDomainEvent } from '../common/events/domain-events';
 
 @Injectable()
@@ -17,11 +14,8 @@ export class ContestSchedulerService {
   constructor(
     @InjectRepository(Contest)
     private readonly contestRepository: Repository<Contest>,
-    @InjectRepository(ContestMember)
-    private readonly contestMemberRepository: Repository<ContestMember>,
     private readonly eventEmitter: EventEmitter2,
-    @InjectQueue(QUEUES.PRIZE_DISTRIBUTION)
-    private readonly prizeDistributionQueue: Queue,
+    private readonly contestsService: ContestsService,
   ) {}
 
   @Cron(CronExpression.EVERY_30_SECONDS)
@@ -60,27 +54,32 @@ export class ContestSchedulerService {
     const now = new Date();
     const contests = await this.contestRepository.find({
       where: {
-        status: In([ContestStatus.RUNNING, ContestStatus.FILLED]),
+        status: ContestStatus.RUNNING,
         endTime: LessThanOrEqual(now),
       },
       take: 50,
     });
 
     for (const contest of contests) {
-      contest.status = ContestStatus.COMPLETED;
-      await this.contestRepository.save(contest);
+      try {
+        const result = await this.contestsService.completeContest(contest.id);
 
-      await this.enqueuePrizeDistribution(contest.id);
+        this.eventEmitter.emit(
+          DomainEventNames.CONTEST_COMPLETED,
+          createDomainEvent(DomainEventNames.CONTEST_COMPLETED, {
+            contestId: contest.id,
+            title: contest.title,
+          }),
+        );
 
-      this.eventEmitter.emit(
-        DomainEventNames.CONTEST_COMPLETED,
-        createDomainEvent(DomainEventNames.CONTEST_COMPLETED, {
-          contestId: contest.id,
-          title: contest.title,
-        }),
-      );
-
-      this.logger.log(`Completed contest ${contest.id}: ${contest.title}`);
+        this.logger.log(
+          `Completed contest ${contest.id}: ${contest.title} with ${result.winners.length} winners`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to complete contest ${contest.id}: ${(error as Error).message}`,
+        );
+      }
     }
   }
 
@@ -98,28 +97,5 @@ export class ContestSchedulerService {
       await this.contestRepository.save(contest);
       this.logger.log(`Contest ${contestId} filled all slots`);
     }
-  }
-
-  private async enqueuePrizeDistribution(contestId: string): Promise<void> {
-    const members = await this.contestMemberRepository.find({
-      where: { contestId },
-      order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
-    });
-
-    const distributionPlan = members.map((m, index) => ({
-      userId: m.userId,
-      rank: index + 1,
-      pointsEarned: m.pointsEarned,
-    }));
-
-    await this.prizeDistributionQueue.add(
-      QUEUES.PRIZE_DISTRIBUTION,
-      { contestId, distributionPlan },
-      { jobId: `prize-${contestId}`, priority: 1 },
-    );
-
-    this.logger.log(
-      `Enqueued prize distribution for contest ${contestId} (${distributionPlan.length} members)`,
-    );
   }
 }

@@ -9,11 +9,14 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  ValidationPipe,
+  UsePipes,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extname } from 'path';
 import { KycService } from './kyc.service';
+import { SubmitKycDto } from './dto/submit-kyc.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -46,17 +49,16 @@ export class KycController {
   @Post('submit')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   async submitKyc(
     @GetUser() user: User,
-    @Body('aadhaarNumber') aadhaarNumber: string,
-    @Body('panNumber') panNumber: string,
-    @Body('fullName') fullName: string,
+    @Body() dto: SubmitKycDto,
   ) {
     const kyc = await this.kycService.submitKyc(
       user.id,
-      aadhaarNumber,
-      panNumber,
-      fullName,
+      dto.aadhaarNumber,
+      dto.panNumber,
+      dto.fullName,
     );
     return {
       id: kyc.id,

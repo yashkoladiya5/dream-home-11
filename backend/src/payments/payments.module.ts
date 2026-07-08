@@ -5,12 +5,16 @@ import { PaymentsService } from './payments.service';
 import { PaymentsController } from './payments.controller';
 import { UsersModule } from '../users/users.module';
 import { TransactionsModule } from '../transactions/transactions.module';
+import { AppConfigModule } from '../config/config.module';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Payment]),
     UsersModule,
     TransactionsModule,
+    AppConfigModule,
+    WalletModule,
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService],

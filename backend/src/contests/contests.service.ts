@@ -133,7 +133,7 @@ export class ContestsService {
   }
 
   async findByCode(code: string): Promise<Contest | null> {
-    return this.contestRepository.findOne({ where: { title: code } });
+    return this.contestRepository.findOne({ where: { inviteCode: code } });
   }
 
   async getMembers(
@@ -205,40 +205,42 @@ export class ContestsService {
   ): Promise<{ contest: Contest; inviteCode: string }> {
     const inviteCode = randomBytes(4).toString('hex').toUpperCase().slice(0, 8);
 
-    const now = new Date();
-    const contest = this.contestRepository.create({
-      title: dto.title,
-      type: ContestType.PRIVATE,
-      entryFeeInr: dto.entryFeeInr,
-      pointsToJoin: dto.pointsToJoin,
-      maxSlots: dto.maxSlots,
-      filledSlots: 0,
-      prize: dto.prize,
-      badgeText: 'PRIVATE',
-      badgeColor: '#F97316',
-      rules:
-        dto.rules ||
-        '1. Entry fee is non-refundable.\n2. This is a private contest — invite only.\n3. Winners will be announced after the contest ends.\n4. Must complete KYC within 7 days of winning.\n5. Dream11 reserves the right to modify these rules.\n6. By joining, you agree to all terms and conditions.',
-      inviteCode,
-      startTime: dto.startTime || now,
-      endTime:
-        dto.endTime || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-      status: ContestStatus.RUNNING,
+    return this.dataSource.transaction(async (entityManager) => {
+      const now = new Date();
+      const contest = entityManager.create(Contest, {
+        title: dto.title,
+        type: ContestType.PRIVATE,
+        entryFeeInr: dto.entryFeeInr,
+        pointsToJoin: dto.pointsToJoin,
+        maxSlots: dto.maxSlots,
+        filledSlots: 0,
+        prize: dto.prize,
+        badgeText: 'PRIVATE',
+        badgeColor: '#F97316',
+        rules:
+          dto.rules ||
+          '1. Entry fee is non-refundable.\n2. This is a private contest — invite only.\n3. Winners will be announced after the contest ends.\n4. Must complete KYC within 7 days of winning.\n5. Dream11 reserves the right to modify these rules.\n6. By joining, you agree to all terms and conditions.',
+        inviteCode,
+        startTime: dto.startTime || now,
+        endTime:
+          dto.endTime || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+        status: ContestStatus.RUNNING,
+      });
+
+      await entityManager.save(contest);
+
+      const member = entityManager.create(ContestMember, {
+        contestId: contest.id,
+        userId,
+        pointsEarned: 0,
+      });
+      await entityManager.save(member);
+
+      contest.filledSlots = 1;
+      await entityManager.save(contest);
+
+      return { contest, inviteCode };
     });
-
-    await this.contestRepository.save(contest);
-
-    const member = this.contestMemberRepository.create({
-      contestId: contest.id,
-      userId,
-      pointsEarned: 0,
-    });
-    await this.contestMemberRepository.save(member);
-
-    contest.filledSlots = 1;
-    await this.contestRepository.save(contest);
-
-    return { contest, inviteCode };
   }
 
   async getLeaderboard(contestId: string): Promise<{ leaderboard: any[] }> {
@@ -442,6 +444,10 @@ export class ContestsService {
       throw new NotFoundException('Contest not found');
     }
 
+    if (contest.status !== ContestStatus.COMPLETED) {
+      throw new BadRequestException('Contest is not completed yet');
+    }
+
     const members = await this.contestMemberRepository.find({
       where: { contestId },
       relations: { user: true },
@@ -533,5 +539,135 @@ export class ContestsService {
     });
 
     return result;
+  }
+
+  calculatePrizes(
+    contest: Contest,
+    members: ContestMember[],
+  ): { userId: string; prize: string; amount: number }[] {
+    const prizePool =
+      Number(contest.entryFeeInr) *
+      Math.min(contest.maxSlots, Math.max(members.length, 1));
+    const results: { userId: string; prize: string; amount: number }[] = [];
+    const topCount = Math.min(10, members.length);
+
+    for (let i = 0; i < topCount; i++) {
+      const member = members[i];
+      let amount = 0;
+      let prizeType = '';
+
+      if (i === 0) {
+        amount = Math.round(prizePool * 0.8 * 100) / 100;
+        prizeType = 'HOME';
+      } else if (i === 1) {
+        amount = Math.round(prizePool * 0.15 * 100) / 100;
+        prizeType = 'CAR';
+      } else {
+        const remainingCount = topCount - 2;
+        amount =
+          remainingCount > 0
+            ? Math.round(((prizePool * 0.05) / remainingCount) * 100) / 100
+            : 0;
+        prizeType = 'CASH';
+      }
+
+      results.push({ userId: member.userId, prize: prizeType, amount });
+    }
+
+    return results;
+  }
+
+  async completeContest(contestId: string): Promise<{
+    contest: Contest;
+    winners: { userId: string; prize: string; amount: number }[];
+  }> {
+    return this.dataSource.transaction(async (manager) => {
+      const contest = await manager.findOne(Contest, {
+        where: { id: contestId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!contest) throw new NotFoundException('Contest not found');
+      if (contest.status !== ContestStatus.RUNNING && contest.status !== ContestStatus.FILLED)
+        throw new BadRequestException('Contest is not in running status');
+
+      const members = await manager.find(ContestMember, {
+        where: { contestId },
+        relations: { user: true },
+        order: { pointsEarned: 'DESC', joinedAt: 'ASC' },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      const winners = this.calculatePrizes(contest, members);
+
+      for (const winner of winners) {
+        if (winner.amount > 0) {
+          const user = await manager.findOne(User, {
+            where: { id: winner.userId },
+            lock: { mode: 'pessimistic_write' },
+          });
+
+          if (user) {
+            const balanceBefore = Number(user.walletBalanceInr);
+            user.walletBalanceInr = balanceBefore + winner.amount;
+            await manager.save(user);
+
+            const transaction = manager.create(Transaction, {
+              userId: winner.userId,
+              type: 'prize',
+              cashAmount: winner.amount,
+              cashBalanceBefore: balanceBefore,
+              cashBalanceAfter: Number(user.walletBalanceInr),
+              description: `Prize for contest: ${contest.title} (${winner.prize})`,
+              referenceType: 'contest',
+              referenceId: contestId,
+              status: 'completed',
+            });
+            await manager.save(transaction);
+          }
+        }
+      }
+
+      for (const member of members) {
+        if (member.user) {
+          const multiplier = this.pointsEngineService.getMultiplier(
+            member.user.currentTier,
+          );
+          const finalPoints = this.pointsEngineService.calculatePoints(
+            100,
+            member.user.currentTier,
+          );
+
+          await this.pointsEngineService.logPointActionWithEntityManager(
+            manager,
+            member.userId,
+            'contest_complete',
+            100,
+            multiplier,
+            finalPoints,
+          );
+
+          member.user.pointsBalance =
+            Number(member.user.pointsBalance) + finalPoints;
+          member.user.lifetimePoints =
+            Number(member.user.lifetimePoints) + finalPoints;
+
+          if (member.user.lifetimePoints >= 5000) {
+            member.user.currentTier = UserLevel.PLATINUM;
+          } else if (member.user.lifetimePoints >= 2000) {
+            member.user.currentTier = UserLevel.GOLD;
+          } else if (member.user.lifetimePoints >= 1000) {
+            member.user.currentTier = UserLevel.SILVER;
+          }
+
+          await manager.save(member.user);
+        }
+      }
+
+      contest.status = ContestStatus.COMPLETED;
+      await manager.save(contest);
+
+      return { contest, winners };
+    });
   }
 }

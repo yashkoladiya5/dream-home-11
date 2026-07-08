@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager, MoreThanOrEqual, In } from 'typeorm';
 import { PointLog } from './entities/point-log.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class PointsEngineService {
@@ -40,11 +41,19 @@ export class PointsEngineService {
       basePoints: 10,
       dailyCap: 1,
     },
+    contest_complete: {
+      name: 'Contest Completed',
+      description: 'Complete a contest',
+      basePoints: 100,
+      dailyCap: 20,
+    },
   };
 
   constructor(
     @InjectRepository(PointLog)
     private readonly pointLogRepo: Repository<PointLog>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
   getMultiplier(tier: string): number {
@@ -274,6 +283,22 @@ export class PointsEngineService {
       finalPoints,
     );
 
+    await this.userRepo.increment(
+      { id: userId },
+      'pointsBalance',
+      finalPoints,
+    );
+    await this.userRepo.increment(
+      { id: userId },
+      'lifetimePoints',
+      finalPoints,
+    );
+
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: { id: true, lifetimePoints: true, currentTier: true },
+    });
+
     return {
       success: true,
       action,
@@ -283,8 +308,8 @@ export class PointsEngineService {
       todayCount: status.todayCount + 1,
       dailyCap: def.dailyCap,
       canPerform: status.todayCount + 1 < def.dailyCap,
-      lifetimePoints: 0,
-      currentTier: tier,
+      lifetimePoints: user?.lifetimePoints ?? 0,
+      currentTier: user?.currentTier ?? tier,
     };
   }
 }
