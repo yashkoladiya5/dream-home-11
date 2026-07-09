@@ -147,10 +147,10 @@ describe('StreakService', () => {
       const result = await service.updateStreak('user-1');
       expect(result.currentStreak).toBe(7);
       expect(result.bonusAwarded).toBe(true);
-      expect(result.bonusPoints).toBe(100);
+      expect(result.bonusPoints).toBe(50);
     });
 
-    it('should award 600 bonus at 30-day streak', async () => {
+    it('should award 300 bonus at 30-day streak', async () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const user = {
@@ -169,7 +169,7 @@ describe('StreakService', () => {
       const result = await service.updateStreak('user-1');
       expect(result.currentStreak).toBe(30);
       expect(result.bonusAwarded).toBe(true);
-      expect(result.bonusPoints).toBe(600);
+      expect(result.bonusPoints).toBe(300);
     });
   });
 
@@ -187,11 +187,11 @@ describe('StreakService', () => {
     });
 
     it('should return no next milestone if 30+ streak', async () => {
-      const user = { ...mockUser, currentStreak: 30, longestStreak: 30 };
+      const user = { ...mockUser, currentStreak: 365, longestStreak: 365 };
       (userRepo.findOne as jest.Mock).mockResolvedValue(user);
 
       const result = await service.getStreakInfo('user-1');
-      expect(result.currentStreak).toBe(30);
+      expect(result.currentStreak).toBe(365);
       expect(result.nextMilestone).toBeNull();
     });
   });

@@ -9,6 +9,7 @@ jest.mock('firebase-admin/auth', () => ({
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { RefreshTokenService } from './refresh-token.service';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { User, UserLevel, UserRole } from '../users/entities/user.entity';
@@ -74,6 +75,11 @@ describe('AuthController', () => {
       ),
   };
 
+  const mockRefreshTokenService = {
+    refreshAccessToken: jest.fn(),
+    generateTokens: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -81,6 +87,10 @@ describe('AuthController', () => {
         {
           provide: AuthService,
           useValue: mockAuthService,
+        },
+        {
+          provide: RefreshTokenService,
+          useValue: mockRefreshTokenService,
         },
       ],
     }).compile();

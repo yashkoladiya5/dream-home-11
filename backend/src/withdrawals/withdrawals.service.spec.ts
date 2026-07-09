@@ -7,6 +7,8 @@ import { User } from '../users/entities/user.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service';
+import { EncryptionService } from '../common/encryption/encryption.service';
+import { ConfigService } from '../config/config.service';
 
 describe('WithdrawalsService', () => {
   let service: WithdrawalsService;
@@ -47,6 +49,18 @@ describe('WithdrawalsService', () => {
     log: jest.fn(),
   };
 
+  const mockEncryptionService = {
+    encrypt: jest.fn().mockImplementation((v) => v),
+    decrypt: jest.fn().mockImplementation((v) => v),
+  };
+
+  const mockConfigService = {
+    getConfig: jest.fn().mockResolvedValue({
+      minWithdrawalAmount: 100,
+      restrictedStates: ['Assam', 'Odisha', 'Telangana'],
+    }),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -78,6 +92,8 @@ describe('WithdrawalsService', () => {
         },
         { provide: DataSource, useValue: dataSource },
         { provide: AuditService, useValue: mockAuditService },
+        { provide: EncryptionService, useValue: mockEncryptionService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 

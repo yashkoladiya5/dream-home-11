@@ -8,6 +8,13 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
 import { SupportTicket } from '../support/entities/support-ticket.entity';
+import { Banner } from '../banners/entities/banner.entity';
+import { PrizeHome } from '../prize-homes/entities/prize-home.entity';
+import { Warning } from './entities/warning.entity';
+import { FraudAlert } from './entities/fraud-alert.entity';
+import { Reward } from '../rewards/entities/reward.entity';
+import { Poll } from '../polls/entities/poll.entity';
+import { Referral } from '../referral/entities/referral.entity';
 import { CompensationService } from '../compensation/compensation.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SmsService } from '../sms/sms.service';
@@ -116,6 +123,13 @@ describe('AdminService', () => {
           provide: getRepositoryToken(SupportTicket),
           useValue: supportTicketRepo,
         },
+        { provide: getRepositoryToken(Banner), useValue: userRepo },
+        { provide: getRepositoryToken(PrizeHome), useValue: userRepo },
+        { provide: getRepositoryToken(Warning), useValue: userRepo },
+        { provide: getRepositoryToken(FraudAlert), useValue: userRepo },
+        { provide: getRepositoryToken(Reward), useValue: userRepo },
+        { provide: getRepositoryToken(Poll), useValue: userRepo },
+        { provide: getRepositoryToken(Referral), useValue: userRepo },
         { provide: CompensationService, useValue: mockCompensationService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: SmsService, useValue: mockSmsService },

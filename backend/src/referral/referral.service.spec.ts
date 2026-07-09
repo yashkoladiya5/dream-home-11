@@ -232,7 +232,7 @@ describe('ReferralService', () => {
       expect(mockDataSource.createQueryRunner).not.toHaveBeenCalled();
     });
 
-    it('should award +30 points and create referral record on success', async () => {
+    it('should award +200 points and create referral record on success', async () => {
       const currentUser = { ...mockUser };
       const referrerLock = {
         ...mockReferrerUser,
@@ -243,7 +243,7 @@ describe('ReferralService', () => {
       const createdReferral = {
         referrerId: 'referrer-1',
         refereeId: 'user-1',
-        signupReward: 30,
+        signupReward: 200,
         status: ReferralStatus.PENDING,
       };
       const createdTransaction = { id: 'txn-1' };
@@ -262,7 +262,7 @@ describe('ReferralService', () => {
       expect(result).toEqual({
         success: true,
         message: 'Referral applied successfully',
-        pointsAwarded: 30,
+        pointsAwarded: 200,
       });
 
       expect(mockUserRepo.findOne).toHaveBeenCalledWith({
@@ -293,13 +293,13 @@ describe('ReferralService', () => {
       });
       expect(mockQueryBuilder.getOne).toHaveBeenCalledTimes(2);
 
-      expect(referrerLock.pointsBalance).toBe(530);
-      expect(referrerLock.lifetimePoints).toBe(1030);
+      expect(referrerLock.pointsBalance).toBe(700);
+      expect(referrerLock.lifetimePoints).toBe(1200);
 
       expect(mockQueryRunner.manager.create).toHaveBeenCalledWith(Referral, {
         referrerId: mockReferrerUser.id,
         refereeId: currentUser.id,
-        signupReward: 30,
+        signupReward: 200,
         status: ReferralStatus.PENDING,
       });
 
@@ -309,9 +309,9 @@ describe('ReferralService', () => {
           userId: mockReferrerUser.id,
           type: 'referral',
           cashAmount: 0,
-          pointsAmount: 30,
+          pointsAmount: 200,
           pointsBalanceBefore: 500,
-          pointsBalanceAfter: 530,
+          pointsBalanceAfter: 700,
           description: 'Referral reward for inviting a friend',
           referenceType: 'referral',
           status: 'completed',
@@ -335,7 +335,7 @@ describe('ReferralService', () => {
       const createdReferral = {
         referrerId: 'referrer-1',
         refereeId: 'user-1',
-        signupReward: 30,
+        signupReward: 200,
         status: ReferralStatus.PENDING,
       };
       const createdTransaction = { id: 'txn-2' };
@@ -350,8 +350,8 @@ describe('ReferralService', () => {
 
       await service.applyReferral(currentUser, 'REFCODE1');
 
-      expect(referrerLock.pointsBalance).toBe(80);
-      expect(referrerLock.lifetimePoints).toBe(1029);
+      expect(referrerLock.pointsBalance).toBe(250);
+      expect(referrerLock.lifetimePoints).toBe(1199);
       expect(referrerLock.currentTier).toBe(UserLevel.SILVER);
     });
 
