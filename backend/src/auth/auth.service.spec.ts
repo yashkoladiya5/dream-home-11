@@ -13,6 +13,10 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { User, UserLevel, UserRole } from '../users/entities/user.entity';
 import { ReferralService } from '../referral/referral.service';
+import { RedisOtpService } from './redis-otp.service';
+import { RefreshTokenService } from './refresh-token.service';
+import { QueueService } from '../queue/queue.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UnauthorizedException } from '@nestjs/common';
 
 describe('AuthService', () => {
@@ -85,6 +89,47 @@ describe('AuthService', () => {
     generateReferralCode: jest.fn().mockReturnValue('TESTCODE'),
   };
 
+  const otpStore = new Map<string, { code: string; expiresAt: Date; attempts: number }>();
+  const mockRedisOtpService = {
+    storeOtp: jest.fn().mockImplementation((phone: string, code: string) => {
+      otpStore.set(phone, { code, expiresAt: new Date(Date.now() + 300000), attempts: 0 });
+    }),
+    verifyOtp: jest.fn().mockImplementation((phone: string, code: string) => {
+      const entry = otpStore.get(phone);
+      if (!entry) throw new UnauthorizedException('OTP not found or expired');
+      if (entry.expiresAt < new Date()) {
+        otpStore.delete(phone);
+        throw new UnauthorizedException('OTP has expired');
+      }
+      if (entry.code !== code) {
+        entry.attempts++;
+        if (entry.attempts >= 3) {
+          otpStore.delete(phone);
+          throw new UnauthorizedException('Too many failed attempts. Please request a new OTP.');
+        }
+        throw new UnauthorizedException('Invalid OTP verification code');
+      }
+      otpStore.delete(phone);
+      return Promise.resolve();
+    }),
+  };
+
+  const mockRefreshTokenService = {
+    generateTokens: jest.fn().mockResolvedValue({
+      accessToken: 'mock-jwt-token-xyz',
+      refreshToken: 'mock-refresh-token',
+    }),
+    refreshAccessToken: jest.fn(),
+  };
+
+  const mockQueueService = {
+    add: jest.fn(),
+  };
+
+  const mockEventEmitter = {
+    emit: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -93,10 +138,15 @@ describe('AuthService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ReferralService, useValue: mockReferralService },
+        { provide: RedisOtpService, useValue: mockRedisOtpService },
+        { provide: RefreshTokenService, useValue: mockRefreshTokenService },
+        { provide: QueueService, useValue: mockQueueService },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    (service as any).otpStore = otpStore;
     firebaseService = module.get<FirebaseService>(FirebaseService);
     usersService = module.get<UsersService>(UsersService);
     jwtService = module.get<JwtService>(JwtService);
@@ -137,7 +187,7 @@ describe('AuthService', () => {
       const result = await service.verifyOtp(idToken, deviceId, otpCode);
 
       expect(result).toBeDefined();
-      expect(result.token).toBe('mock-jwt-token-xyz');
+      expect(result.accessToken).toBe('mock-jwt-token-xyz');
       expect(result.user).toEqual(mockUser);
 
       expect(firebaseService.verifyIdToken).toHaveBeenCalledWith(idToken);
@@ -145,10 +195,6 @@ describe('AuthService', () => {
         phoneNumber,
         deviceId,
       );
-      expect(jwtService.sign).toHaveBeenCalledWith({
-        sub: mockUser.id,
-        phoneNumber: mockUser.phoneNumber,
-      });
 
       // Verification code should be cleared
       expect(service['otpStore'].get(phoneNumber)).toBeUndefined();

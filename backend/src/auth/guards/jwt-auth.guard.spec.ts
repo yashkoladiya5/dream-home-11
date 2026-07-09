@@ -1,4 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UsersService } from '../../users/users.service';
@@ -35,7 +36,7 @@ describe('JwtAuthGuard', () => {
     mockUsersService = {
       findById: jest.fn(),
     } as any;
-    guard = new JwtAuthGuard(mockJwtService, mockUsersService);
+    guard = new JwtAuthGuard(mockJwtService, mockUsersService, { getAllAndOverride: jest.fn().mockReturnValue(false) } as any);
   });
 
   describe('valid token', () => {
