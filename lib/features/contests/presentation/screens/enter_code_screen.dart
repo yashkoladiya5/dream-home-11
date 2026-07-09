@@ -157,9 +157,11 @@ class _EnterCodeScreenState extends ConsumerState<EnterCodeScreen>
 
     if (result == 'confirmed' && context.mounted) {
       final confirmed = await showJoinConfirmationDialog(context, contest);
+      if (!context.mounted) return;
       if (confirmed == true && context.mounted) {
         final joinResult =
             await ref.read(userProfileProvider.notifier).joinContestById(contest.id);
+        if (!context.mounted) return;
         if (context.mounted) {
           if (joinResult != null) {
             final userData =

@@ -24,11 +24,11 @@ class AdminApiService {
     final params = <String, dynamic>{
       'page': page,
       'limit': limit,
-      if (search != null) 'search': search,
-      if (role != null) 'role': role,
-      if (isActive != null) 'isActive': isActive,
-      if (tier != null) 'tier': tier,
-      if (kycStatus != null) 'kycStatus': kycStatus,
+      'search':? search,
+      'role':? role,
+      'isActive':? isActive,
+      'tier':? tier,
+      'kycStatus':? kycStatus,
     };
     final response =
         await _dio.get('/api/v1/admin/users', queryParameters: params);
@@ -56,9 +56,9 @@ class AdminApiService {
     final params = <String, dynamic>{
       'page': page,
       'limit': limit,
-      if (status != null) 'status': status,
-      if (type != null) 'type': type,
-      if (search != null) 'search': search,
+      'status':? status,
+      'type':? type,
+      'search':? search,
     };
     final response =
         await _dio.get('/api/v1/admin/contests', queryParameters: params);
@@ -79,8 +79,8 @@ class AdminApiService {
     final params = <String, dynamic>{
       'page': page,
       'limit': limit,
-      if (status != null) 'status': status,
-      if (userId != null) 'userId': userId,
+      'status':? status,
+      'userId':? userId,
     };
     final response =
         await _dio.get('/api/v1/admin/kyc', queryParameters: params);
@@ -116,8 +116,8 @@ class AdminApiService {
     final params = <String, dynamic>{
       'page': page,
       'limit': limit,
-      if (status != null) 'status': status,
-      if (category != null) 'category': category,
+      'status':? status,
+      'category':? category,
     };
     final response = await _dio.get('/api/v1/admin/support-tickets',
         queryParameters: params);
@@ -142,7 +142,7 @@ class AdminApiService {
     final params = <String, dynamic>{
       'page': page,
       'limit': limit,
-      if (status != null) 'status': status,
+      'status':? status,
     };
     final response = await _dio.get('/api/v1/admin/compensations',
         queryParameters: params);
@@ -169,7 +169,7 @@ class AdminApiService {
     final data = <String, dynamic>{
       'title': title,
       'message': message,
-      if (tier != null) 'tier': tier,
+      'tier':? tier,
     };
     final response = await _dio.post('/api/v1/admin/notifications/broadcast', data: data);
     return response.data as Map<String, dynamic>;
@@ -181,7 +181,7 @@ class AdminApiService {
   }) async {
     final data = <String, dynamic>{
       'message': message,
-      if (tier != null) 'tier': tier,
+      'tier':? tier,
     };
     final response = await _dio.post('/api/v1/admin/notifications/broadcast-sms', data: data);
     return response.data as Map<String, dynamic>;
@@ -195,7 +195,7 @@ class AdminApiService {
     final params = <String, dynamic>{
       'page': page,
       'limit': limit,
-      if (action != null) 'action': action,
+      'action':? action,
     };
     final response = await _dio.get('/api/v1/admin/audit-logs', queryParameters: params);
     return response.data as Map<String, dynamic>;

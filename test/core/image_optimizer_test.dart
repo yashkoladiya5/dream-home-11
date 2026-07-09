@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/core/utils/image_optimizer.dart';
+import 'package:dream_home_11/core/utils/image_optimizer.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

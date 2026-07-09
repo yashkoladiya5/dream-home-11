@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api, { type ApiResponse } from '../lib/api';
 import { Search, Eye } from 'lucide-react';
 import Table, { Column } from '../components/ui/Table';
@@ -75,7 +76,7 @@ export default function UsersPage() {
       const res = await api.get(`/admin/users?${params.toString()}`);
       setData(res.data);
     } catch {
-      // silently fail
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'generated/app_localizations.dart';
 import 'core/i18n/locale_provider.dart';
 import 'core/network/connectivity_state.dart';
 import 'core/performance/app_startup.dart';
@@ -170,6 +171,7 @@ class _DreamHomeAppState extends ConsumerState<DreamHomeApp> {
             Locale('hi'),
           ],
           localizationsDelegates: const [
+            AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
@@ -178,7 +180,7 @@ class _DreamHomeAppState extends ConsumerState<DreamHomeApp> {
           builder: (context, child) {
             return Stack(
               children: [
-                if (child != null) child,
+                ?child,
                 const Positioned(
                   top: 0,
                   left: 0,

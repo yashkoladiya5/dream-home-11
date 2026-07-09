@@ -64,9 +64,9 @@ void main() {
 
       debugPrint(
         '[Benchmark] Dragged 500px: '
-        '${frameCount} frames, '
+        '$frameCount frames, '
         'avg build ${avgBuildTimeMs.toStringAsFixed(1)}ms, '
-        '${jankyFrames} janky frames',
+        '$jankyFrames janky frames',
       );
 
       controller.dispose();

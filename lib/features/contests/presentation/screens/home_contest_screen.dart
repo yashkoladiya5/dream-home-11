@@ -34,10 +34,12 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
 
     if (result == 'confirmed' && context.mounted) {
       final confirmed = await showJoinConfirmationDialog(context, contest);
+      if (!context.mounted) return;
       if (confirmed == true && context.mounted) {
         final joinResult = await ref
             .read(userProfileProvider.notifier)
             .joinContestById(contest.id);
+        if (!context.mounted) return;
         if (context.mounted) {
           if (joinResult != null) {
             final userData = UserProfile.fromJson(
@@ -94,7 +96,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
           }
           return prizeHomesAsync.when(
             loading: () => _buildLoadingSkeleton(),
-            error: (_, __) => _buildContent(homeContests, []),
+            error: (_, _) => _buildContent(homeContests, []),
             data: (prizeHomes) => _buildContent(homeContests, prizeHomes),
           );
         },

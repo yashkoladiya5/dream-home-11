@@ -190,10 +190,10 @@ class JobsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: AppTheme.primaryRed.withOpacity(0.12),
+              color: AppTheme.primaryRed.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
-                color: AppTheme.primaryRed.withOpacity(0.35),
+                color: AppTheme.primaryRed.withValues(alpha: 0.35),
                 width: 1.2,
               ),
             ),

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../lib/core/performance/image_preloader.dart';
+import 'package:dream_home_11/core/performance/image_preloader.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
