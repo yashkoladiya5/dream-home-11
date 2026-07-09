@@ -24,7 +24,11 @@ import { RedisCacheService } from './redis-cache.service';
             if (times > 5) return null;
             return Math.min(times * 200, 3000);
           },
+          enableReadyCheck: true,
           lazyConnect: true,
+          keepAlive: 30000,
+          connectTimeout: 10000,
+          disconnectTimeout: 5000,
         });
         client.on('error', () => {});
         return client;

@@ -14,12 +14,14 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CacheControl } from '../common/decorators/cache-control.decorator';
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Controller('api/v1/notifications')
 @UseGuards(JwtAuthGuard)
+@CacheControl(30)
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 

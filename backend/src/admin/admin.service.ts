@@ -20,6 +20,8 @@ import { Reward } from '../rewards/entities/reward.entity';
 import { Poll } from '../polls/entities/poll.entity';
 import { Referral } from '../referral/entities/referral.entity';
 import { CompensationService } from '../compensation/compensation.service';
+import { ConsentService } from '../common/consent/consent.service';
+import { GdprService } from '../gdpr/gdpr.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SmsService } from '../sms/sms.service';
 
@@ -57,6 +59,8 @@ export class AdminService {
     @InjectRepository(Referral)
     private readonly referralRepo: Repository<Referral>,
     private readonly compensationService: CompensationService,
+    private readonly consentService: ConsentService,
+    private readonly gdprService: GdprService,
     private readonly notificationsService: NotificationsService,
     private readonly smsService: SmsService,
   ) {}
@@ -963,6 +967,80 @@ export class AdminService {
     const poll = await this.pollRepo.findOne({ where: { id } });
     if (!poll) throw new NotFoundException('Poll not found');
     await this.pollRepo.remove(poll);
+  }
+
+  async getComplianceSettings() {
+    const configs = await this.configRepo.find();
+    const config = configs[0] || await this.configRepo.save(this.configRepo.create());
+    return {
+      minimumAge: config.minimumAge,
+      requireKycForWithdrawal: config.requireKycForWithdrawal,
+      restrictedStates: config.restrictedStates,
+      tosVersion: config.tosVersion,
+      privacyPolicyVersion: config.privacyPolicyVersion,
+      cookieConsentRequired: config.cookieConsentRequired,
+      dataRetentionDays: config.dataRetentionDays,
+      gdprContactEmail: config.gdprContactEmail,
+      ageVerificationRequired: config.ageVerificationRequired,
+    };
+  }
+
+  async updateComplianceSettings(dto: Partial<SystemConfig>) {
+    const configs = await this.configRepo.find();
+    let config = configs[0];
+    if (!config) {
+      config = this.configRepo.create();
+      await this.configRepo.save(config);
+    }
+
+    const allowedFields: (keyof SystemConfig)[] = [
+      'minimumAge',
+      'requireKycForWithdrawal',
+      'restrictedStates',
+      'tosVersion',
+      'privacyPolicyVersion',
+      'cookieConsentRequired',
+      'dataRetentionDays',
+      'gdprContactEmail',
+      'ageVerificationRequired',
+    ];
+
+    const filtered: any = {};
+    for (const key of allowedFields) {
+      if (key in dto) {
+        filtered[key] = (dto as any)[key];
+      }
+    }
+    if (Object.keys(filtered).length === 0) return config;
+
+    await this.configRepo.update(config.id, filtered);
+    return this.getComplianceSettings();
+  }
+
+  async getConsentLogs(query?: { limit?: number; offset?: number }) {
+    return this.consentService.getConsentLogs(query?.limit, query?.offset);
+  }
+
+  async getDeletionRequests() {
+    const requests = await this.userRepo.find({
+      where: { isActive: false },
+      withDeleted: true,
+      order: { deletedAt: 'DESC' },
+      take: 100,
+    });
+    return {
+      requests: requests.map((u) => ({
+        id: u.id,
+        phoneNumber: u.phoneNumber,
+        requestedAt: u.deletedAt || u.createdAt,
+        status: 'pending_approval',
+      })),
+    };
+  }
+
+  async approveDeletionRequest(id: string) {
+    await this.gdprService.permanentDeleteAccount(id);
+    return { success: true, message: `User ${id} permanently deleted` };
   }
 
   async exportReport(type: string, query: any): Promise<any> {

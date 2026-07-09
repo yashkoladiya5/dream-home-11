@@ -13,6 +13,7 @@ import { createMockDataSource, createMockWalletService, createMockEncryptionServ
 import { WalletService } from '../wallet/wallet.service';
 import { PointsEngineService } from '../points/points-engine.service';
 import { EncryptionService } from '../common/encryption/encryption.service';
+import { ConsentService } from '../common/consent/consent.service';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -25,6 +26,7 @@ describe('UsersService', () => {
   let mockWalletService: ReturnType<typeof createMockWalletService>;
   let mockEncryptionService: ReturnType<typeof createMockEncryptionService>;
   let mockPointsEngineService: ReturnType<typeof createMockPointsEngineService>;
+  let mockConsentService: Record<string, jest.Mock>;
 
   const mockUser: User = {
     id: 'user-1',
@@ -66,6 +68,9 @@ describe('UsersService', () => {
     mockWalletService = createMockWalletService();
     mockEncryptionService = createMockEncryptionService();
     mockPointsEngineService = createMockPointsEngineService();
+    mockConsentService = {
+      recordConsent: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -79,6 +84,7 @@ describe('UsersService', () => {
         { provide: PointsEngineService, useValue: mockPointsEngineService },
         { provide: EncryptionService, useValue: mockEncryptionService },
         { provide: WalletService, useValue: mockWalletService },
+        { provide: ConsentService, useValue: mockConsentService },
       ],
     }).compile();
 

@@ -1,9 +1,11 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { PrizeHomesService } from './prize-homes.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CacheControl } from '../common/decorators/cache-control.decorator';
 
 @Controller('api/v1/prize-homes')
 @UseGuards(JwtAuthGuard)
+@CacheControl(300)
 export class PrizeHomesController {
   constructor(private readonly prizeHomesService: PrizeHomesService) {}
 

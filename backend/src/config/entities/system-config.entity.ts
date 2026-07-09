@@ -83,6 +83,30 @@ export class SystemConfig {
   @Column({ type: 'integer', default: 300 })
   bonusTier3Points: number;
 
+  @Column({ type: 'integer', default: 18 })
+  minimumAge: number;
+
+  @Column({ default: true })
+  requireKycForWithdrawal: boolean;
+
+  @Column({ default: '1.0' })
+  tosVersion: string;
+
+  @Column({ default: '1.0' })
+  privacyPolicyVersion: string;
+
+  @Column({ default: true })
+  cookieConsentRequired: boolean;
+
+  @Column({ type: 'integer', default: 90 })
+  dataRetentionDays: number;
+
+  @Column({ default: 'privacy@dreamhome11.com' })
+  gdprContactEmail: string;
+
+  @Column({ default: true })
+  ageVerificationRequired: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

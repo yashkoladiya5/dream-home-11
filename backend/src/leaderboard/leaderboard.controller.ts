@@ -25,10 +25,12 @@ import {
 } from './leaderboard-redis.service';
 import { LeaderboardResetService } from './leaderboard-reset.service';
 import { LeaderboardSyncService } from './leaderboard-sync.service';
+import { CacheControl } from '../common/decorators/cache-control.decorator';
 
 @Controller('api/v1/leaderboard')
 @UseGuards(JwtAuthGuard)
 @Throttle({ default: { ttl: 60000, limit: 10000 } })
+@CacheControl(60)
 export class LeaderboardController {
   constructor(
     private readonly leaderboardRedis: LeaderboardRedisService,

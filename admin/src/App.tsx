@@ -19,6 +19,7 @@ import SupportPage from '@/pages/SupportPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import AuditLogsPage from '@/pages/AuditLogsPage';
 import CompensationsPage from '@/pages/CompensationsPage';
+import CompliancePage from '@/pages/CompliancePage';
 import LeaderboardPage from '@/pages/LeaderboardPage';
 import PaymentsPage from '@/pages/PaymentsPage';
 import WithdrawalsPage from '@/pages/WithdrawalsPage';
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="referrals" element={<ReferralsPage />} />
           <Route path="polls" element={<PollsPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="compliance" element={<CompliancePage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

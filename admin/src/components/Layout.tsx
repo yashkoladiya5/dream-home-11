@@ -34,6 +34,7 @@ const navItems = [
   { to: '/banners', label: 'Banners', icon: Image },
   { to: '/leaderboard', label: 'Leaderboard', icon: Award },
   { to: '/kyc', label: 'KYC', icon: ShieldCheck },
+  { to: '/compliance', label: 'Compliance', icon: ShieldCheck },
   { to: '/config', label: 'Config', icon: Settings },
   { to: '/support', label: 'Support', icon: HeadphonesIcon },
   { to: '/warnings', label: 'Warnings', icon: AlertTriangle },

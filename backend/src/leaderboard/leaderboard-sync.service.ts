@@ -102,14 +102,27 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
     contestCount: number;
   }> {
     const contests = await this.contestRepo.find();
+    if (contests.length === 0) return { memberCount: 0, contestCount: 0 };
+
+    const contestIds = contests.map((c) => c.id);
+    const allMembers = await this.contestMemberRepo.find({
+      where: { contestId: In(contestIds) },
+      select: { userId: true, pointsEarned: true, contestId: true },
+    });
+
+    const membersByContest = new Map<string, typeof allMembers>();
+    for (const member of allMembers) {
+      const list = membersByContest.get(member.contestId) || [];
+      list.push(member);
+      membersByContest.set(member.contestId, list);
+    }
+
     let totalMembers = 0;
+    const pipeline = this.leaderboardRedis.batchSetScores.bind(this.leaderboardRedis);
+    const tasks: Promise<void>[] = [];
 
     for (const contest of contests) {
-      const members = await this.contestMemberRepo.find({
-        where: { contestId: contest.id },
-        select: { userId: true, pointsEarned: true },
-      });
-
+      const members = membersByContest.get(contest.id) || [];
       if (members.length === 0) continue;
 
       const scores = members.map((m) => ({
@@ -118,9 +131,11 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
       }));
 
       const contestKey = this.leaderboardRedis.getContestKey(contest.id);
-      await this.leaderboardRedis.batchSetScores(contestKey, scores);
+      tasks.push(this.leaderboardRedis.batchSetScores(contestKey, scores));
       totalMembers += members.length;
     }
+
+    await Promise.all(tasks);
 
     this.logger.log(
       `Synced ${totalMembers} members across ${contests.length} contest leaderboards`,

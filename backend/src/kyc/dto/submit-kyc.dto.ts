@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, Matches } from 'class-validator';
 
 export class SubmitKycDto {
   @IsString()
@@ -14,4 +14,8 @@ export class SubmitKycDto {
   @IsString()
   @IsNotEmpty()
   fullName: string;
+
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
 }

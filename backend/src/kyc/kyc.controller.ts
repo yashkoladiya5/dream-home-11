@@ -59,6 +59,7 @@ export class KycController {
       dto.aadhaarNumber,
       dto.panNumber,
       dto.fullName,
+      dto.dateOfBirth,
     );
     return {
       id: kyc.id,

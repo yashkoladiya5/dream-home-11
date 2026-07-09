@@ -65,6 +65,7 @@ export interface KycEntry {
   aadhaarBackUrl?: string;
   panCardUrl?: string;
   selfieUrl?: string;
+  dateOfBirth?: string;
 }
 
 export interface Ticket {

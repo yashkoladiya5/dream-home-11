@@ -3,6 +3,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  DeleteDateColumn,
   OneToOne,
   Index,
 } from 'typeorm';
@@ -139,6 +140,12 @@ export class User {
 
   @Column({ name: 'last_streak_date', type: 'date', nullable: true })
   lastStreakDate: Date | null;
+
+  @Column({ name: 'terms_accepted_at', type: 'timestamp', nullable: true })
+  termsAcceptedAt?: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  deletedAt?: Date;
 
   @OneToOne(() => Kyc, (kyc) => kyc.user)
   kyc: Kyc;
