@@ -62,9 +62,9 @@ export class PointsController {
       user.lifetimePoints = Number(user.lifetimePoints) + result.finalPoints;
       user.pointsBalance = Number(user.pointsBalance) + result.finalPoints;
 
-      if (user.lifetimePoints >= 5000) {
+      if (user.lifetimePoints >= 15000) {
         user.currentTier = UserLevel.PLATINUM;
-      } else if (user.lifetimePoints >= 2000) {
+      } else if (user.lifetimePoints >= 5000) {
         user.currentTier = UserLevel.GOLD;
       } else if (user.lifetimePoints >= 1000) {
         user.currentTier = UserLevel.SILVER;
@@ -89,9 +89,9 @@ export class PointsController {
           user.pointsBalance =
             Number(user.pointsBalance) + streakResult.bonusPoints;
 
-          if (user.lifetimePoints >= 5000) {
+          if (user.lifetimePoints >= 15000) {
             user.currentTier = UserLevel.PLATINUM;
-          } else if (user.lifetimePoints >= 2000) {
+          } else if (user.lifetimePoints >= 5000) {
             user.currentTier = UserLevel.GOLD;
           } else if (user.lifetimePoints >= 1000) {
             user.currentTier = UserLevel.SILVER;

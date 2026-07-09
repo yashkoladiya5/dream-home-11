@@ -44,11 +44,11 @@ class SentryDioInterceptor extends Interceptor {
         withScope: (scope) {
           scope.setTag('endpoint', err.requestOptions.path);
           scope.setTag('status_code', statusCode.toString());
-          scope.setExtra('request_url', err.requestOptions.uri.toString());
-          scope.setExtra('request_method', err.requestOptions.method);
-          if (err.response?.data != null) {
-            scope.setExtra('response_body', err.response?.data);
-          }
+          scope.setContexts('request', {
+            'url': err.requestOptions.uri.toString(),
+            'method': err.requestOptions.method,
+            if (err.response?.data != null) 'response_body': err.response?.data,
+          });
         },
       );
     }

@@ -73,7 +73,7 @@ export class ReferralService {
       throw new BadRequestException('Referral cannot be from the same device');
     }
 
-    const pointsAwarded = 30;
+    const pointsAwarded = 200;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -95,9 +95,9 @@ export class ReferralService {
       referrerLock.lifetimePoints =
         Number(referrerLock.lifetimePoints) + pointsAwarded;
 
-      if (referrerLock.lifetimePoints >= 5000) {
+      if (referrerLock.lifetimePoints >= 15000) {
         referrerLock.currentTier = UserLevel.PLATINUM;
-      } else if (referrerLock.lifetimePoints >= 2000) {
+      } else if (referrerLock.lifetimePoints >= 5000) {
         referrerLock.currentTier = UserLevel.GOLD;
       } else if (referrerLock.lifetimePoints >= 1000) {
         referrerLock.currentTier = UserLevel.SILVER;
@@ -243,9 +243,9 @@ export class ReferralService {
       referrerLock.lifetimePoints =
         Number(referrerLock.lifetimePoints) + kycReward;
 
-      if (referrerLock.lifetimePoints >= 5000) {
+      if (referrerLock.lifetimePoints >= 15000) {
         referrerLock.currentTier = UserLevel.PLATINUM;
-      } else if (referrerLock.lifetimePoints >= 2000) {
+      } else if (referrerLock.lifetimePoints >= 5000) {
         referrerLock.currentTier = UserLevel.GOLD;
       } else if (referrerLock.lifetimePoints >= 1000) {
         referrerLock.currentTier = UserLevel.SILVER;

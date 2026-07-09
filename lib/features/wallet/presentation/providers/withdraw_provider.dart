@@ -29,10 +29,10 @@ class WithdrawNotifier {
     try {
       final response = await _dio.post('/api/v1/payments/withdraw', data: {
         'amount': amount,
-        if (bankAccountNumber != null) 'bankAccountNumber': bankAccountNumber,
-        if (bankIfsc != null) 'bankIfsc': bankIfsc,
-        if (bankName != null) 'bankName': bankName,
-        if (upiId != null) 'upiId': upiId,
+        'bankAccountNumber':? bankAccountNumber,
+        'bankIfsc':? bankIfsc,
+        'bankName':? bankName,
+        'upiId':? upiId,
       });
       return WithdrawResponse.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {

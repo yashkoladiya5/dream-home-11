@@ -24,6 +24,9 @@ import { CreatePrivateContestDto } from './dto/create-private-contest.dto';
 
 @Injectable()
 export class ContestsService {
+  static readonly DEFAULT_POINTS_NORMAL = 50;
+  static readonly DEFAULT_POINTS_PREMIUM = 100;
+
   constructor(
     @InjectRepository(Contest)
     private readonly contestRepository: Repository<Contest>,
@@ -207,11 +210,13 @@ export class ContestsService {
 
     return this.dataSource.transaction(async (entityManager) => {
       const now = new Date();
+      const pointsToJoin =
+        dto.pointsToJoin ?? ContestsService.DEFAULT_POINTS_NORMAL;
       const contest = entityManager.create(Contest, {
         title: dto.title,
         type: ContestType.PRIVATE,
         entryFeeInr: dto.entryFeeInr,
-        pointsToJoin: dto.pointsToJoin,
+        pointsToJoin,
         maxSlots: dto.maxSlots,
         filledSlots: 0,
         prize: dto.prize,
@@ -372,9 +377,9 @@ export class ContestsService {
       user.pointsBalance = Number(user.pointsBalance) + finalPoints;
       user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
 
-      if (user.lifetimePoints >= 5000) {
+      if (user.lifetimePoints >= 15000) {
         user.currentTier = UserLevel.PLATINUM;
-      } else if (user.lifetimePoints >= 2000) {
+      } else if (user.lifetimePoints >= 5000) {
         user.currentTier = UserLevel.GOLD;
       } else if (user.lifetimePoints >= 1000) {
         user.currentTier = UserLevel.SILVER;
@@ -652,9 +657,9 @@ export class ContestsService {
           member.user.lifetimePoints =
             Number(member.user.lifetimePoints) + finalPoints;
 
-          if (member.user.lifetimePoints >= 5000) {
+          if (member.user.lifetimePoints >= 15000) {
             member.user.currentTier = UserLevel.PLATINUM;
-          } else if (member.user.lifetimePoints >= 2000) {
+          } else if (member.user.lifetimePoints >= 5000) {
             member.user.currentTier = UserLevel.GOLD;
           } else if (member.user.lifetimePoints >= 1000) {
             member.user.currentTier = UserLevel.SILVER;

@@ -111,7 +111,7 @@ export class SeedService implements OnApplicationBootstrap {
           title: 'Weekend Villa Clash',
           type: ContestType.NORMAL,
           entryFeeInr: 99.0,
-          pointsToJoin: 250,
+          pointsToJoin: 50,
           maxSlots: 5000,
           filledSlots: 1200,
           prize: 'Premium Villa Weekend Gateway',
@@ -127,7 +127,7 @@ export class SeedService implements OnApplicationBootstrap {
           title: 'Starter Dream Cottage',
           type: ContestType.NORMAL,
           entryFeeInr: 19.0,
-          pointsToJoin: 30,
+          pointsToJoin: 50,
           maxSlots: 1000,
           filledSlots: 950,
           prize: 'Mountain Cottage Stay & Title',
@@ -143,7 +143,7 @@ export class SeedService implements OnApplicationBootstrap {
           title: 'Luxury Penthouse Showdown',
           type: ContestType.MEGA,
           entryFeeInr: 199.0,
-          pointsToJoin: 500,
+          pointsToJoin: 100,
           maxSlots: 2000,
           filledSlots: 0,
           prize: 'Sea-facing Penthouse in Goa',
@@ -225,7 +225,7 @@ export class SeedService implements OnApplicationBootstrap {
       title: 'Grand Prix Finale 2026',
       type: ContestType.NORMAL,
       entryFeeInr: 99.0,
-      pointsToJoin: 200,
+      pointsToJoin: 50,
       maxSlots: 50,
       filledSlots: 50,
       prize: '₹50,000 Grand Prize',
@@ -316,7 +316,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: 'Dream Villa Championship',
         type: ContestType.NORMAL,
         entryFeeInr: 149.0,
-        pointsToJoin: 300,
+        pointsToJoin: 50,
         maxSlots: 100,
         filledSlots: 100,
         prize: 'Luxury Villa in Lonavala',
@@ -333,7 +333,7 @@ export class SeedService implements OnApplicationBootstrap {
         title: 'Premier League Showdown',
         type: ContestType.MEGA,
         entryFeeInr: 199.0,
-        pointsToJoin: 500,
+        pointsToJoin: 100,
         maxSlots: 500,
         filledSlots: 500,
         prize: '₹1,00,000 Grand Cash Prize',
@@ -1037,8 +1037,8 @@ export class SeedService implements OnApplicationBootstrap {
   }
 
   private getTierForPoints(points: number): UserLevel {
-    if (points >= 5000) return UserLevel.PLATINUM;
-    if (points >= 2000) return UserLevel.GOLD;
+    if (points >= 15000) return UserLevel.PLATINUM;
+    if (points >= 5000) return UserLevel.GOLD;
     if (points >= 1000) return UserLevel.SILVER;
     return UserLevel.BRONZE;
   }

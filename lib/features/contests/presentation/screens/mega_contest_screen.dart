@@ -31,8 +31,10 @@ class _MegaContestScreenState extends ConsumerState<MegaContestScreen> {
 
     if (result == 'confirmed' && context.mounted) {
       final confirmed = await showJoinConfirmationDialog(context, contest, title: 'Join Mega Contest');
+      if (!context.mounted) return;
       if (confirmed == true && context.mounted) {
         final joinResult = await ref.read(userProfileProvider.notifier).joinContestById(contest.id);
+        if (!context.mounted) return;
         if (context.mounted) {
           if (joinResult != null) {
             final userData = UserProfile.fromJson(joinResult['user'] as Map<String, dynamic>);

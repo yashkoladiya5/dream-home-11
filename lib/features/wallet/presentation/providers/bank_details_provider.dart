@@ -61,10 +61,10 @@ class BankDetailsNotifier extends StateNotifier<BankDetails?> {
   }) async {
     try {
       final response = await _dio.patch('/api/v1/users/bank-details', data: {
-        if (bankAccountNumber != null) 'bankAccountNumber': bankAccountNumber,
-        if (bankIfsc != null) 'bankIfsc': bankIfsc,
-        if (bankName != null) 'bankName': bankName,
-        if (upiId != null) 'upiId': upiId,
+        'bankAccountNumber':? bankAccountNumber,
+        'bankIfsc':? bankIfsc,
+        'bankName':? bankName,
+        'upiId':? upiId,
       });
       state = BankDetails.fromJson(response.data as Map<String, dynamic>);
       return true;

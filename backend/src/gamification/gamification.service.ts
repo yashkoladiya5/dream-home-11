@@ -86,9 +86,9 @@ export class GamificationService {
     user.lifetimePoints = prevLifetime + prizePoints;
     user.pointsBalance = prevPoints + prizePoints;
 
-    if (user.lifetimePoints >= 5000) {
+    if (user.lifetimePoints >= 15000) {
       user.currentTier = UserLevel.PLATINUM;
-    } else if (user.lifetimePoints >= 2000) {
+    } else if (user.lifetimePoints >= 5000) {
       user.currentTier = UserLevel.GOLD;
     } else if (user.lifetimePoints >= 1000) {
       user.currentTier = UserLevel.SILVER;

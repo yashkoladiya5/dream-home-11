@@ -19,9 +19,10 @@ export class CreatePrivateContestDto {
   @Min(0)
   entryFeeInr: number;
 
+  @IsOptional()
   @IsInt()
   @Min(0)
-  pointsToJoin: number;
+  pointsToJoin?: number;
 
   @IsInt()
   @Min(1)

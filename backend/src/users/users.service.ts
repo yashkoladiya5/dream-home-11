@@ -117,9 +117,9 @@ export class UsersService {
     user.pointsBalance = Number(user.pointsBalance) + points;
     user.lifetimePoints = Number(user.lifetimePoints) + points;
 
-    if (user.lifetimePoints >= 5000) {
+    if (user.lifetimePoints >= 15000) {
       user.currentTier = UserLevel.PLATINUM;
-    } else if (user.lifetimePoints >= 2000) {
+    } else if (user.lifetimePoints >= 5000) {
       user.currentTier = UserLevel.GOLD;
     } else if (user.lifetimePoints >= 1000) {
       user.currentTier = UserLevel.SILVER;

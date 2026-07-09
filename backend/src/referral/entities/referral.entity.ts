@@ -32,7 +32,7 @@ export class Referral {
   @JoinColumn({ name: 'referee_id' })
   referee: User;
 
-  @Column({ type: 'integer', default: 30 })
+  @Column({ type: 'integer', default: 200 })
   signupReward: number;
 
   @Column({ type: 'integer', default: 0 })

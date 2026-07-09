@@ -65,7 +65,7 @@ class RenderingAnalyzer {
 
   void estimateRepaintBoundaries() {
     if (kReleaseMode) return;
-    final root = RendererBinding.instance.renderView;
+    final root = RendererBinding.instance.renderViews.first;
     _repaintBoundaryCount = _countRepaintBoundaries(root);
   }
 
