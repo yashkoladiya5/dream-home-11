@@ -118,7 +118,7 @@ export default function PrizeHomesPage() {
       render: (h: PrizeHome) => (
         <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center overflow-hidden">
           {h.images?.[0] ? (
-            <img src={h.images[0]} alt="" className="w-full h-full object-cover" />
+            <img src={h.images[0]} alt={h.name} className="w-full h-full object-cover" />
           ) : (
             <ImageIcon size={20} className="text-slate-500" />
           )}

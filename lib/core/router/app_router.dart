@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/providers/auth_state.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/language_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
+import '../../features/auth/presentation/pages/age_verification_page.dart';
 import '../../features/contests/presentation/screens/our_contests_screen.dart';
 import '../../features/contests/presentation/screens/mega_contest_screen.dart';
 import '../../features/contests/presentation/screens/home_contest_screen.dart';
@@ -58,8 +60,10 @@ import '../../features/help/presentation/screens/faq_screen.dart';
 import '../../features/help/presentation/screens/support_screen.dart';
 import '../../features/help/presentation/screens/how_to_play_screen.dart';
 import '../../features/help/presentation/screens/community_guidelines_screen.dart';
-import '../../features/legal/presentation/screens/terms_of_service_screen.dart';
-import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
+import '../widgets/terms_acceptance.dart';
+import '../network/api_client.dart';
+import '../../features/legal/presentation/pages/terms_of_service_page.dart';
+import '../../features/legal/presentation/pages/privacy_policy_page.dart';
 import '../../features/legal/presentation/screens/responsible_gaming_screen.dart';
 import '../../features/legal/presentation/screens/about_screen.dart';
 import '../../features/legal/presentation/screens/version_screen.dart';
@@ -81,6 +85,23 @@ import '../../features/admin/presentation/screens/admin_broadcast_screen.dart';
 import '../../features/admin/presentation/screens/admin_audit_logs_screen.dart';
 import '../../features/compensations/presentation/screens/compensation_history_screen.dart';
 
+class _HomeWithTermsGate extends ConsumerWidget {
+  const _HomeWithTermsGate();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dio = ref.read(apiClientProvider);
+    return TermsAcceptanceBanner(
+      child: const DashboardLayout(),
+      onAccept: () async {
+        try {
+          await dio.post('/api/v1/users/accept-terms', data: {});
+        } catch (_) {}
+      },
+    );
+  }
+}
+
 class GoRouterRefreshListenable extends ChangeNotifier {
   final Ref _ref;
 
@@ -99,16 +120,22 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     refreshListenable: listenable,
-    redirect: (context, state) {
+    redirect: (context, state) async {
       final authState = ref.read(authProvider);
       final status = authState.status;
       final isLoggingIn = state.matchedLocation == '/' || 
                           state.matchedLocation == '/language' || 
                           state.matchedLocation == '/login' || 
-                          state.matchedLocation == '/otp';
+                          state.matchedLocation == '/otp' ||
+                          state.matchedLocation == '/age-verification';
 
       if (status == AuthStatus.verified) {
         if (isLoggingIn) {
+          final prefs = await SharedPreferences.getInstance();
+          final dob = prefs.getString('date_of_birth');
+          if (dob == null) {
+            return '/age-verification';
+          }
           return '/home';
         }
         final isAdminRoute = state.matchedLocation.startsWith('/admin');
@@ -147,8 +174,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/age-verification',
+        builder: (context, state) => AgeVerificationPage(
+          onVerified: () => context.go('/home'),
+        ),
+      ),
+      GoRoute(
         path: '/home',
-        builder: (context, state) => const DashboardLayout(),
+        builder: (context, state) => const _HomeWithTermsGate(),
       ),
       GoRoute(
         path: '/contest/:id',
@@ -364,11 +397,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/terms-of-service',
-        builder: (context, state) => const TermsOfServiceScreen(),
+        builder: (context, state) => const TermsOfServicePage(),
       ),
       GoRoute(
         path: '/privacy-policy',
-        builder: (context, state) => const PrivacyPolicyScreen(),
+        builder: (context, state) => const PrivacyPolicyPage(),
       ),
       GoRoute(
         path: '/responsible-gaming',

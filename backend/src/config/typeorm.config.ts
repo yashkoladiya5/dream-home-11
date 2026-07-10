@@ -41,6 +41,7 @@ import { Warning } from '../admin/entities/warning.entity';
 import { FraudAlert } from '../admin/entities/fraud-alert.entity';
 import { LeaderboardArchive } from '../leaderboard/entities/leaderboard-archive.entity';
 import { Wallet } from '../wallet/entities/wallet.entity';
+import { ConsentRecord } from '../common/entities/consent-record.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -87,6 +88,7 @@ export default new DataSource({
     FraudAlert,
     LeaderboardArchive,
     Wallet,
+    ConsentRecord,
   ],
   migrations: ['dist/migrations/*.js'],
   migrationsTableName: 'typeorm_migrations',

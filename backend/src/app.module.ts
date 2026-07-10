@@ -87,6 +87,8 @@ import { CommonModule } from './common/common.module';
 import { MetricsModule } from './common/metrics/metrics.module';
 import { Wallet } from './wallet/entities/wallet.entity';
 import { WalletModule } from './wallet/wallet.module';
+import { ConsentRecord } from './common/entities/consent-record.entity';
+import { ConsentModule } from './common/consent/consent.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
@@ -143,6 +145,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
           FraudAlert,
           LeaderboardArchive,
           Wallet,
+          ConsentRecord,
         ],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
         autoLoadEntities: false,
@@ -207,6 +210,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     AuditModule,
     SmsModule,
     CommonModule,
+    ConsentModule,
     HealthModule,
     MetricsModule,
     BatchModule,

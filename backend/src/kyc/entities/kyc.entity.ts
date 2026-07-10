@@ -74,6 +74,9 @@ export class Kyc {
   @Column({ name: 'selfie_url', type: 'varchar', nullable: true })
   selfieUrl: string;
 
+  @Column({ name: 'date_of_birth', type: 'date', nullable: true })
+  dateOfBirth?: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt: Date;
 

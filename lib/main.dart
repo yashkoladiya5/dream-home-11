@@ -21,11 +21,15 @@ import 'core/performance/memory_profiler.dart';
 import 'core/performance/rendering_analyzer.dart';
 import 'core/performance/scroll_tracker.dart';
 import 'core/performance/lazy_init.dart';
+import 'core/widgets/cookie_consent_banner.dart';
 
 bool isFirebaseInitialized = false;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  PaintingBinding.instance.imageCache.maximumSize = 500;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 100 << 20; // 100 MB
 
   DeepLinkConfig.configure();
 
@@ -178,16 +182,18 @@ class _DreamHomeAppState extends ConsumerState<DreamHomeApp> {
           ],
           routerConfig: router,
           builder: (context, child) {
-            return Stack(
-              children: [
-                ?child,
-                const Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: ConnectivityBanner(),
-                ),
-              ],
+            return CookieConsentBanner(
+              child: Stack(
+                children: [
+                  if (child != null) child,
+                  const Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: ConnectivityBanner(),
+                  ),
+                ],
+              ),
             );
           },
         ),

@@ -35,6 +35,7 @@ export class KycService {
     aadhaarNumber: string,
     panNumber: string,
     fullName: string,
+    dateOfBirth?: string,
   ): Promise<Kyc> {
     const existing = await this.kycRepository.findOne({ where: { userId } });
     if (existing) {
@@ -46,6 +47,7 @@ export class KycService {
       aadhaarNumber: this.encryptionService.encrypt(aadhaarNumber),
       panNumber: this.encryptionService.encrypt(panNumber),
       status: KycStatus.PENDING,
+      dateOfBirth,
     });
 
     const saved = await this.kycRepository.save(kyc);
@@ -107,6 +109,7 @@ export class KycService {
       status: kyc.status,
       verifiedAt: kyc.verifiedAt,
       rejectionReason: kyc.rejectionReason,
+      dateOfBirth: kyc.dateOfBirth,
       aadhaarNumber: decryptedAadhaar
         ? maskAadhaar(decryptedAadhaar)
         : undefined,

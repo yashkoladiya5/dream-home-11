@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/reward.dart';
 import '../providers/reward_provider.dart';
@@ -154,24 +155,21 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: reward.imageUrl != null && reward.imageUrl!.isNotEmpty
-                          ? Image.network(
-                              reward.imageUrl!,
+                          ? CachedNetworkImage(
+                              imageUrl: reward.imageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Center(
+                              errorWidget: (context, url, error) => const Center(
                                 child: Icon(
                                   Icons.card_giftcard_rounded,
                                   size: 80,
                                   color: AppTheme.goldYellow,
                                 ),
                               ),
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return const Center(
-                                  child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.goldYellow),
-                                  ),
-                                );
-                              },
+                              placeholder: (context, url) => const Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.goldYellow),
+                                ),
+                              ),
                             )
                           : Center(
                               child: Icon(

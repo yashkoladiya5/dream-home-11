@@ -16,6 +16,8 @@ import { FraudAlert } from './entities/fraud-alert.entity';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 import { CompensationModule } from '../compensation/compensation.module';
+import { ConsentModule } from '../common/consent/consent.module';
+import { GdprModule } from '../gdpr/gdpr.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { SmsModule } from '../sms/sms.module';
 import { AuditModule } from '../audit/audit.module';
@@ -38,6 +40,8 @@ import { AuditModule } from '../audit/audit.module';
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
     CompensationModule,
+    ConsentModule,
+    GdprModule,
     AuditModule,
     NotificationsModule,
     SmsModule,

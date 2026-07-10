@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/reward.dart';
 import '../providers/reward_provider.dart';
@@ -154,27 +155,24 @@ class _RewardCard extends ConsumerWidget {
                     child: reward.imageUrl != null && reward.imageUrl!.isNotEmpty
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              reward.imageUrl!,
+                            child: CachedNetworkImage(
+                              imageUrl: reward.imageUrl!,
                               fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) => Icon(
+                              errorWidget: (context, url, error) => const Icon(
                                 Icons.card_giftcard_rounded,
                                 size: 40,
                                 color: AppTheme.goldYellow,
                               ),
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return const Center(
-                                  child: SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.goldYellow),
-                                    ),
+                              placeholder: (context, url) => const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.goldYellow),
                                   ),
-                                );
-                              },
+                                ),
+                              ),
                             ),
                           )
                         : Icon(

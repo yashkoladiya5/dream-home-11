@@ -5,6 +5,7 @@ import {
   Patch,
   Body,
   Query,
+  Req,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -12,15 +13,26 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { UsersService } from './users.service';
+import { ConsentService } from '../common/consent/consent.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from './entities/user.entity';
+import { Kyc } from '../kyc/entities/kyc.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { VerifyAgeDto } from './dto/verify-age.dto';
+import { RecordConsentDto } from './dto/record-consent.dto';
 
 @Controller('api/v1/users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly consentService: ConsentService,
+    @InjectRepository(Kyc)
+    private readonly kycRepository: Repository<Kyc>,
+  ) {}
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
@@ -108,6 +120,58 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async getProfile(@GetUser() user: User) {
     return this.usersService.getProfile(user.id);
+  }
+
+  @Post('consent')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async recordConsent(
+    @GetUser() user: User,
+    @Body() dto: RecordConsentDto,
+    @Req() req: any,
+  ) {
+    return this.consentService.recordConsent(
+      user.id,
+      dto.consentType,
+      dto.accepted,
+      req.ip,
+      req.headers['user-agent'],
+    );
+  }
+
+  @Get('consents')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  @UseGuards(JwtAuthGuard)
+  async getUserConsents(@GetUser() user: User) {
+    return this.consentService.getUserConsents(user.id);
+  }
+
+  @Post('verify-age')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async verifyAge(
+    @GetUser() user: User,
+    @Body() dto: VerifyAgeDto,
+  ) {
+    let kyc = await this.kycRepository.findOne({ where: { userId: user.id } });
+    if (!kyc) {
+      kyc = this.kycRepository.create({ userId: user.id });
+    }
+    kyc.dateOfBirth = dto.dateOfBirth;
+    await this.kycRepository.save(kyc);
+    return { verified: true };
+  }
+
+  @Post('accept-terms')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async acceptTerms(@GetUser() user: User) {
+    return this.usersService.acceptTerms(user.id);
   }
 
   @Get('search')

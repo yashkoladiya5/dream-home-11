@@ -157,6 +157,7 @@ export class WithdrawalsService {
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
+      relations: { user: true },
     });
 
     const result = await this.withdrawalRepo
@@ -184,36 +185,34 @@ export class WithdrawalsService {
     rejectedCount: number;
     totalCount: number;
   }> {
-    const withdrawals = await this.withdrawalRepo.find({ where: { userId } });
-    let totalWithdrawn = 0;
-    let pendingCount = 0;
-    let approvedCount = 0;
-    let rejectedCount = 0;
-
-    for (const w of withdrawals) {
-      const amt = Number(w.amount);
-      if (w.status === WithdrawalStatus.APPROVED) {
-        totalWithdrawn += amt;
-        approvedCount++;
-      } else if (w.status === WithdrawalStatus.PENDING) {
-        pendingCount++;
-      } else if (w.status === WithdrawalStatus.REJECTED) {
-        rejectedCount++;
-      }
-    }
+    const stats = await this.withdrawalRepo
+      .createQueryBuilder('w')
+      .select('COUNT(*)', 'totalCount')
+      .addSelect('COALESCE(SUM(CASE WHEN w.status = :approved THEN w.amount ELSE 0 END), 0)', 'totalWithdrawn')
+      .addSelect('COALESCE(SUM(CASE WHEN w.status = :pending THEN 1 ELSE 0 END), 0)', 'pendingCount')
+      .addSelect('COALESCE(SUM(CASE WHEN w.status = :approved THEN 1 ELSE 0 END), 0)', 'approvedCount')
+      .addSelect('COALESCE(SUM(CASE WHEN w.status = :rejected THEN 1 ELSE 0 END), 0)', 'rejectedCount')
+      .where('w.userId = :userId', { userId })
+      .setParameters({
+        approved: WithdrawalStatus.APPROVED,
+        pending: WithdrawalStatus.PENDING,
+        rejected: WithdrawalStatus.REJECTED,
+      })
+      .getRawOne();
 
     return {
-      totalWithdrawn: Math.round(totalWithdrawn * 100) / 100,
-      pendingCount,
-      approvedCount,
-      rejectedCount,
-      totalCount: withdrawals.length,
+      totalWithdrawn: stats ? Math.round(Number(stats.totalWithdrawn) * 100) / 100 : 0,
+      pendingCount: stats ? Number(stats.pendingCount) : 0,
+      approvedCount: stats ? Number(stats.approvedCount) : 0,
+      rejectedCount: stats ? Number(stats.rejectedCount) : 0,
+      totalCount: stats ? Number(stats.totalCount) : 0,
     };
   }
 
   async getWithdrawalById(id: string, userId: string): Promise<Withdrawal> {
     const withdrawal = await this.withdrawalRepo.findOne({
       where: { id, userId },
+      relations: { user: true },
     });
     if (!withdrawal) {
       throw new NotFoundException('Withdrawal not found');

@@ -131,6 +131,13 @@ export default function KycPage() {
       minute: '2-digit',
     });
 
+  const formatAgeDate = (date: string) =>
+    new Date(date).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+
   const columns = [
     {
       key: 'userName',
@@ -143,6 +150,15 @@ export default function KycPage() {
       ),
     },
     { key: 'userPhone', header: 'Phone', render: (e: KycEntry) => <span className="text-slate-400 font-medium">{e.userPhone || '—'}</span> },
+    {
+      key: 'dateOfBirth',
+      header: 'Age',
+      render: (e: KycEntry) => (
+        <span className="text-slate-400 font-medium text-xs">
+          {e.dateOfBirth ? formatAgeDate(e.dateOfBirth) : '—'}
+        </span>
+      ),
+    },
     {
       key: 'documentType',
       header: 'Documents Submitted',
@@ -414,6 +430,10 @@ export default function KycPage() {
               <div>
                 <span className="text-slate-500 font-bold uppercase tracking-wider">User ID:</span>
                 <p className="font-mono text-[10px] text-slate-400 select-all mt-0.5">{selectedEntry.userId}</p>
+              </div>
+              <div>
+                <span className="text-slate-500 font-bold uppercase tracking-wider">Date of Birth:</span>
+                <p className="font-bold text-white text-sm mt-0.5">{selectedEntry.dateOfBirth ? formatAgeDate(selectedEntry.dateOfBirth) : '—'}</p>
               </div>
               <div>
                 <span className="text-slate-500 font-bold uppercase tracking-wider">Status:</span>

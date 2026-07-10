@@ -60,22 +60,32 @@ class _WithdrawHistoryScreenState extends ConsumerState<WithdrawHistoryScreen> {
             if (history.withdrawals.isEmpty) {
               return _buildEmpty();
             }
-            return ListView(
+            final hasMore = ref.read(withdrawHistoryScreenProvider.notifier).hasMore;
+            final isLoadingMore = ref.read(withdrawHistoryScreenProvider.notifier).isLoadingMore;
+            return ListView.builder(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              children: [
-                _buildStatsCard(statsAsync),
-                const SizedBox(height: 20),
-                ...history.withdrawals.map((record) => _buildRecordItem(record)),
-                if (ref.read(withdrawHistoryScreenProvider.notifier).hasMore)
-                  _buildLoadMoreButton(),
-                if (ref.read(withdrawHistoryScreenProvider.notifier).isLoadingMore)
-                  const Padding(
+              itemCount: 1 + history.withdrawals.length + (hasMore || isLoadingMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: _buildStatsCard(statsAsync),
+                  );
+                }
+                final itemIndex = index - 1;
+                if (itemIndex < history.withdrawals.length) {
+                  return _buildRecordItem(history.withdrawals[itemIndex]);
+                }
+                if (isLoadingMore) {
+                  return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16),
                     child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryRed)),
-                  ),
-              ],
+                  );
+                }
+                return _buildLoadMoreButton();
+              },
             );
           },
         ),

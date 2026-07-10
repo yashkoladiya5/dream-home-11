@@ -148,7 +148,7 @@ export default function BannersPage() {
           style={{ backgroundColor: b.bgColor || '#1e293b' }}
         >
           {b.imageUrl ? (
-            <img src={b.imageUrl} alt="" className="w-full h-full object-cover" />
+            <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover" />
           ) : (
             <ImageIcon size={20} className="text-slate-500" />
           )}

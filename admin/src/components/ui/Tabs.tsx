@@ -17,10 +17,12 @@ export default function Tabs({ tabs, defaultActive }: TabsProps) {
   return (
     <div>
       <div className="border-b border-slate-700">
-        <nav className="-mb-px flex gap-6">
+        <nav className="-mb-px flex gap-6" role="tablist">
           {tabs.map((tab) => (
             <button
               key={tab.key}
+              role="tab"
+              aria-selected={active === tab.key}
               onClick={() => setActive(tab.key)}
               className={`whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors ${
                 active === tab.key

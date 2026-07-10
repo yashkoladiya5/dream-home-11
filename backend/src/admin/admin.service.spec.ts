@@ -16,6 +16,8 @@ import { Reward } from '../rewards/entities/reward.entity';
 import { Poll } from '../polls/entities/poll.entity';
 import { Referral } from '../referral/entities/referral.entity';
 import { CompensationService } from '../compensation/compensation.service';
+import { ConsentService } from '../common/consent/consent.service';
+import { GdprService } from '../gdpr/gdpr.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SmsService } from '../sms/sms.service';
 
@@ -56,6 +58,18 @@ describe('AdminService', () => {
   const mockSmsService = {
     sendSms: jest.fn().mockResolvedValue(undefined),
     sendCompensationSms: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const mockConsentService = {
+    recordConsent: jest.fn().mockResolvedValue(undefined),
+    getUserConsents: jest.fn().mockResolvedValue([]),
+    getConsentLogs: jest.fn().mockResolvedValue({ records: [], total: 0 }),
+  };
+
+  const mockGdprService = {
+    exportUserData: jest.fn().mockResolvedValue({}),
+    requestAccountDeletion: jest.fn().mockResolvedValue(undefined),
+    permanentDeleteAccount: jest.fn().mockResolvedValue(undefined),
   };
 
   const mockQueryBuilder: any = {
@@ -133,6 +147,8 @@ describe('AdminService', () => {
         { provide: CompensationService, useValue: mockCompensationService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: SmsService, useValue: mockSmsService },
+        { provide: ConsentService, useValue: mockConsentService },
+        { provide: GdprService, useValue: mockGdprService },
       ],
     }).compile();
 

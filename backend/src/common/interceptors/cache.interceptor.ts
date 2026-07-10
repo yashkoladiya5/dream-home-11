@@ -15,6 +15,7 @@ import {
   NO_CACHE_KEY,
   INVALIDATE_CACHE_KEY,
 } from '../decorators/cache.decorator';
+import { CACHE_TTL } from '../decorators/cache-ttl.decorator';
 
 @Injectable()
 export class CacheInterceptor implements NestInterceptor {
@@ -81,6 +82,9 @@ export class CacheInterceptor implements NestInterceptor {
 
   private resolveTtl(context: ExecutionContext, req: Request): number {
     const ttl = this.reflector.getAllAndOverride<number>(CACHE_TTL_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]) || this.reflector.getAllAndOverride<number>(CACHE_TTL, [
       context.getHandler(),
       context.getClass(),
     ]);

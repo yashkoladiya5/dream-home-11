@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { ChatMessage } from './entities/chat-message.entity';
 import { ChatParticipant } from './entities/chat-participant.entity';
 import { Chat } from './entities/chat.entity';
@@ -76,26 +76,53 @@ export class ChatHistoryService {
       order: { joinedAt: 'DESC' },
     });
 
-    const enrichedChats: ChatListResponseDto[] = [];
+    if (participations.length === 0) return [];
 
-    for (const participation of participations) {
-      const chat = participation.chat;
+    const chatIds = participations.map((p) => p.chat.id);
 
-      const participants = await this.chatParticipantRepo.find({
-        where: { chatId: chat.id },
+    const [allParticipants, lastMessages, unreadCountResults] = await Promise.all([
+      this.chatParticipantRepo.find({
+        where: { chatId: In(chatIds) },
         relations: { user: true },
-      });
+      }),
+      this.chatMessageRepo
+        .createQueryBuilder()
+        .select('DISTINCT ON (chat_id) id, chat_id, content, sender_id, created_at')
+        .from('chat_messages', 'm')
+        .where('chat_id IN (:...chatIds)', { chatIds })
+        .orderBy('chat_id', 'ASC')
+        .addOrderBy('created_at', 'DESC')
+        .getRawMany(),
+      this.chatMessageRepo
+        .createQueryBuilder('m')
+        .select('m.chat_id', 'chat_id')
+        .addSelect('COUNT(*)', 'count')
+        .where('m.chat_id IN (:...chatIds)', { chatIds })
+        .andWhere('m.is_read = false')
+        .groupBy('m.chat_id')
+        .getRawMany(),
+    ]);
 
-      const lastMessage = await this.chatMessageRepo.findOne({
-        where: { chatId: chat.id },
-        order: { createdAt: 'DESC' },
-      });
+    const participantsByChat = new Map<string, typeof allParticipants>();
+    for (const p of allParticipants) {
+      const list = participantsByChat.get(p.chatId) || [];
+      list.push(p);
+      participantsByChat.set(p.chatId, list);
+    }
 
-      const unreadCount = await this.chatMessageRepo.count({
-        where: { chatId: chat.id, isRead: false },
-      });
+    const lastMessageByChat = new Map(
+      lastMessages.map((m: any) => [m.chat_id, m]),
+    );
+    const unreadCountByChat = new Map(
+      unreadCountResults.map((r: any) => [r.chat_id, parseInt(r.count, 10)]),
+    );
 
-      enrichedChats.push({
+    return participations.map((participation) => {
+      const chat = participation.chat;
+      const participants = participantsByChat.get(chat.id) || [];
+      const rawLast = lastMessageByChat.get(chat.id);
+
+      return {
         id: chat.id,
         name: chat.name,
         type: chat.type,
@@ -104,19 +131,17 @@ export class ChatHistoryService {
           fullName: p.user.fullName || 'User',
           avatarUrl: p.user.avatarUrl,
         })),
-        lastMessage: lastMessage
+        lastMessage: rawLast
           ? {
-              content: lastMessage.content,
-              createdAt: lastMessage.createdAt,
-              senderId: lastMessage.senderId,
+              content: rawLast.content,
+              createdAt: rawLast.created_at,
+              senderId: rawLast.sender_id,
             }
           : null,
-        unreadCount,
+        unreadCount: unreadCountByChat.get(chat.id) ?? 0,
         createdAt: chat.createdAt,
-      });
-    }
-
-    return enrichedChats;
+      };
+    });
   }
 
   async getChatDetail(

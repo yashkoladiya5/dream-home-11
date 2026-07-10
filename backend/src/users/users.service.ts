@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In, ILike } from 'typeorm';
+import { ConsentService } from '../common/consent/consent.service';
+import { ConsentType } from '../common/entities/consent-record.entity';
 import { User, UserLevel } from './entities/user.entity';
 import { ContestMember } from '../contests/entities/contest-member.entity';
 import { Contest } from '../contests/entities/contest.entity';
@@ -28,6 +30,7 @@ export class UsersService {
     private readonly dataSource: DataSource,
     private readonly pointsEngineService: PointsEngineService,
     private readonly encryptionService: EncryptionService,
+    private readonly consentService: ConsentService,
     @Inject(forwardRef(() => WalletService))
     private readonly walletService: WalletService,
   ) {}
@@ -48,7 +51,7 @@ export class UsersService {
   async findById(id: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },
-      relations: { kyc: true },
+      relations: { kyc: true, wallet: true },
       select: {
         id: true,
         phoneNumber: true,
@@ -61,6 +64,7 @@ export class UsersService {
         isActive: true,
         role: true,
         kyc: { status: true },
+        wallet: { id: true, balanceInr: true, pointsBalance: true },
       },
     });
   }
@@ -159,7 +163,7 @@ export class UsersService {
   async getProfile(userId: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: { kyc: true },
+      relations: { kyc: true, wallet: true },
     });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -209,6 +213,14 @@ export class UsersService {
       bankName: user.bankName,
       upiId: decryptedUpi ? maskUpi(decryptedUpi) : null,
       kyc: user.kyc,
+      wallet: user.wallet
+        ? {
+            id: user.wallet.id,
+            balanceInr: user.wallet.balanceInr,
+            lockedBalanceInr: user.wallet.lockedBalanceInr,
+            pointsBalance: user.wallet.pointsBalance,
+          }
+        : null,
     };
   }
 
@@ -373,6 +385,17 @@ export class UsersService {
     });
 
     return { contests };
+  }
+
+  async acceptTerms(userId: string): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    user.termsAcceptedAt = new Date();
+    const saved = await this.userRepository.save(user);
+    await this.consentService.recordConsent(userId, ConsentType.TERMS_OF_SERVICE, true);
+    return saved;
   }
 
   async getMyHomeContests(userId: string): Promise<{ contests: any[] }> {

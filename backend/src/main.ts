@@ -1,16 +1,20 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import helmet from 'helmet';
+import compression from 'compression';
 import * as Sentry from '@sentry/node';
 import { AppModule } from './app.module';
 import { SanitizePipe } from './common/pipes/sanitize.pipe';
 import { PinoLoggerService } from './common/logger/pino-logger.service';
+import { RedisIoAdapter } from './common/adapters/redis-io.adapter';
 import { createSwaggerConfig } from './common/config/swagger.config';
 import { createValidationPipe } from './common/pipes/validation-pipe.config';
 import { createCorsConfig } from './common/config/cors.config';
 import { createHelmetConfig } from './common/config/helmet.config';
+import { CacheControlInterceptor } from './common/interceptors/cache-control.interceptor';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -81,15 +85,25 @@ async function bootstrap() {
 
   app.set('trust proxy', 1);
 
+  // Redis WebSocket adapter for multi-instance support (session affinity, pub/sub)
+  const configService = app.get(ConfigService);
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis(configService);
+  app.useWebSocketAdapter(redisIoAdapter);
+
   app.use(helmet(createHelmetConfig()));
 
   app.enableCors(createCorsConfig());
+
+  app.use(compression());
 
   const sanitizePipe = app.get(SanitizePipe);
 
   app.useGlobalPipes(createValidationPipe(), sanitizePipe);
 
   app.enableShutdownHooks();
+
+  app.useGlobalInterceptors(new CacheControlInterceptor(app.get(Reflector)));
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',

@@ -19,8 +19,10 @@ import { CreatePrivateContestDto } from './dto/create-private-contest.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { CacheControl } from '../common/decorators/cache-control.decorator';
 
 @Controller('api/v1/contests')
+@CacheControl(60)
 export class ContestsController {
   constructor(
     private readonly contestsService: ContestsService,

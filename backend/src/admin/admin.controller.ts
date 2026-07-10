@@ -3,6 +3,7 @@ import {
   Get,
   Patch,
   Post,
+  Put,
   Delete,
   Param,
   Body,
@@ -25,6 +26,7 @@ import {
   QueryContestsDto,
   QueryKycDto,
   RejectKycDto,
+  ComplianceSettingsDto,
 } from './dto';
 
 @Controller('api/v1/admin')
@@ -578,6 +580,61 @@ export class AdminController {
       targetId: id, targetType: 'poll', ipAddress: req.ip,
     });
     return { success: true };
+  }
+
+  @Get('compliance/settings')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  async getComplianceSettings() {
+    return this.adminService.getComplianceSettings();
+  }
+
+  @Put('compliance/settings')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  async updateComplianceSettings(
+    @Body() dto: ComplianceSettingsDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
+    const result = await this.adminService.updateComplianceSettings(dto);
+    await this.auditService.log({
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetType: 'compliance',
+      metadata: { updatedKeys: Object.keys(dto) },
+      ipAddress: req.ip,
+    });
+    return result;
+  }
+
+  @Get('compliance/consent-logs')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  async getConsentLogs() {
+    return this.adminService.getConsentLogs();
+  }
+
+  @Get('compliance/deletion-requests')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  async getDeletionRequests() {
+    return this.adminService.getDeletionRequests();
+  }
+
+  @Post('compliance/deletion-requests/:id/approve')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  async approveDeletionRequest(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
+    const result = await this.adminService.approveDeletionRequest(id);
+    await this.auditService.log({
+      adminId: admin.id,
+      action: AuditAction.UPDATE_USER,
+      targetId: id,
+      targetType: 'deletion_request',
+      metadata: { status: 'approved' },
+      ipAddress: req.ip,
+    });
+    return result;
   }
 
   @Post('reports/export')
