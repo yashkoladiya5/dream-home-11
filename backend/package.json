@@ -5,6 +5,10 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -17,12 +21,14 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:load": "node test/load/simple-load-test.js",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch",
     "pretest:e2e": "echo 'Ensure test DB is running'",
     "migration:generate": "npx ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:generate -d src/config/typeorm.config.ts",
     "migration:run": "npx ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:run -d src/config/typeorm.config.ts",
-    "migration:revert": "npx ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:revert -d src/config/typeorm.config.ts"
+    "migration:revert": "npx ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:revert -d src/config/typeorm.config.ts",
+    "security:audit": "npm audit --audit-level=high"
   },
   "dependencies": {
     "@nestjs/bullmq": "^11.0.4",

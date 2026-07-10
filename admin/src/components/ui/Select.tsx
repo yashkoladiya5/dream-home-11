@@ -16,6 +16,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <div className="relative">
           <select
             ref={ref}
+            aria-label={label || props.placeholder || 'Select option'}
             className={`w-full rounded-xl border border-slate-700 bg-slate-800/60 text-slate-100 px-4 pr-10 py-2.5 text-sm appearance-none [-webkit-appearance:none] [-moz-appearance:none] focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-300 ${className}`}
             {...props}
           >

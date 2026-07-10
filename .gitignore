@@ -44,6 +44,14 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+backend/.env
+admin/.env
+
 # Project documentation & schedule files
 DREAM HOME 11.docx
 dream_home_11_analysis.md

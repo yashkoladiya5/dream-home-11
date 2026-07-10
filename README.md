@@ -1,16 +1,32 @@
-# dream_home_11
+# Dream Home 11
 
-A new Flutter project.
+A fantasy home design contest platform built with NestJS, Flutter, and React.
 
-## Getting Started
+## Projects
 
-This project is a starting point for a Flutter application.
+- **backend/** — NestJS API server (PostgreSQL + Redis)
+- **admin/** — React admin panel (Vite + TypeScript + Tailwind)
+- **lib/** — Flutter mobile app
 
-A few resources to get you started if this is your first Flutter project:
+## Requirements
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Node.js 20+
+- Flutter 3.38+
+- PostgreSQL 16+
+- Redis 7+
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Quick Start
+
+```bash
+# Start services
+docker compose up -d
+
+# Backend
+cd backend && npm install && npm run start:dev
+
+# Admin
+cd admin && npm install && npm run dev
+
+# Flutter
+flutter pub get && flutter run
+```
