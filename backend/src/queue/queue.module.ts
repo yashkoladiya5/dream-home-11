@@ -13,6 +13,7 @@ import { PushNotificationsProcessor } from './processors/push-notifications.proc
 import { EmailProcessor } from './processors/email.processor';
 import { SettlementProcessor } from './processors/settlement.processor';
 import { RemindersProcessor } from './processors/reminders.processor';
+import { SmsModule } from '../sms/sms.module';
 
 @Global()
 @Module({
@@ -37,6 +38,7 @@ import { RemindersProcessor } from './processors/reminders.processor';
     BullModule.registerQueue(
       ...Object.values(QUEUES).map((name) => ({ name })),
     ),
+    SmsModule,
   ],
   providers: [
     QueueService,
