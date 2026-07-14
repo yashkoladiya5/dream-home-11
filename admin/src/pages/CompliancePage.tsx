@@ -79,18 +79,18 @@ export default function CompliancePage() {
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" /></div>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Compliance Settings</h1>
+    <div className="p-6 text-slate-100">
+      <h1 className="text-2xl font-bold text-white mb-6">Compliance Settings</h1>
 
       <div className="flex gap-2 mb-6">
         {(['settings', 'consent', 'deletions'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab
-                ? 'bg-brand-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20'
+                : 'bg-slate-800 text-slate-400 hover:bg-slate-700/80 hover:text-slate-200 border border-slate-700/50'
             }`}
           >
             {tab === 'settings' ? 'Settings' : tab === 'consent' ? 'Consent Logs' : 'Deletion Requests'}
@@ -99,98 +99,98 @@ export default function CompliancePage() {
       </div>
 
       {activeTab === 'settings' && (
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
+        <div className="backdrop-blur-md bg-slate-900/50 rounded-2xl border border-slate-800/80 p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Age</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Minimum Age</label>
               <input
                 type="number"
                 value={settings.minimumAge}
                 onChange={e => setSettings({ ...settings, minimumAge: Number(e.target.value) })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 px-3 py-2.5 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data Retention (days)</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Data Retention (days)</label>
               <input
                 type="number"
                 value={settings.dataRetentionDays}
                 onChange={e => setSettings({ ...settings, dataRetentionDays: Number(e.target.value) })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 px-3 py-2.5 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ToS Version</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">ToS Version</label>
               <input
                 type="text"
                 value={settings.tosVersion}
                 onChange={e => setSettings({ ...settings, tosVersion: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 px-3 py-2.5 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Privacy Policy Version</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Privacy Policy Version</label>
               <input
                 type="text"
                 value={settings.privacyPolicyVersion}
                 onChange={e => setSettings({ ...settings, privacyPolicyVersion: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 px-3 py-2.5 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">GDPR Contact Email</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">GDPR Contact Email</label>
               <input
                 type="email"
                 value={settings.gdprContactEmail}
                 onChange={e => setSettings({ ...settings, gdprContactEmail: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 px-3 py-2.5 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Restricted States</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Restricted States</label>
               <input
                 type="text"
                 value={settings.restrictedStates.join(', ')}
                 onChange={e => setSettings({ ...settings, restrictedStates: e.target.value.split(',').map(s => s.trim()) })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 px-3 py-2.5 transition-colors"
                 placeholder="Comma-separated state names"
               />
             </div>
           </div>
 
-          <div className="space-y-4">
-            <label className="flex items-center gap-3">
+          <div className="space-y-4 pt-2">
+            <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={settings.requireKycForWithdrawal}
                 onChange={e => setSettings({ ...settings, requireKycForWithdrawal: e.target.checked })}
-                className="rounded border-gray-300"
+                className="rounded border-slate-700 bg-slate-800/50 text-brand-600 focus:ring-brand-500 focus:ring-offset-slate-900 h-4 w-4 transition-colors"
               />
-              <span className="text-sm">Require KYC for Withdrawal</span>
+              <span className="text-sm text-slate-300 group-hover:text-slate-200 transition-colors">Require KYC for Withdrawal</span>
             </label>
-            <label className="flex items-center gap-3">
+            <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={settings.cookieConsentRequired}
                 onChange={e => setSettings({ ...settings, cookieConsentRequired: e.target.checked })}
-                className="rounded border-gray-300"
+                className="rounded border-slate-700 bg-slate-800/50 text-brand-600 focus:ring-brand-500 focus:ring-offset-slate-900 h-4 w-4 transition-colors"
               />
-              <span className="text-sm">Require Cookie Consent</span>
+              <span className="text-sm text-slate-300 group-hover:text-slate-200 transition-colors">Require Cookie Consent</span>
             </label>
-            <label className="flex items-center gap-3">
+            <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={settings.ageVerificationRequired}
                 onChange={e => setSettings({ ...settings, ageVerificationRequired: e.target.checked })}
-                className="rounded border-gray-300"
+                className="rounded border-slate-700 bg-slate-800/50 text-brand-600 focus:ring-brand-500 focus:ring-offset-slate-900 h-4 w-4 transition-colors"
               />
-              <span className="text-sm">Require Age Verification</span>
+              <span className="text-sm text-slate-300 group-hover:text-slate-200 transition-colors">Require Age Verification</span>
             </label>
           </div>
 
           <button
             onClick={handleSave}
-            className="bg-brand-600 text-white px-6 py-2 rounded-lg hover:bg-brand-700"
+            className="bg-brand-600 hover:bg-brand-700 text-white font-medium py-2.5 px-6 rounded-lg transition-colors shadow-lg shadow-brand-600/20"
           >
             Save Settings
           </button>
@@ -198,35 +198,41 @@ export default function CompliancePage() {
       )}
 
       {activeTab === 'consent' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="backdrop-blur-md bg-slate-900/50 rounded-2xl border border-slate-800/80 overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="border-b border-slate-800 bg-slate-800/30">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Consent Type</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">User</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Consent Type</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">IP</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-800/60">
               {consentLogs.map(log => (
-                <tr key={log.id}>
-                  <td className="px-4 py-3 text-sm">{log.userName}</td>
-                  <td className="px-4 py-3 text-sm capitalize">{log.consentType}</td>
+                <tr key={log.id} className="hover:bg-slate-800/10 transition-colors">
+                  <td className="px-4 py-3 text-sm text-slate-200">{log.userName}</td>
+                  <td className="px-4 py-3 text-sm capitalize text-slate-300">{log.consentType}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      log.accepted ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                      log.accepted 
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                     }`}>
                       {log.accepted ? 'Accepted' : 'Rejected'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm">{new Date(log.acceptedAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{log.ipAddress}</td>
+                  <td className="px-4 py-3 text-sm text-slate-400">{new Date(log.acceptedAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-sm text-slate-500">{log.ipAddress}</td>
                 </tr>
               ))}
               {consentLogs.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No consent logs found</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                    No consent logs found
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -234,34 +240,37 @@ export default function CompliancePage() {
       )}
 
       {activeTab === 'deletions' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="backdrop-blur-md bg-slate-900/50 rounded-2xl border border-slate-800/80 overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="border-b border-slate-800 bg-slate-800/30">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requested</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">User</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Requested</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-800/60">
               {deletionRequests.map(req => (
-                <tr key={req.id}>
-                  <td className="px-4 py-3 text-sm">{req.userName}</td>
-                  <td className="px-4 py-3 text-sm">{new Date(req.requestedAt).toLocaleDateString()}</td>
+                <tr key={req.id} className="hover:bg-slate-800/10 transition-colors">
+                  <td className="px-4 py-3 text-sm text-slate-200">{req.userName}</td>
+                  <td className="px-4 py-3 text-sm text-slate-400">{new Date(req.requestedAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      req.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      req.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                      req.status === 'pending' || req.status === 'pending_approval'
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
+                        : req.status === 'approved' 
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                     }`}>
-                      {req.status}
+                      {req.status.replace('_', ' ')}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {req.status === 'pending' && (
+                    {(req.status === 'pending' || req.status === 'pending_approval') && (
                       <button
                         onClick={() => handleApproveDeletion(req.id)}
-                        className="text-brand-600 hover:text-brand-800 text-sm font-medium"
+                        className="text-brand-400 hover:text-brand-300 text-sm font-medium transition-colors"
                       >
                         Approve
                       </button>
@@ -270,7 +279,11 @@ export default function CompliancePage() {
                 </tr>
               ))}
               {deletionRequests.length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-500">No deletion requests</td></tr>
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                    No deletion requests found
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
