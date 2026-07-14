@@ -5,20 +5,20 @@ import ReferralsPage from '../../pages/ReferralsPage';
 
 vi.mock('react-hot-toast', () => ({ default: { error: vi.fn(), success: vi.fn() } }));
 
-const mockReferrals = {
+const mockReferralsResponse = {
   data: {
+    success: true,
     data: [
-      { _id: 'r1', referrer: { name: 'Kim', phone: '1111111111' }, referee: { name: 'Lee', phone: '2222222222' }, reward: 100, status: 'settled', createdAt: new Date().toISOString() },
-      { _id: 'r2', referrer: { name: 'Max', phone: '3333333333' }, referee: { name: 'Nina', phone: '4444444444' }, reward: 50, status: 'pending', createdAt: new Date().toISOString() },
+      { id: 'r1', _id: 'r1', referrer: { fullName: 'Kim', phoneNumber: '1111111111', phone: '1111111111' }, referee: { fullName: 'Lee', phoneNumber: '2222222222', phone: '2222222222' }, signupReward: 100, kycReward: 0, status: 'settled', createdAt: new Date().toISOString() },
+      { id: 'r2', _id: 'r2', referrer: { fullName: 'Max', phoneNumber: '3333333333', phone: '3333333333' }, referee: { fullName: 'Nina', phoneNumber: '4444444444', phone: '4444444444' }, signupReward: 50, kycReward: 0, status: 'pending', createdAt: new Date().toISOString() },
     ],
     pagination: { page: 1, limit: 20, total: 2, totalPages: 1 },
+    stats: { totalReferrals: 100, totalReferrers: 45, totalPayouts: 25000, settledCount: 80 },
   },
 };
 
-const mockStats = { data: { data: { totalReferrals: 100, totalReferrers: 45, totalPayouts: 25000, settled: 80 } } };
-
 vi.mock('../../lib/api', () => ({
-  default: { get: vi.fn((url: string) => url.includes('/stats') ? Promise.resolve(mockStats) : Promise.resolve(mockReferrals)) },
+  default: { get: vi.fn(() => Promise.resolve(mockReferralsResponse)) },
 }));
 
 describe('ReferralsPage', () => {
@@ -48,7 +48,9 @@ describe('ReferralsPage', () => {
 
   it('shows empty state when no referrals', async () => {
     const apiMod = await import('../../lib/api');
-    vi.mocked(apiMod.default.get).mockResolvedValue({ data: { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } } });
+    vi.mocked(apiMod.default.get).mockResolvedValue({
+      data: { success: true, data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 }, stats: { totalReferrals: 0, totalReferrers: 0, totalPayouts: 0, settledCount: 0 } },
+    } as any);
     render(<BrowserRouter><ReferralsPage /></BrowserRouter>);
     expect(await screen.findByText('No Referrals Yet')).toBeInTheDocument();
   });

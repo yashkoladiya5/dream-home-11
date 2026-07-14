@@ -323,6 +323,14 @@ api.interceptors.response.use(
         const limit = Number(data.limit);
         const page = Number(data.page);
 
+        const standardKeys = new Set([listKey, 'total', 'page', 'limit']);
+        const extra: Record<string, any> = {};
+        for (const key of Object.keys(data)) {
+          if (!standardKeys.has(key)) {
+            extra[key] = data[key];
+          }
+        }
+
         response.data = {
           success: true,
           data: data[listKey],
@@ -332,6 +340,7 @@ api.interceptors.response.use(
             total,
             totalPages: Math.ceil(total / limit) || 1,
           },
+          ...extra,
         };
         return response;
       }

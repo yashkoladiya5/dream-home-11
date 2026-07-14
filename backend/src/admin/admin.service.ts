@@ -129,8 +129,8 @@ export class AdminService {
 
     const contestCount = await this.contestRepo
       .createQueryBuilder('c')
-      .innerJoin('contest_members', 'cm', 'cm.contest_id = c.id')
-      .where('cm.user_id = :userId', { userId: id })
+      .innerJoin('c.members', 'cm')
+      .where('cm.userId = :userId', { userId: id })
       .getCount();
 
     const deposits = await this.transactionRepo
@@ -312,7 +312,7 @@ export class AdminService {
 
     const memberCount = await this.contestRepo
       .createQueryBuilder('c')
-      .innerJoin('contest_members', 'cm', 'cm.contest_id = c.id')
+      .innerJoin('c.members', 'cm')
       .where('c.id = :id', { id })
       .getCount();
 
@@ -473,11 +473,11 @@ export class AdminService {
     const dailyAgg = await this.compensationService
       .getCompensationLogRepo()
       .createQueryBuilder('cl')
-      .select('DATE(cl.created_at)', 'date')
+      .select('DATE(cl.createdAt)', 'date')
       .addSelect('COUNT(*)', 'count')
-      .addSelect('COALESCE(SUM(cl.compensation_points), 0)', 'points')
-      .groupBy('DATE(cl.created_at)')
-      .orderBy('DATE(cl.created_at)', 'DESC')
+      .addSelect('COALESCE(SUM(cl.compensationPoints), 0)', 'points')
+      .groupBy('DATE(cl.createdAt)')
+      .orderBy('DATE(cl.createdAt)', 'DESC')
       .limit(30)
       .getRawMany();
 
@@ -785,11 +785,11 @@ export class AdminService {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const alertsByDay = await this.fraudAlertRepo
       .createQueryBuilder('fa')
-      .select('DATE(fa.created_at)', 'date')
+      .select('DATE(fa.createdAt)', 'date')
       .addSelect('COUNT(*)', 'count')
-      .where('fa.created_at >= :sevenDaysAgo', { sevenDaysAgo })
-      .groupBy('DATE(fa.created_at)')
-      .orderBy('DATE(fa.created_at)', 'ASC')
+      .where('fa.createdAt >= :sevenDaysAgo', { sevenDaysAgo })
+      .groupBy('DATE(fa.createdAt)')
+      .orderBy('DATE(fa.createdAt)', 'ASC')
       .getRawMany();
 
     return {
@@ -942,12 +942,12 @@ export class AdminService {
 
     const totalReferrers = await this.referralRepo
       .createQueryBuilder('r')
-      .select('COUNT(DISTINCT r.referrer_id)', 'count')
+      .select('COUNT(DISTINCT r.referrerId)', 'count')
       .getRawOne();
 
     const totalPayouts = await this.referralRepo
       .createQueryBuilder('r')
-      .select('COALESCE(SUM(r.signup_reward + r.kyc_reward), 0)', 'total')
+      .select('COALESCE(SUM(r.signupReward + r.kycReward), 0)', 'total')
       .where('r.status = :status', { status: 'settled' })
       .getRawOne();
 

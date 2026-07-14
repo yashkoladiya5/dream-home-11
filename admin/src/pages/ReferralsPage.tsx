@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import api, { type ApiResponse } from '../lib/api';
+import api from '../lib/api';
 import { Users, Gift, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import Table from '../components/ui/Table';
 import Pagination from '../components/ui/Pagination';
@@ -44,32 +44,41 @@ export default function ReferralsPage() {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const limit = 20;
-
-  const fetchStats = useCallback(async () => {
-    setStatsLoading(true);
-    try {
-      const { data } = await api.get<ApiResponse<ReferralStats>>('/admin/referrals/stats');
-      setStats(data.data);
-    } catch {
-      // silently fail — stats are supplementary
-    } finally {
-      setStatsLoading(false);
-    }
-  }, []);
 
   const fetchReferrals = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const params: Record<string, string | number> = { page, limit };
-      const { data } = await api.get<ApiResponse<Referral[]>>('/admin/referrals', { params });
-      setReferrals(data.data);
+      const response = await api.get('/admin/referrals', { params });
+      const data = response.data;
+      setReferrals(
+        (data.data || []).map((r: any) => ({
+          _id: r._id || r.id,
+          referrer: {
+            name: r.referrer?.fullName || 'Unknown',
+            phone: r.referrer?.phoneNumber || r.referrer?.phone || '—',
+          },
+          referee: {
+            name: r.referee?.fullName || 'Unknown',
+            phone: r.referee?.phoneNumber || r.referee?.phone || '—',
+          },
+          reward: (r.signupReward || 0) + (r.kycReward || 0),
+          status: r.status,
+          createdAt: r.createdAt,
+        }))
+      );
       setTotalPages(data.pagination?.totalPages ?? 1);
+      setStats({
+        totalReferrals: data.stats?.totalReferrals ?? data.pagination?.total ?? 0,
+        totalReferrers: data.stats?.totalReferrers ?? 0,
+        totalPayouts: data.stats?.totalPayouts ?? 0,
+        settled: data.stats?.settledCount ?? 0,
+      });
     } catch {
       setError('Failed to load referrals');
       toast.error('Failed to load referrals');
@@ -79,9 +88,8 @@ export default function ReferralsPage() {
   }, [page]);
 
   useEffect(() => {
-    fetchStats();
     fetchReferrals();
-  }, [fetchStats, fetchReferrals]);
+  }, [fetchReferrals]);
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString('en-IN', {
@@ -160,10 +168,10 @@ export default function ReferralsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard icon={Users} value={stats?.totalReferrals ?? 0} label="Total Referrals" loading={statsLoading} />
-        <StatsCard icon={Gift} value={stats?.totalReferrers ?? 0} label="Total Referrers" loading={statsLoading} />
-        <StatsCard icon={TrendingUp} value={stats ? formatINR(stats.totalPayouts) : 0} label="Total Payouts" loading={statsLoading} />
-        <StatsCard icon={CheckCircle} value={stats?.settled ?? 0} label="Settled" loading={statsLoading} />
+        <StatsCard icon={Users} value={stats?.totalReferrals ?? 0} label="Total Referrals" loading={loading} />
+        <StatsCard icon={Gift} value={stats?.totalReferrers ?? 0} label="Total Referrers" loading={loading} />
+        <StatsCard icon={TrendingUp} value={stats ? formatINR(stats.totalPayouts) : 0} label="Total Payouts" loading={loading} />
+        <StatsCard icon={CheckCircle} value={stats?.settled ?? 0} label="Settled" loading={loading} />
       </div>
 
       {loading && referrals.length === 0 ? (
