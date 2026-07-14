@@ -16,6 +16,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { MockLoginDto } from './dto/mock-login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { AdminLoginDto } from './dto/admin-login.dto';
 import { User } from '../users/entities/user.entity';
 import { SkipEnvelope } from '../common/decorators/skip-envelope.decorator';
 
@@ -66,6 +67,15 @@ export class AuthController {
       dto.refreshToken,
       deviceId,
     );
+  }
+
+  @Post('admin-login')
+  @SkipEnvelope()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async adminLogin(@Body() dto: AdminLoginDto) {
+    return this.authService.adminLogin(dto.phoneNumber, dto.password);
   }
 
   @Post('mock-login')

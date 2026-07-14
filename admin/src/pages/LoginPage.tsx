@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Phone, Loader2 } from 'lucide-react';
+import { Phone, Loader2, KeyRound } from 'lucide-react';
 import { login } from '@/lib/auth';
 
 export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [role, setRole] = useState('admin');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -16,9 +16,13 @@ export default function LoginPage() {
       toast.error('Please enter phone number');
       return;
     }
+    if (!password.trim()) {
+      toast.error('Please enter password');
+      return;
+    }
     setLoading(true);
     try {
-      await login(phoneNumber, role);
+      await login(phoneNumber, password);
       toast.success('Logged in successfully');
       navigate('/dashboard');
     } catch (err: unknown) {
@@ -61,15 +65,19 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-300">Role</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 text-slate-100 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-            >
-              <option value="admin" className="bg-slate-900">Admin</option>
-              <option value="moderator" className="bg-slate-900">Moderator</option>
-            </select>
+            <label className="block text-sm font-medium text-slate-300">
+              Password
+            </label>
+            <div className="relative">
+              <KeyRound size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter admin password"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              />
+            </div>
           </div>
 
           <button

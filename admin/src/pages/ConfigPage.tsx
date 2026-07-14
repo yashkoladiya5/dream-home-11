@@ -75,6 +75,38 @@ export default function ConfigPage() {
 
   const handleSave = async () => {
     if (!config) return;
+
+    if (!config.appName.trim()) {
+      toast.error('App Name is required');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!config.supportEmail.trim() || !emailRegex.test(config.supportEmail)) {
+      toast.error('A valid support email is required');
+      return;
+    }
+
+    if (config.minWithdrawalAmount < 0) {
+      toast.error('Minimum withdrawal amount cannot be negative');
+      return;
+    }
+
+    if (config.maxWithdrawalAmount < config.minWithdrawalAmount) {
+      toast.error('Maximum withdrawal amount cannot be less than minimum');
+      return;
+    }
+
+    if (config.maxDailySpins < 0) {
+      toast.error('Maximum daily spins cannot be negative');
+      return;
+    }
+
+    if (config.maxDailyPosts < 0) {
+      toast.error('Maximum daily posts cannot be negative');
+      return;
+    }
+
     setSaving(true);
     try {
       await api.patch('/admin/config', config);

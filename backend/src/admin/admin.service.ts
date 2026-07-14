@@ -814,6 +814,34 @@ export class AdminService {
     return this.fraudAlertRepo.save(alert);
   }
 
+  async getTransactionStats() {
+    const depositsAgg = await this.transactionRepo
+      .createQueryBuilder('t')
+      .select('COALESCE(SUM(t.cashAmount), 0)', 'total')
+      .where("t.type = 'deposit' AND t.status = 'completed'")
+      .getRawOne();
+
+    const withdrawalsAgg = await this.transactionRepo
+      .createQueryBuilder('t')
+      .select('COALESCE(SUM(t.cashAmount), 0)', 'total')
+      .where("t.type = 'withdrawal' AND t.status = 'completed'")
+      .getRawOne();
+
+    const pendingCount = await this.transactionRepo.count({
+      where: { status: 'pending' },
+    });
+
+    const totalDeposits = Number(depositsAgg?.total || 0);
+    const totalWithdrawals = Number(withdrawalsAgg?.total || 0);
+
+    return {
+      totalDeposits,
+      totalWithdrawals,
+      pendingTransactions: pendingCount,
+      totalVolume: totalDeposits + totalWithdrawals,
+    };
+  }
+
   async getTransactions(query: { page?: number; limit?: number; type?: string; userId?: string }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 50, 100);
