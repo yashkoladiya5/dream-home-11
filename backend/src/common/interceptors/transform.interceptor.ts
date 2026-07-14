@@ -65,7 +65,10 @@ export class TransformInterceptor<T>
         }
 
         if (this.isPaginated(response)) {
-          const { data, ...pagination } = response;
+          const keys = Object.keys(response);
+          const listKey = keys.find((key) => Array.isArray(response[key]))!;
+          const data = response[listKey];
+          const { [listKey]: _, ...pagination } = response;
           return {
             success: true as const,
             data,
@@ -100,13 +103,19 @@ export class TransformInterceptor<T>
 
   private isPaginated(
     value: any,
-  ): value is { data: any[]; total: number; page: number; limit: number } {
-    return (
-      value &&
-      Array.isArray(value.data) &&
+  ): value is { total: number; page: number; limit: number; [key: string]: any } {
+    if (!value || typeof value !== 'object') return false;
+
+    const hasPaginationKeys =
       typeof value.total === 'number' &&
       typeof value.page === 'number' &&
-      typeof value.limit === 'number'
-    );
+      typeof value.limit === 'number';
+
+    if (!hasPaginationKeys) return false;
+
+    const keys = Object.keys(value);
+    const hasArray = keys.some((key) => Array.isArray(value[key]));
+
+    return hasArray;
   }
 }
