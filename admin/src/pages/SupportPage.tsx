@@ -79,7 +79,7 @@ export default function SupportPage() {
     if (!selectedTicket) return;
     setUpdatingStatus(true);
     try {
-      await api.patch(`/admin/support-tickets/${selectedTicket._id}/status`, {
+      await api.patch(`/admin/support-tickets/${selectedTicket.id}/status`, {
         status: statusToUpdate,
       });
       toast.success('Ticket status updated successfully');
@@ -99,7 +99,7 @@ export default function SupportPage() {
       if (status) params.set('status', status);
       if (category) params.set('category', category);
       const { data } = await api.get(`/admin/support-tickets?${params}`);
-      setTickets(data.data);
+      setTickets(data.data || []);
       setTotalPages(data.pagination?.totalPages || 1);
     } catch {
       toast.error('Failed to load support tickets');
@@ -170,7 +170,7 @@ export default function SupportPage() {
               </tr>
             ) : (
               tickets.map((ticket) => (
-                <tr key={ticket._id}>
+                <tr key={ticket.id}>
                   <td className="font-medium text-white">{ticket.userName}</td>
                   <td className="text-slate-400">{ticket.userPhone}</td>
                   <td className="text-white max-w-[200px] truncate">{ticket.subject}</td>
