@@ -255,6 +255,15 @@ const mapApiObject = (item: any): any => {
     mapped.userPhone = mapped.user.phoneNumber || '';
   }
 
+  // If it's a Transaction object (has cashAmount)
+  if ('cashAmount' in mapped) {
+    mapped.amount = Number(mapped.cashAmount || 0);
+    if (mapped.user) {
+      mapped.userName = mapped.user?.fullName || mapped.user?.phoneNumber || '';
+      mapped.userPhone = mapped.user?.phoneNumber || '';
+    }
+  }
+
   // If it's a Ticket object (has subject, message, and user relation)
   if ('subject' in mapped && 'message' in mapped && mapped.user) {
     mapped.userName = mapped.user.fullName || mapped.user.phoneNumber || '';
