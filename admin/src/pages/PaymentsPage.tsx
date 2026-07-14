@@ -62,6 +62,12 @@ export default function PaymentsPage() {
   const [type, setType] = useState('');
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
+  const [stats, setStats] = useState({
+    totalDeposits: 0,
+    totalWithdrawals: 0,
+    pendingTransactions: 0,
+    totalVolume: 0,
+  });
   const limit = 20;
 
   const fetchTransactions = useCallback(async () => {
@@ -82,9 +88,21 @@ export default function PaymentsPage() {
     }
   }, [page, type, status, search]);
 
+  const fetchStats = useCallback(async () => {
+    try {
+      const { data } = await api.get<ApiResponse<any>>('/admin/transactions/stats');
+      if (data.data) {
+        setStats(data.data);
+      }
+    } catch {
+      // Fail silently for stats
+    }
+  }, []);
+
   useEffect(() => {
     fetchTransactions();
-  }, [fetchTransactions]);
+    fetchStats();
+  }, [fetchTransactions, fetchStats]);
 
   useEffect(() => {
     setPage(1);
@@ -182,7 +200,7 @@ export default function PaymentsPage() {
               <ArrowDownLeft size={18} className="text-emerald-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">—</p>
+          <p className="text-2xl font-bold text-white">₹{stats.totalDeposits.toLocaleString('en-IN')}</p>
           <p className="text-xs text-slate-500 mt-1">Total Deposits</p>
         </div>
         <div className="backdrop-blur-md bg-slate-900/50 rounded-2xl border border-slate-800/80 p-5">
@@ -191,7 +209,7 @@ export default function PaymentsPage() {
               <ArrowUpRight size={18} className="text-rose-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">—</p>
+          <p className="text-2xl font-bold text-white">₹{stats.totalWithdrawals.toLocaleString('en-IN')}</p>
           <p className="text-xs text-slate-500 mt-1">Total Withdrawals</p>
         </div>
         <div className="backdrop-blur-md bg-slate-900/50 rounded-2xl border border-slate-800/80 p-5">
@@ -200,7 +218,7 @@ export default function PaymentsPage() {
               <Wallet size={18} className="text-amber-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">—</p>
+          <p className="text-2xl font-bold text-white">{stats.pendingTransactions}</p>
           <p className="text-xs text-slate-500 mt-1">Pending Transactions</p>
         </div>
         <div className="backdrop-blur-md bg-slate-900/50 rounded-2xl border border-slate-800/80 p-5">
@@ -209,7 +227,7 @@ export default function PaymentsPage() {
               <Banknote size={18} className="text-blue-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">—</p>
+          <p className="text-2xl font-bold text-white">₹{stats.totalVolume.toLocaleString('en-IN')}</p>
           <p className="text-xs text-slate-500 mt-1">Total Volume</p>
         </div>
       </div>

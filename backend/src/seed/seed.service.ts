@@ -27,7 +27,7 @@ import { Referral } from '../referral/entities/referral.entity';
 import { ReferralStatus } from '../referral/entities/referral.entity';
 import { SupportTicket } from '../support/entities/support-ticket.entity';
 import { SystemConfig } from '../config/entities/system-config.entity';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -1650,13 +1650,10 @@ export class SeedService implements OnApplicationBootstrap {
       where: { phoneNumber: '+919999999998' },
     });
     if (admin) {
-      if (admin.role !== UserRole.ADMIN) {
-        admin.role = UserRole.ADMIN;
-        await this.userRepository.save(admin);
-        this.logger.log(`Upgraded existing user ${admin.fullName} to admin`);
-      } else {
-        this.logger.log('Admin user already exists — skipping');
-      }
+      admin.role = UserRole.ADMIN;
+      admin.password = createHash('sha256').update('Admin@123').digest('hex');
+      await this.userRepository.save(admin);
+      this.logger.log(`Seeded/Updated existing admin user: ${admin.fullName}`);
       return;
     }
 
@@ -1664,7 +1661,9 @@ export class SeedService implements OnApplicationBootstrap {
       where: { role: UserRole.ADMIN },
     });
     if (existingAdmin) {
-      this.logger.log('Admin user already exists — skipping');
+      existingAdmin.password = createHash('sha256').update('Admin@123').digest('hex');
+      await this.userRepository.save(existingAdmin);
+      this.logger.log('Seeded/Updated existing admin password');
       return;
     }
 
@@ -1672,6 +1671,7 @@ export class SeedService implements OnApplicationBootstrap {
       fullName: 'Admin Dream11',
       phoneNumber: '+919999999998',
       email: 'admin@dreamhome11.com',
+      password: createHash('sha256').update('Admin@123').digest('hex'),
       walletBalanceInr: 0,
       pointsBalance: 0,
       lifetimePoints: 0,

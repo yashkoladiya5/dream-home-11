@@ -464,6 +464,12 @@ export class AdminController {
     return result;
   }
 
+  @Get('transactions/stats')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  async getTransactionStats() {
+    return this.adminService.getTransactionStats();
+  }
+
   @Get('transactions')
   @Throttle({ default: { ttl: 60000, limit: 30 } })
   async getTransactions(@Query() query: { page?: number; limit?: number; type?: string; userId?: string }) {

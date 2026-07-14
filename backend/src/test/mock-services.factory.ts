@@ -7,6 +7,7 @@ export function createMockLogger(): Record<keyof Logger, jest.Mock> {
     warn: jest.fn(),
     debug: jest.fn(),
     verbose: jest.fn(),
+    fatal: jest.fn(),
     localInstance: jest.fn() as any,
   };
 }

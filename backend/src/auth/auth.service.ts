@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
+import * as crypto from 'crypto';
 import { FirebaseService } from './firebase.service';
 import { UsersService } from '../users/users.service';
 import { ReferralService } from '../referral/referral.service';
@@ -107,6 +108,41 @@ export class AuthService {
       user.id,
       user.phoneNumber,
       'mock-device',
+    );
+
+    return { ...tokens, user };
+  }
+
+  async adminLogin(
+    phoneNumber: string,
+    password?: string,
+  ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
+    const user = await this.usersService.findByPhoneNumber(phoneNumber);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.MODERATOR) {
+      throw new UnauthorizedException('Access denied');
+    }
+
+    if (!user.password) {
+      throw new UnauthorizedException('Password not set for admin');
+    }
+
+    const hashedPassword = crypto
+      .createHash('sha256')
+      .update(password || '')
+      .digest('hex');
+
+    if (user.password !== hashedPassword) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const tokens = await this.refreshTokenService.generateTokens(
+      user.id,
+      user.phoneNumber,
+      'admin-device',
     );
 
     return { ...tokens, user };

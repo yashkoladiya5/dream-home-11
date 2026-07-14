@@ -13,6 +13,9 @@ import { Banner } from '../banners/entities/banner.entity';
 import { PrizeHome } from '../prize-homes/entities/prize-home.entity';
 import { Warning } from './entities/warning.entity';
 import { FraudAlert } from './entities/fraud-alert.entity';
+import { Reward } from '../rewards/entities/reward.entity';
+import { Poll } from '../polls/entities/poll.entity';
+import { Referral } from '../referral/entities/referral.entity';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 import { CompensationModule } from '../compensation/compensation.module';
@@ -36,6 +39,9 @@ import { AuditModule } from '../audit/audit.module';
       PrizeHome,
       Warning,
       FraudAlert,
+      Reward,
+      Poll,
+      Referral,
     ]),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),

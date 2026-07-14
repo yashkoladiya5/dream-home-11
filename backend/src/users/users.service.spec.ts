@@ -102,7 +102,7 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(userRepo.findOne).toHaveBeenCalledWith({
         where: { phoneNumber: '+911234567890' },
-        select: { id: true, phoneNumber: true, fullName: true, isActive: true, referralCode: true },
+        select: { id: true, phoneNumber: true, fullName: true, isActive: true, referralCode: true, role: true, password: true },
       });
     });
 
@@ -177,19 +177,19 @@ describe('UsersService', () => {
       expect(result.currentTier).toBe(UserLevel.SILVER);
     });
 
-    it('should promote to GOLD at 5000 lifetime points', async () => {
-      const goldUser = { ...mockUser, lifetimePoints: 4500, pointsBalance: 200 };
+    it('should promote to GOLD at 2000 lifetime points', async () => {
+      const goldUser = { ...mockUser, lifetimePoints: 1500, pointsBalance: 200 };
       (userRepo.findOne as jest.Mock).mockResolvedValue(goldUser);
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...goldUser, lifetimePoints: 5000, pointsBalance: 700, currentTier: UserLevel.GOLD });
+      (userRepo.save as jest.Mock).mockResolvedValue({ ...goldUser, lifetimePoints: 2000, pointsBalance: 700, currentTier: UserLevel.GOLD });
 
       const result = await service.awardPoints('user-1', 500);
       expect(result.currentTier).toBe(UserLevel.GOLD);
     });
 
-    it('should promote to PLATINUM at 15000 lifetime points', async () => {
-      const platUser = { ...mockUser, lifetimePoints: 14000, pointsBalance: 200 };
+    it('should promote to PLATINUM at 5000 lifetime points', async () => {
+      const platUser = { ...mockUser, lifetimePoints: 4000, pointsBalance: 200 };
       (userRepo.findOne as jest.Mock).mockResolvedValue(platUser);
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...platUser, lifetimePoints: 15000, pointsBalance: 1200, currentTier: UserLevel.PLATINUM });
+      (userRepo.save as jest.Mock).mockResolvedValue({ ...platUser, lifetimePoints: 5000, pointsBalance: 1200, currentTier: UserLevel.PLATINUM });
 
       const result = await service.awardPoints('user-1', 1000);
       expect(result.currentTier).toBe(UserLevel.PLATINUM);

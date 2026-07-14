@@ -132,6 +132,9 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ name: 'password', type: 'varchar', length: 255, nullable: true })
+  password?: string;
+
   @Column({ name: 'current_streak', type: 'integer', default: 0 })
   currentStreak: number;
 
