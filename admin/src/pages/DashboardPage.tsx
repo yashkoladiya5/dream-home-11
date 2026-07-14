@@ -25,8 +25,8 @@ interface DashboardData {
   totalPointsEarned: number;
   pendingKycCount: number;
   openSupportTickets: number;
-  recentUsers: { _id: string; fullName: string; phone: string; currentTier: string; createdAt: string }[];
-  recentTransactions: { _id: string; user: { fullName: string }; type: string; amount: number; createdAt: string }[];
+  recentUsers: { id: string; fullName: string; phone: string; currentTier: string; createdAt: string }[];
+  recentTransactions: { id: string; user: { fullName: string }; type: string; amount: number; createdAt: string }[];
   compensationStats: { totalPaid: number; pending: number; thisMonth: number };
 }
 

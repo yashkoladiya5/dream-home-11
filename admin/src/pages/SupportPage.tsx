@@ -184,9 +184,9 @@ export default function SupportPage() {
                       {statusLabel[ticket.status] || ticket.status}
                     </Badge>
                   </td>
-                  <td className="text-slate-500 text-xs">
-                    {new Date(ticket.createdAt).toLocaleDateString()}
-                  </td>
+                     <td className="text-slate-500 text-xs">
+                       {(function(){try{return new Date(ticket.createdAt).toLocaleDateString()}catch{return 'N/A'}})()}
+                     </td>
                   <td>
                     <Button
                       variant="ghost"
@@ -291,7 +291,7 @@ export default function SupportPage() {
             </div>
 
             <div className="text-xs text-slate-400">
-              Created: {new Date(selectedTicket.createdAt).toLocaleString()}
+               Created: {(function(){try{return new Date(selectedTicket.createdAt).toLocaleString()}catch{return 'N/A'}})()}
             </div>
           </div>
         )}

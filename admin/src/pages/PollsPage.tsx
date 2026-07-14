@@ -15,7 +15,7 @@ interface PollOption {
 }
 
 interface Poll {
-  _id: string;
+  id: string;
   question: string;
   options: PollOption[];
   totalVotes: number;
@@ -89,7 +89,7 @@ export default function PollsPage() {
   const handleDelete = async (poll: Poll) => {
     if (!confirm(`Delete poll "${poll.question}"?`)) return;
     try {
-      await api.delete(`/admin/polls/${poll._id}`);
+      await api.delete(`/admin/polls/${poll.id}`);
       toast.success('Poll deleted');
       fetchData();
     } catch {
@@ -99,8 +99,8 @@ export default function PollsPage() {
 
   const handleToggle = async (poll: Poll) => {
     try {
-      await api.patch(`/admin/polls/${poll._id}`, { isActive: !poll.isActive });
-      setData(prev => prev.map(p => p._id === poll._id ? { ...p, isActive: !poll.isActive } : p));
+      await api.patch(`/admin/polls/${poll.id}`, { isActive: !poll.isActive });
+      setData(prev => prev.map(p => p.id === poll.id ? { ...p, isActive: !poll.isActive } : p));
       toast.success(poll.isActive ? 'Poll deactivated' : 'Poll activated');
     } catch {
       toast.error('Failed to toggle');
@@ -132,7 +132,7 @@ export default function PollsPage() {
       };
 
       if (editing) {
-        await api.patch(`/admin/polls/${editing._id}`, payload);
+        await api.patch(`/admin/polls/${editing.id}`, payload);
         toast.success('Poll updated');
       } else {
         await api.post('/admin/polls', payload);

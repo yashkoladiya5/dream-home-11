@@ -10,7 +10,7 @@ import Select from '../components/ui/Select';
 import Badge from '../components/ui/Badge';
 
 interface User {
-  _id: string;
+  id: string;
   fullName: string;
   phone: string;
   email: string;
@@ -105,7 +105,7 @@ export default function UsersPage() {
       render: (u) => (
         <div className="flex flex-col">
           <span className="font-semibold text-white">{u.fullName || 'Unnamed User'}</span>
-          <span className="text-[10px] text-slate-500 font-mono tracking-tighter">{u._id}</span>
+          <span className="text-[10px] text-slate-500 font-mono tracking-tighter">{u.id}</span>
         </div>
       ),
     },
@@ -154,7 +154,7 @@ export default function UsersPage() {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/users/${u._id}`);
+            navigate(`/users/${u.id}`);
           }}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-brand-400 hover:text-white bg-brand-500/5 hover:bg-brand-500/10 border border-brand-500/10 hover:border-brand-500/30 transition-all duration-300 shadow-sm"
         >
@@ -237,7 +237,7 @@ export default function UsersPage() {
         columns={columns} 
         data={data?.data ?? []} 
         loading={loading} 
-        onRowClick={(u) => navigate(`/users/${u._id}`)}
+        onRowClick={(u) => navigate(`/users/${u.id}`)}
         emptyMessage="No users found matching current filters." 
       />
 

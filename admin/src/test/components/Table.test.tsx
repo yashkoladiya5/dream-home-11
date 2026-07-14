@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import Table from '../../components/ui/Table';
 
 interface TestItem {
-  _id: string;
+  id: string;
   name: string;
   value: number;
 }
@@ -14,8 +14,8 @@ const columns = [
 ];
 
 const data: TestItem[] = [
-  { _id: '1', name: 'Alice', value: 100 },
-  { _id: '2', name: 'Bob', value: 200 },
+  { id: '1', name: 'Alice', value: 100 },
+  { id: '2', name: 'Bob', value: 200 },
 ];
 
 describe('Table', () => {

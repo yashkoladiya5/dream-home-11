@@ -13,7 +13,7 @@ interface TableProps<T> {
   emptyMessage?: string;
 }
 
-export default function Table<T extends { _id: string }>({
+export default function Table<T extends { id: string }>({
   columns,
   data,
   loading = false,
@@ -72,7 +72,7 @@ export default function Table<T extends { _id: string }>({
             ) : (
               data.map((item) => (
                 <tr
-                  key={item._id}
+                  key={item.id}
                   onClick={() => onRowClick?.(item)}
                   className={onRowClick ? 'cursor-pointer' : ''}
                 >

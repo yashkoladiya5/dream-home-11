@@ -10,7 +10,7 @@ import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 
 interface Transaction {
-  _id: string;
+  id: string;
   userId: string;
   userName: string;
   userPhone: string;
@@ -116,21 +116,26 @@ export default function PaymentsPage() {
     return <span className="text-rose-400">-{formatted}</span>;
   };
 
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatDate = (date: string) => {
+    try {
+      return new Date(date).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
 
   const columns = [
     {
-      key: '_id',
+      key: 'id',
       header: 'Transaction ID',
       render: (t: Transaction) => (
-        <span className="font-mono text-xs text-slate-400">{t._id.slice(-8)}</span>
+        <span className="font-mono text-xs text-slate-400">{t.id?.slice(-8) ?? ''}</span>
       ),
     },
     {
@@ -200,7 +205,7 @@ export default function PaymentsPage() {
               <ArrowDownLeft size={18} className="text-emerald-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">₹{stats.totalDeposits.toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-bold text-white">₹{(stats.totalDeposits || 0).toLocaleString('en-IN')}</p>
           <p className="text-xs text-slate-500 mt-1">Total Deposits</p>
         </div>
         <div className="backdrop-blur-md bg-slate-900/50 rounded-2xl border border-slate-800/80 p-5">
@@ -209,7 +214,7 @@ export default function PaymentsPage() {
               <ArrowUpRight size={18} className="text-rose-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">₹{stats.totalWithdrawals.toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-bold text-white">₹{(stats.totalWithdrawals || 0).toLocaleString('en-IN')}</p>
           <p className="text-xs text-slate-500 mt-1">Total Withdrawals</p>
         </div>
         <div className="backdrop-blur-md bg-slate-900/50 rounded-2xl border border-slate-800/80 p-5">
@@ -227,7 +232,7 @@ export default function PaymentsPage() {
               <Banknote size={18} className="text-blue-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">₹{stats.totalVolume.toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-bold text-white">₹{(stats.totalVolume || 0).toLocaleString('en-IN')}</p>
           <p className="text-xs text-slate-500 mt-1">Total Volume</p>
         </div>
       </div>

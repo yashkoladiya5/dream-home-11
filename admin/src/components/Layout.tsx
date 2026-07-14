@@ -25,6 +25,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { getStoredUser, logout } from '@/lib/auth';
+import ErrorBoundary from './ErrorBoundary';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -165,7 +166,9 @@ export default function Layout() {
         {/* Content Shell */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-[#0b0f19]/30">
           <div className="animate-fade-in-up">
-            <Outlet />
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
       </div>

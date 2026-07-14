@@ -72,7 +72,7 @@ export default function BannersPage() {
   const handleDelete = async (banner: Banner) => {
     if (!confirm(`Delete banner "${banner.title}"?`)) return;
     try {
-      await api.delete(`/admin/banners/${banner._id}`);
+      await api.delete(`/admin/banners/${banner.id}`);
       toast.success('Banner deleted');
       fetchData();
     } catch {
@@ -82,7 +82,7 @@ export default function BannersPage() {
 
   const handleReorder = async (banner: Banner, direction: 'up' | 'down') => {
     const sorted = [...data].sort((a, b) => a.order - b.order);
-    const idx = sorted.findIndex(b => b._id === banner._id);
+    const idx = sorted.findIndex(b => b.id === banner.id);
     if (idx === -1) return;
     const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
     if (swapIdx < 0 || swapIdx >= sorted.length) return;
@@ -94,9 +94,9 @@ export default function BannersPage() {
 
     try {
       await api.post('/admin/banners/reorder', {
-        bannerId: banner._id,
+        bannerId: banner.id,
         newOrder: updated[idx].order,
-        swapWithId: updated[swapIdx]._id,
+        swapWithId: updated[swapIdx].id,
         swapWithOrder: updated[swapIdx].order,
       });
       setData(updated);
@@ -108,8 +108,8 @@ export default function BannersPage() {
 
   const handleToggle = async (banner: Banner) => {
     try {
-      await api.patch(`/admin/banners/${banner._id}`, { isActive: !banner.isActive });
-      setData(prev => prev.map(b => b._id === banner._id ? { ...b, isActive: !b.isActive } : b));
+      await api.patch(`/admin/banners/${banner.id}`, { isActive: !banner.isActive });
+      setData(prev => prev.map(b => b.id === banner.id ? { ...b, isActive: !b.isActive } : b));
       toast.success(banner.isActive ? 'Banner deactivated' : 'Banner activated');
     } catch {
       toast.error('Failed to toggle');
@@ -123,7 +123,7 @@ export default function BannersPage() {
     try {
       const payload = { ...form, order: Number(form.order) };
       if (editing) {
-        await api.patch(`/admin/banners/${editing._id}`, payload);
+        await api.patch(`/admin/banners/${editing.id}`, payload);
         toast.success('Banner updated');
       } else {
         await api.post('/admin/banners', payload);

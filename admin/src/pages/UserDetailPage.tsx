@@ -10,7 +10,7 @@ import Select from '../components/ui/Select';
 import Spinner from '../components/ui/Spinner';
 
 interface UserData {
-  _id: string;
+  id: string;
   fullName: string;
   phone: string;
   email: string;
@@ -114,7 +114,7 @@ export default function UserDetailPage() {
         </button>
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">Edit Profile</h1>
-          <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5 tracking-wider">User Account / {user._id}</p>
+          <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5 tracking-wider">User Account / {user.id}</p>
         </div>
       </div>
 

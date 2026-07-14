@@ -9,7 +9,7 @@ import StatsCard from '../components/ui/StatsCard';
 import Spinner from '../components/ui/Spinner';
 
 interface Referral {
-  _id: string;
+  id: string;
   referrer: { name: string; phone: string };
   referee: { name: string; phone: string };
   reward: number;

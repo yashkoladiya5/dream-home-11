@@ -127,7 +127,7 @@ export default function ContestsPage() {
       render: (c: Contest) => (
         <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={() => navigate(`/contests/${c._id}`)}
+            onClick={() => navigate(`/contests/${c.id}`)}
             className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-700 hover:text-slate-300"
             title="View Details"
           >
@@ -172,7 +172,7 @@ export default function ContestsPage() {
         columns={columns}
         data={contests}
         loading={loading}
-        onRowClick={(c) => navigate(`/contests/${c._id}`)}
+        onRowClick={(c) => navigate(`/contests/${c.id}`)}
         emptyMessage="No contests found"
       />
 

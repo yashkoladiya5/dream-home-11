@@ -93,7 +93,7 @@ describe('api client', () => {
       if (successHandler) {
         const result = successHandler.fulfilled(response);
         expect(result.data.success).toBe(true);
-        expect(result.data.data).toEqual([{ _id: '1' }]);
+        expect(result.data.data).toEqual([{ _id: '1', id: '1' }]);
         expect(result.data.pagination).toBeDefined();
         expect(result.data.pagination?.totalPages).toBe(1);
       }

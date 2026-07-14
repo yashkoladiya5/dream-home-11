@@ -62,7 +62,7 @@ export default function FraudDashboardPage() {
   const handleAction = async (alert: FraudAlert, action: 'investigating' | 'resolved' | 'dismissed') => {
     setActionLoading(true);
     try {
-      await api.patch(`/admin/fraud/alerts/${alert._id}/resolve`, { status: action });
+      await api.patch(`/admin/fraud/alerts/${alert.id}/resolve`, { status: action });
       toast.success(`Alert ${action}`);
       setShowDetail(false);
       setSelected(null);
@@ -234,7 +234,7 @@ export default function FraudDashboardPage() {
               <tbody className="divide-y divide-slate-800/50">
                 {alerts.map(alert => (
                   <tr
-                    key={alert._id}
+                    key={alert.id}
                     className="hover:bg-slate-800/30 cursor-pointer transition-colors"
                     onClick={() => { setSelected(alert); setShowDetail(true); }}
                   >

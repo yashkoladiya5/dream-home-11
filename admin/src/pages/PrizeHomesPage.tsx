@@ -75,7 +75,7 @@ export default function PrizeHomesPage() {
   const handleDelete = async (home: PrizeHome) => {
     if (!confirm(`Delete "${home.name}"? This cannot be undone.`)) return;
     try {
-      await api.delete(`/admin/prize-homes/${home._id}`);
+      await api.delete(`/admin/prize-homes/${home.id}`);
       toast.success('Prize home deleted');
       fetchData();
     } catch {
@@ -96,7 +96,7 @@ export default function PrizeHomesPage() {
       };
 
       if (editing) {
-        await api.patch(`/admin/prize-homes/${editing._id}`, payload);
+        await api.patch(`/admin/prize-homes/${editing.id}`, payload);
         toast.success('Prize home updated');
       } else {
         await api.post('/admin/prize-homes', payload);

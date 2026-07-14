@@ -22,7 +22,7 @@ export interface DashboardStats {
 }
 
 export interface User {
-  _id: string;
+  id: string;
   name: string;
   phoneNumber: string;
   email?: string;
@@ -35,7 +35,7 @@ export interface User {
 }
 
 export interface Contest {
-  _id: string;
+  id: string;
   title: string;
   entryFee: number;
   totalPrize: number;
@@ -49,7 +49,7 @@ export interface Contest {
 }
 
 export interface KycEntry {
-  _id: string;
+  id: string;
   userId: string;
   userName: string;
   userPhone: string;
@@ -69,7 +69,7 @@ export interface KycEntry {
 }
 
 export interface Ticket {
-  _id: string;
+  id: string;
   userId: string;
   userName: string;
   userPhone: string;
@@ -82,7 +82,7 @@ export interface Ticket {
 }
 
 export interface AuditLog {
-  _id: string;
+  id: string;
   adminId: string;
   adminName: string;
   action: string;
@@ -110,7 +110,7 @@ export interface NotificationPayload {
 }
 
 export interface Compensation {
-  _id: string;
+  id: string;
   contestId: string;
   contestTitle: string;
   amount: number;
@@ -122,7 +122,7 @@ export interface Compensation {
 }
 
 export interface PrizeHome {
-  _id: string;
+  id: string;
   name: string;
   description: string;
   images: string[];
@@ -139,7 +139,7 @@ export interface PrizeHome {
 }
 
 export interface Banner {
-  _id: string;
+  id: string;
   title: string;
   subtitle?: string;
   imageUrl: string;
@@ -153,7 +153,7 @@ export interface Banner {
 }
 
 export interface Warning {
-  _id: string;
+  id: string;
   userId: string;
   userName: string;
   userPhone: string;
@@ -169,7 +169,7 @@ export interface Warning {
 }
 
 export interface FraudAlert {
-  _id: string;
+  id: string;
   userId: string;
   userName: string;
   userPhone: string;
@@ -219,9 +219,12 @@ const mapApiObject = (item: any): any => {
 
   const mapped: any = { ...item };
 
-  // Add _id if id exists
+  // Sync id and _id in both directions
   if ('id' in mapped && !('_id' in mapped)) {
     mapped._id = mapped.id;
+  }
+  if ('_id' in mapped && !('id' in mapped)) {
+    mapped.id = mapped._id;
   }
 
   // If it's a User object (has phoneNumber or walletBalanceInr)

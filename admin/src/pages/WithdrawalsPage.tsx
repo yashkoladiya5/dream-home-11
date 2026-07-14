@@ -12,7 +12,7 @@ import Modal from '../components/ui/Modal';
 import StatsCard from '../components/ui/StatsCard';
 
 interface WithdrawalEntry {
-  _id: string;
+  id: string;
   userId: string;
   userName: string;
   userPhone: string;
@@ -125,7 +125,7 @@ export default function WithdrawalsPage() {
     if (!selectedEntry) return;
     setActionLoading(true);
     try {
-      await api.patch(`/admin/withdrawals/${selectedEntry._id}/approve`);
+      await api.patch(`/admin/withdrawals/${selectedEntry.id}/approve`);
       toast.success('Withdrawal approved successfully');
       setShowApproveModal(false);
       setSelectedEntry(null);
@@ -142,7 +142,7 @@ export default function WithdrawalsPage() {
     if (!selectedEntry || !rejectReason.trim()) return;
     setActionLoading(true);
     try {
-      await api.patch(`/admin/withdrawals/${selectedEntry._id}/reject`, { reason: rejectReason.trim() });
+      await api.patch(`/admin/withdrawals/${selectedEntry.id}/reject`, { reason: rejectReason.trim() });
       toast.success('Withdrawal rejected');
       setShowRejectModal(false);
       setSelectedEntry(null);
@@ -162,14 +162,19 @@ export default function WithdrawalsPage() {
     setShowRejectModal(true);
   };
 
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatDate = (date: string) => {
+    try {
+      return new Date(date).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
 
   const formatAmount = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -207,7 +212,7 @@ export default function WithdrawalsPage() {
           ) : (
             <>
               {e.bankAccount && (
-                <span className="text-xs text-slate-300 font-mono">••••{e.bankAccount.slice(-4)}</span>
+                <span className="text-xs text-slate-300 font-mono">••••{e.bankAccount?.slice(-4) ?? 'XXXX'}</span>
               )}
               {e.ifscCode && (
                 <span className="text-[10px] text-slate-500 font-mono">{e.ifscCode}</span>

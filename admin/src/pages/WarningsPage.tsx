@@ -83,7 +83,7 @@ export default function WarningsPage() {
     if (!selected) return;
     setSaving(true);
     try {
-      await api.patch(`/admin/warnings/${selected._id}/resolve`);
+      await api.patch(`/admin/warnings/${selected.id}/resolve`);
       toast.success('Warning resolved');
       setShowResolveModal(false);
       setSelected(null);

@@ -10,7 +10,7 @@ import Badge from '../components/ui/Badge';
 import StatsCard from '../components/ui/StatsCard';
 
 interface Compensation {
-  _id: string;
+  id: string;
   contestId: string;
   contestTitle: string;
   userName: string;
@@ -122,18 +122,23 @@ export default function CompensationsPage() {
     }
   };
 
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+  const formatDate = (date: string) => {
+    try {
+      return new Date(date).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
 
   const columns = [
     { key: 'contestTitle', header: 'Contest', render: (c: Compensation) => <span className="font-medium text-white">{c.contestTitle}</span> },
     { key: 'userName', header: 'User', render: (c: Compensation) => c.userName },
-    { key: 'entryFee', header: 'Entry Fee', render: (c: Compensation) => `₹${c.entryFee.toLocaleString('en-IN')}` },
-    { key: 'points', header: 'Points', render: (c: Compensation) => c.points.toLocaleString() },
+     { key: 'entryFee', header: 'Entry Fee', render: (c: Compensation) => `₹${(c.entryFee || 0).toLocaleString('en-IN')}` },
+     { key: 'points', header: 'Points', render: (c: Compensation) => (c.points || 0).toLocaleString() },
     {
       key: 'status',
       header: 'Status',

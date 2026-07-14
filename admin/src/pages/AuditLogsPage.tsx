@@ -126,12 +126,12 @@ export default function AuditLogsPage() {
               logs.map((log) => (
                 <>
                   <tr
-                    key={log._id}
+                    key={log.id}
                     className="cursor-pointer"
-                    onClick={() => toggleExpand(log._id)}
+                    onClick={() => toggleExpand(log.id)}
                   >
                     <td className="w-8">
-                      {expandedId === log._id ? (
+                      {expandedId === log.id ? (
                         <ChevronUp className="h-4 w-4 text-slate-400" />
                       ) : (
                         <ChevronDown className="h-4 w-4 text-slate-400" />
@@ -146,12 +146,12 @@ export default function AuditLogsPage() {
                     <td className="text-slate-400">{log.targetType}</td>
                     <td className="text-slate-500 font-mono text-xs">{log.target}</td>
                     <td className="text-slate-500 font-mono text-xs">{log.ip}</td>
-                    <td className="text-slate-500 text-xs" title={new Date(log.createdAt).toLocaleString()}>
+                    <td className="text-slate-500 text-xs" title={(function(){try{return new Date(log.createdAt).toLocaleString()}catch{return 'N/A'}})()}>
                       {formatTime(log.createdAt)}
                     </td>
                   </tr>
-                  {expandedId === log._id && (
-                    <tr key={`${log._id}-details`}>
+                  {expandedId === log.id && (
+                    <tr key={`${log.id}-details`}>
                       <td colSpan={7} className="bg-slate-800 px-8 py-4">
                         <p className="text-xs font-medium text-slate-500 mb-2">Metadata</p>
                         <pre className="text-xs text-slate-300 bg-slate-800 rounded-lg border border-slate-700 p-3 overflow-auto max-h-48">

@@ -11,7 +11,7 @@ import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 
 interface ContestMember {
-  _id: string;
+  id: string;
   userId: string;
   userName: string;
   userPhone: string;
@@ -20,7 +20,7 @@ interface ContestMember {
 }
 
 interface ContestDetail {
-  _id: string;
+  id: string;
   title: string;
   entryFee: number;
   totalPrize: number;

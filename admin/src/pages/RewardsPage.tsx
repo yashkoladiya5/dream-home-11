@@ -12,7 +12,7 @@ import Toggle from '../components/ui/Toggle';
 import { Gift, Plus, Edit3, Trash2, Image as ImageIcon } from 'lucide-react';
 
 interface Reward {
-  _id: string;
+  id: string;
   title: string;
   description: string;
   imageUrl: string;
@@ -100,7 +100,7 @@ export default function RewardsPage() {
   const handleDelete = async (reward: Reward) => {
     if (!confirm(`Delete reward "${reward.title}"?`)) return;
     try {
-      await api.delete(`/admin/rewards/${reward._id}`);
+      await api.delete(`/admin/rewards/${reward.id}`);
       toast.success('Reward deleted');
       fetchData();
     } catch {
@@ -110,8 +110,8 @@ export default function RewardsPage() {
 
   const handleToggle = async (reward: Reward) => {
     try {
-      await api.patch(`/admin/rewards/${reward._id}`, { isActive: !reward.isActive });
-      setData(prev => prev.map(r => r._id === reward._id ? { ...r, isActive: !r.isActive } : r));
+      await api.patch(`/admin/rewards/${reward.id}`, { isActive: !reward.isActive });
+      setData(prev => prev.map(r => r.id === reward.id ? { ...r, isActive: !r.isActive } : r));
       toast.success(reward.isActive ? 'Reward deactivated' : 'Reward activated');
     } catch {
       toast.error('Failed to toggle');
@@ -125,7 +125,7 @@ export default function RewardsPage() {
     try {
       const payload = { ...form, pointsRequired: Number(form.pointsRequired), stock: Number(form.stock), sortOrder: Number(form.sortOrder) };
       if (editing) {
-        await api.patch(`/admin/rewards/${editing._id}`, payload);
+        await api.patch(`/admin/rewards/${editing.id}`, payload);
         toast.success('Reward updated');
       } else {
         await api.post('/admin/rewards', payload);

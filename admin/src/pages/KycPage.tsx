@@ -85,7 +85,7 @@ export default function KycPage() {
     if (!selectedEntry) return;
     setActionLoading(true);
     try {
-      await api.patch(`/admin/kyc/${selectedEntry._id}/approve`);
+      await api.patch(`/admin/kyc/${selectedEntry.id}/approve`);
       toast.success('KYC approved successfully');
       setShowApproveModal(false);
       setShowDetailsModal(false);
@@ -102,7 +102,7 @@ export default function KycPage() {
     if (!selectedEntry || !rejectReason.trim()) return;
     setActionLoading(true);
     try {
-      await api.patch(`/admin/kyc/${selectedEntry._id}/reject`, { reason: rejectReason.trim() });
+      await api.patch(`/admin/kyc/${selectedEntry.id}/reject`, { reason: rejectReason.trim() });
       toast.success('KYC rejected');
       setShowRejectModal(false);
       setShowDetailsModal(false);
