@@ -236,8 +236,8 @@ describe('ContestsService', () => {
       expect(result.user.currentTier).toBe(UserLevel.SILVER);
     });
 
-    it('should upgrade tier to GOLD at 5000 lifetime points', async () => {
-      const user = { ...mockUser, lifetimePoints: 4800, pointsBalance: 4800 };
+    it('should upgrade tier to GOLD at 2000 lifetime points', async () => {
+      const user = { ...mockUser, lifetimePoints: 1800, pointsBalance: 1800 };
       const contest = { ...mockContest, pointsToJoin: 200 };
 
       (mockEntityManager.findOne as jest.Mock)
@@ -252,8 +252,8 @@ describe('ContestsService', () => {
       expect(result.user.currentTier).toBe(UserLevel.GOLD);
     });
 
-    it('should upgrade tier to PLATINUM at 15000 lifetime points', async () => {
-      const user = { ...mockUser, lifetimePoints: 14800, pointsBalance: 14800 };
+    it('should upgrade tier to PLATINUM at 5000 lifetime points', async () => {
+      const user = { ...mockUser, lifetimePoints: 4800, pointsBalance: 4800 };
       const contest = { ...mockContest, pointsToJoin: 200 };
 
       (mockEntityManager.findOne as jest.Mock)

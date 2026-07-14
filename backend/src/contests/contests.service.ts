@@ -377,9 +377,9 @@ export class ContestsService {
       user.pointsBalance = Number(user.pointsBalance) + finalPoints;
       user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
 
-      if (user.lifetimePoints >= 15000) {
+      if (user.lifetimePoints >= 5000) {
         user.currentTier = UserLevel.PLATINUM;
-      } else if (user.lifetimePoints >= 5000) {
+      } else if (user.lifetimePoints >= 2000) {
         user.currentTier = UserLevel.GOLD;
       } else if (user.lifetimePoints >= 1000) {
         user.currentTier = UserLevel.SILVER;
@@ -657,9 +657,9 @@ export class ContestsService {
           member.user.lifetimePoints =
             Number(member.user.lifetimePoints) + finalPoints;
 
-          if (member.user.lifetimePoints >= 15000) {
+          if (member.user.lifetimePoints >= 5000) {
             member.user.currentTier = UserLevel.PLATINUM;
-          } else if (member.user.lifetimePoints >= 5000) {
+          } else if (member.user.lifetimePoints >= 2000) {
             member.user.currentTier = UserLevel.GOLD;
           } else if (member.user.lifetimePoints >= 1000) {
             member.user.currentTier = UserLevel.SILVER;
