@@ -124,6 +124,12 @@ export class User {
   @Column({ name: 'device_id', type: 'varchar', length: 255, nullable: false })
   deviceId: string;
 
+  @Column({
+    name: 'role',
+    type: 'varchar',
+    length: 20,
+    default: UserRole.USER,
+  })
   role: UserRole;
 
   @Column({ name: 'password', type: 'varchar', length: 255, nullable: true })

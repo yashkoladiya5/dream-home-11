@@ -102,7 +102,7 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(userRepo.findOne).toHaveBeenCalledWith({
         where: { phoneNumber: '+911234567890' },
-        select: { id: true, phoneNumber: true, fullName: true, isActive: true, referralCode: true },
+        select: { id: true, phoneNumber: true, fullName: true, isActive: true, referralCode: true, role: true, password: true },
       });
     });
 

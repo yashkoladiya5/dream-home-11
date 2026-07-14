@@ -44,6 +44,8 @@ export class UsersService {
         fullName: true,
         isActive: true,
         referralCode: true,
+        role: true,
+        password: true,
       },
     });
   }
