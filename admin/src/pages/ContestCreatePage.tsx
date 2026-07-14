@@ -18,7 +18,7 @@ interface PrizeTier {
 
 interface ContestForm {
   title: string;
-  type: 'mega' | 'head-to-head' | 'mega-pool' | 'normal' | 'home';
+  type: 'normal' | 'mega' | 'home' | 'private';
   entryFee: number;
   maxSlots: number;
   minSlotsRequired: number;
@@ -33,8 +33,6 @@ interface ContestForm {
 const contestTypes = [
   { value: 'normal', label: 'Normal' },
   { value: 'mega', label: 'Mega' },
-  { value: 'head-to-head', label: 'Head to Head' },
-  { value: 'mega-pool', label: 'Mega Pool' },
   { value: 'home', label: 'Home' },
   { value: 'private', label: 'Private' },
 ];

@@ -69,14 +69,17 @@ export class TransformInterceptor<T>
           const listKey = keys.find((key) => Array.isArray(response[key]))!;
           const data = response[listKey];
           const { [listKey]: _, ...pagination } = response;
+          const total = Number(pagination.total);
+          const limit = Number(pagination.limit);
+          const page = Number(pagination.page);
           return {
             success: true as const,
             data,
             pagination: {
-              total: pagination.total,
-              page: pagination.page,
-              limit: pagination.limit,
-              totalPages: Math.ceil(pagination.total / pagination.limit),
+              total,
+              page,
+              limit,
+              totalPages: Math.ceil(total / limit) || 1,
             },
             timestamp: new Date().toISOString(),
             requestId,
@@ -107,9 +110,12 @@ export class TransformInterceptor<T>
     if (!value || typeof value !== 'object') return false;
 
     const hasPaginationKeys =
-      typeof value.total === 'number' &&
-      typeof value.page === 'number' &&
-      typeof value.limit === 'number';
+      'total' in value &&
+      'page' in value &&
+      'limit' in value &&
+      !isNaN(Number(value.total)) &&
+      !isNaN(Number(value.page)) &&
+      !isNaN(Number(value.limit));
 
     if (!hasPaginationKeys) return false;
 

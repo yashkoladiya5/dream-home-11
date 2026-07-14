@@ -20,9 +20,9 @@ const statusOptions = [
 
 const typeOptions = [
   { value: '', label: 'All Types' },
+  { value: 'normal', label: 'Normal' },
   { value: 'mega', label: 'Mega' },
-  { value: 'head-to-head', label: 'Head-to-Head' },
-  { value: 'mega-pool', label: 'Mega Pool' },
+  { value: 'home', label: 'Home' },
   { value: 'private', label: 'Private' },
 ];
 

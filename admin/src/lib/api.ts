@@ -42,7 +42,7 @@ export interface Contest {
   maxSlots: number;
   filledSlots: number;
   status: 'upcoming' | 'running' | 'completed' | 'cancelled';
-  type: 'mega' | 'head-to-head' | 'mega-pool' | 'private';
+  type: 'normal' | 'mega' | 'home' | 'private';
   startTime: string;
   endTime: string;
   createdAt: string;
@@ -312,6 +312,40 @@ api.interceptors.response.use(
 
     // If it's already in standard ApiResponse format, pass it through
     if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+      // Check if data.data is accidentally containing a paginated object that was not unwrapped
+      const payload = data.data;
+      if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+        const keys = Object.keys(payload);
+        const listKey = keys.find((key) => Array.isArray(payload[key]));
+
+        if (listKey && 'total' in payload && 'page' in payload && 'limit' in payload) {
+          const total = Number(payload.total);
+          const limit = Number(payload.limit);
+          const page = Number(payload.page);
+
+          const standardKeys = new Set([listKey, 'total', 'page', 'limit']);
+          const extra: Record<string, any> = {};
+          for (const key of Object.keys(payload)) {
+            if (!standardKeys.has(key)) {
+              extra[key] = payload[key];
+            }
+          }
+
+          response.data = {
+            success: true,
+            data: payload[listKey],
+            pagination: {
+              page,
+              limit,
+              total,
+              totalPages: Math.ceil(total / limit) || 1,
+            },
+            ...extra,
+          };
+          return response;
+        }
+      }
+      
       response.data = data;
       return response;
     }

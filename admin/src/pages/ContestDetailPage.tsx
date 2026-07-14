@@ -27,7 +27,7 @@ interface ContestDetail {
   maxSlots: number;
   filledSlots: number;
   status: 'upcoming' | 'running' | 'completed' | 'cancelled';
-  type: 'mega' | 'head-to-head' | 'mega-pool' | 'private';
+  type: 'normal' | 'mega' | 'home' | 'private';
   startTime: string;
   endTime: string;
   inviteCode?: string;
