@@ -51,9 +51,9 @@ export default function CompliancePage() {
 
   useEffect(() => {
     Promise.all([
-      api.get('/admin/compliance/settings').then(r => setSettings(r.data)).catch(() => {}),
-      api.get('/admin/compliance/consent-logs').then(r => setConsentLogs(r.data.consentLogs || [])).catch(() => {}),
-      api.get('/admin/compliance/deletion-requests').then(r => setDeletionRequests(r.data.requests || [])).catch(() => {}),
+      api.get('/admin/compliance/settings').then(r => setSettings(r.data.data)).catch(() => {}),
+      api.get('/admin/compliance/consent-logs').then(r => setConsentLogs(r.data.data?.records || [])).catch(() => {}),
+      api.get('/admin/compliance/deletion-requests').then(r => setDeletionRequests(r.data.data?.requests || [])).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, []);
 
