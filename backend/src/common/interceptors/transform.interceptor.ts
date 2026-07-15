@@ -9,6 +9,8 @@ import { map } from 'rxjs/operators';
 import { Reflector } from '@nestjs/core';
 import { SKIP_ENVELOPE_KEY } from '../decorators/skip-envelope.decorator';
 
+// Global response transform interceptor
+
 export interface ApiResponse<T> {
   success: true;
   data: T;
