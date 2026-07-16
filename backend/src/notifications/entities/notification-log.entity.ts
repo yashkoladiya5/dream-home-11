@@ -1,3 +1,4 @@
+// Notification Log Entity: Defines the database schema for persisting sent notification logs and read/unread states.
 import {
   Entity,
   PrimaryGeneratedColumn,
