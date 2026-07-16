@@ -15,6 +15,7 @@ class AdminContestsScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminContestsScreenState extends ConsumerState<AdminContestsScreen> {
+  // Search controller to filter administrative contests by title or code
   final _searchController = TextEditingController();
 
   @override

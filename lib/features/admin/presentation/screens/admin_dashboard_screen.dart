@@ -17,6 +17,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
+    // Watch the admin dashboard statistics provider for real-time state
     final dashboardAsync = ref.watch(adminDashboardProvider);
 
     return Scaffold(

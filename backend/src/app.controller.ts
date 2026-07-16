@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
+  // Root controller constructor injecting AppService
   constructor(private readonly appService: AppService) {}
 
   @Get()

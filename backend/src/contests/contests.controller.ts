@@ -29,6 +29,7 @@ export class ContestsController {
     private readonly contestsGateway: ContestsGateway,
   ) {}
 
+  // Retrieve all available contests with query filters
   @Get()
   @UseGuards(JwtAuthGuard)
   async findAll(@Query() query: QueryContestsDto) {

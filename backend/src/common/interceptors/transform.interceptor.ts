@@ -36,6 +36,7 @@ export interface PaginatedResponse<T> {
 export class TransformInterceptor<T>
   implements NestInterceptor<T, ApiResponse<T> | PaginatedResponse<T>>
 {
+  // Standard response envelope transformer constructor
   constructor(private readonly reflector: Reflector) {}
 
   intercept(

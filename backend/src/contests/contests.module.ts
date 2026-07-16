@@ -22,4 +22,5 @@ import { QUEUES } from '../queue/queue.constants';
   controllers: [ContestsController],
   exports: [TypeOrmModule, ContestsService, ContestsGateway],
 })
+// Module for managing all contests, gateway, and schedulers
 export class ContestsModule {}

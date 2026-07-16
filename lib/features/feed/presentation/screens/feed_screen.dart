@@ -16,6 +16,7 @@ class FeedScreen extends ConsumerStatefulWidget {
 }
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
+  // Scroll controller to handle pagination trigger on scroll
   final _scrollController = ScrollController();
 
   @override
