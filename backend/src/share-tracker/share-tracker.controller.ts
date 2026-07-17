@@ -14,6 +14,7 @@ export class ShareTrackerController {
     @Req() req,
     @Body('contestId') contestId: string,
     @Body('shareChannel') shareChannel: string,
+    @Body('shareType') shareType: string = 'app',
   ) {
     if (!shareChannel)
       return { success: false, reason: 'shareChannel is required' };
@@ -21,6 +22,7 @@ export class ShareTrackerController {
       req.user.id,
       contestId,
       shareChannel,
+      shareType,
     );
     return { success: true, share };
   }

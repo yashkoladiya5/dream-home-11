@@ -1,3 +1,4 @@
+// Admin Dashboard Screen: Displays statistics and management widgets for administrators.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,6 +18,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
+    // Watch the admin dashboard statistics provider for real-time state
     final dashboardAsync = ref.watch(adminDashboardProvider);
 
     return Scaffold(

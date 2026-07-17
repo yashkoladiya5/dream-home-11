@@ -18,6 +18,7 @@ export class ContestSchedulerService {
     private readonly contestsService: ContestsService,
   ) {}
 
+  // Run status checker cron job every 30 seconds to handle transitions
   @Cron(CronExpression.EVERY_30_SECONDS)
   async processStatusTransitions(): Promise<void> {
     await this.activateUpcomingContests();

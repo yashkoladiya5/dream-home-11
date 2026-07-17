@@ -13,6 +13,7 @@ import { Payment } from './entities/payment.entity';
 import { User } from '../users/entities/user.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { WalletService } from '../wallet/wallet.service';
+import { Wallet } from '../wallet/entities/wallet.entity';
 import { ConfigService } from '../config/config.service';
 
 @Injectable()
@@ -71,7 +72,7 @@ export class PaymentsService {
     orderId: string,
     paymentId: string,
   ): Promise<{ payment: Payment; bonusPoints: number; user: User }> {
-    const { payment, bonusPoints } = await this.dataSource.transaction(async (entityManager) => {
+    return this.dataSource.transaction(async (entityManager) => {
       const payment = await entityManager.findOne(Payment, {
         where: { orderId },
         lock: { mode: 'pessimistic_write' },
@@ -96,21 +97,39 @@ export class PaymentsService {
       payment.bonusPoints = bonusPoints;
       await entityManager.save(payment);
 
-      return { payment, bonusPoints };
+      const wallet = await entityManager.findOne(Wallet, {
+        where: { userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!wallet) throw new NotFoundException('Wallet not found');
+
+      const balanceBefore = Number(wallet.balanceInr);
+      wallet.balanceInr = balanceBefore + Number(payment.amount);
+      const savedWallet = await entityManager.save(wallet);
+
+      const transaction = entityManager.create(Transaction, {
+        userId,
+        type: 'deposit',
+        cashAmount: Number(payment.amount),
+        cashBalanceBefore: balanceBefore,
+        cashBalanceAfter: Number(savedWallet.balanceInr),
+        description: `Deposit of \u20B9${Number(payment.amount)}`,
+        referenceType: 'payment',
+        referenceId: payment.id,
+        status: 'completed',
+      });
+      await entityManager.save(transaction);
+
+      const user = await entityManager.findOne(User, {
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!user) throw new NotFoundException('User not found');
+      user.walletBalanceInr = Number(savedWallet.balanceInr);
+      const savedUser = await entityManager.save(user);
+
+      return { payment, bonusPoints, user: savedUser };
     });
-
-    const { wallet } = await this.walletService.creditBalance(userId, Number(payment.amount), {
-      type: 'payment',
-      id: payment.id,
-      description: `Deposit of \u20B9${Number(payment.amount)}`,
-    });
-
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
-    user.walletBalanceInr = Number(wallet.balanceInr);
-    const savedUser = await this.userRepo.save(user);
-
-    return { payment, bonusPoints, user: savedUser };
   }
 
   async calculateBonusPoints(amount: number): Promise<number> {

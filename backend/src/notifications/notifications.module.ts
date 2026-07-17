@@ -1,3 +1,4 @@
+// Notifications Module: Configures TypeOrm imports, controllers, and services for push notifications and reminders.
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationsController } from './notifications.controller';

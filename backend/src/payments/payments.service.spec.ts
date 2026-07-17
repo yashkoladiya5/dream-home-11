@@ -138,6 +138,7 @@ describe('PaymentsService', () => {
       const manager = {
         findOne: jest.fn().mockResolvedValue(highAmountPayment),
         save: jest.fn().mockResolvedValue({ ...highAmountPayment, status: 'completed' }),
+        create: jest.fn().mockReturnValue({}),
       };
       mockDataSource.transaction.mockImplementation(async (cb: any) => {
         const result = await cb(manager);

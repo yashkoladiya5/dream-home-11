@@ -14,6 +14,7 @@ class DepositNotifier {
 
   DepositNotifier(this._dio);
 
+  // Performs deposit by creating an order and executing a mock verification
   Future<UserProfile?> deposit(double amount) async {
     try {
       final orderRes = await _dio.post('/api/v1/payments/order', data: {'amount': amount});

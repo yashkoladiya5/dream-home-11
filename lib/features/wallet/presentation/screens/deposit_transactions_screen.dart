@@ -1,3 +1,4 @@
+// Deposit Transactions Screen: Renders the transaction history for user deposits and points bonuses.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';

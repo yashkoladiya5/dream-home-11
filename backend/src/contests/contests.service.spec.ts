@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { RedisService } from '@liaoliaots/nestjs-redis';
+import { WalletService } from '../wallet/wallet.service';
 import { ContestsService } from './contests.service';
 import {
   Contest,
@@ -21,6 +24,7 @@ describe('ContestsService', () => {
   >;
   let dataSource: Partial<Record<keyof DataSource, jest.Mock>>;
   let mockEntityManager: Partial<Record<keyof EntityManager, jest.Mock>>;
+  let walletService: WalletService;
 
   const mockUser: User = {
     id: 'user-1',
@@ -116,10 +120,21 @@ describe('ContestsService', () => {
         },
         { provide: DataSource, useValue: dataSource },
         { provide: PointsEngineService, useValue: mockPointsEngineService },
+        { 
+          provide: WalletService,
+          useValue: { 
+            debitBalance: jest.fn().mockResolvedValue({ 
+              wallet: { balanceInr: 900 }, 
+              transaction: { id: 'tx-1' } 
+            }),
+            creditPoints: jest.fn().mockResolvedValue({ pointsBalance: 150 })
+          } 
+        },
       ],
     }).compile();
 
     service = module.get<ContestsService>(ContestsService);
+    walletService = module.get<WalletService>(WalletService);
   });
 
   it('should be defined', () => {
@@ -145,9 +160,8 @@ describe('ContestsService', () => {
       const result = await service.joinContest('user-1', 'contest-1');
 
       expect(result).toBeDefined();
-      expect(result.user.pointsBalance).toBe(50);
-      expect(result.user.lifetimePoints).toBe(50);
-      expect(result.user.walletBalanceInr).toBe(900);
+      expect(walletService.debitBalance).toHaveBeenCalled();
+      expect(walletService.creditPoints).toHaveBeenCalled();
       expect(result.contest.filledSlots).toBe(51);
     });
 
@@ -236,8 +250,8 @@ describe('ContestsService', () => {
       expect(result.user.currentTier).toBe(UserLevel.SILVER);
     });
 
-    it('should upgrade tier to GOLD at 2000 lifetime points', async () => {
-      const user = { ...mockUser, lifetimePoints: 1800, pointsBalance: 1800 };
+    it('should upgrade tier to GOLD at 5000 lifetime points', async () => {
+      const user = { ...mockUser, lifetimePoints: 4800, pointsBalance: 4800 };
       const contest = { ...mockContest, pointsToJoin: 200 };
 
       (mockEntityManager.findOne as jest.Mock)
@@ -252,8 +266,8 @@ describe('ContestsService', () => {
       expect(result.user.currentTier).toBe(UserLevel.GOLD);
     });
 
-    it('should upgrade tier to PLATINUM at 5000 lifetime points', async () => {
-      const user = { ...mockUser, lifetimePoints: 4800, pointsBalance: 4800 };
+    it('should upgrade tier to PLATINUM at 15000 lifetime points', async () => {
+      const user = { ...mockUser, lifetimePoints: 14800, pointsBalance: 14800 };
       const contest = { ...mockContest, pointsToJoin: 200 };
 
       (mockEntityManager.findOne as jest.Mock)

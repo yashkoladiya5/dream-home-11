@@ -107,9 +107,9 @@ export class PointsEngineService {
 
   getTierInfo(lifetimePoints: number): { tier: string; multiplier: number } {
     let tier: string;
-    if (lifetimePoints >= 5000) {
+    if (lifetimePoints >= 15000) {
       tier = 'platinum';
-    } else if (lifetimePoints >= 2000) {
+    } else if (lifetimePoints >= 5000) {
       tier = 'gold';
     } else if (lifetimePoints >= 1000) {
       tier = 'silver';
@@ -126,8 +126,8 @@ export class PointsEngineService {
   } {
     const thresholds = [
       { tier: 'silver', points: 1000, multiplier: 1.1 },
-      { tier: 'gold', points: 2000, multiplier: 1.25 },
-      { tier: 'platinum', points: 5000, multiplier: 1.5 },
+      { tier: 'gold', points: 5000, multiplier: 1.25 },
+      { tier: 'platinum', points: 15000, multiplier: 1.5 },
     ];
     for (const t of thresholds) {
       if (lifetimePoints < t.points) {

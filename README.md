@@ -2,6 +2,8 @@
 
 A fantasy home design contest platform built with NestJS, Flutter, and React.
 
+<!-- Dream Home 11 Repository Information and Setup Guide -->
+
 ## Projects
 
 - **backend/** — NestJS API server (PostgreSQL + Redis)

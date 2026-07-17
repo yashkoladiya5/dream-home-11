@@ -123,9 +123,9 @@ export class UsersService {
     user.pointsBalance = Number(user.pointsBalance) + points;
     user.lifetimePoints = Number(user.lifetimePoints) + points;
 
-    if (user.lifetimePoints >= 5000) {
+    if (user.lifetimePoints >= 15000) {
       user.currentTier = UserLevel.PLATINUM;
-    } else if (user.lifetimePoints >= 2000) {
+    } else if (user.lifetimePoints >= 5000) {
       user.currentTier = UserLevel.GOLD;
     } else if (user.lifetimePoints >= 1000) {
       user.currentTier = UserLevel.SILVER;
@@ -573,5 +573,28 @@ export class UsersService {
       page,
       limit,
     };
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    
+    // Instead of hard deleting, we typically deactivate the account for compliance/auditing
+    // Or we anonymize personal data. Here we do a soft delete + anonymization.
+    const randomSuffix = randomBytes(4).toString('hex');
+    user.isActive = false;
+    user.phoneNumber = `deleted_${randomSuffix}`; // Anonymize PII
+    user.fullName = 'Deleted User';
+    user.email = user.email ? `deleted_${randomSuffix}@example.com` : null;
+    user.deviceToken = null;
+    user.appleId = null;
+    user.googleId = null;
+    
+    await this.userRepository.save(user);
+    
+    // In a real app we might also need to clean up sessions and queue 
+    // a background job for hard-deleting transactional data if required by GDPR.
   }
 }

@@ -60,11 +60,15 @@ describe('ShareTrackerService', () => {
         userId: 'user-uuid',
         contestId: 'contest-uuid',
         shareChannel: 'whatsapp',
-        pointsAwarded: SHARE_POINTS,
+        pointsAwarded: 15,
       }));
       expect(mockRepo.save).toHaveBeenCalled();
       expect(mockPointsEngine.logPointAction).toHaveBeenCalledWith(
-        'user-uuid', 'share_contest', SHARE_POINTS, 1.0, SHARE_POINTS,
+        'user-uuid',
+        'share_contest',
+        15,
+        1.0,
+        15,
       );
     });
 
