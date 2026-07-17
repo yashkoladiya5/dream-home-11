@@ -14,7 +14,7 @@ import { NotificationLog } from './entities/notification-log.entity';
 import { User } from '../users/entities/user.entity';
 import { PointsEngineService } from '../points/points-engine.service';
 
-export const REMINDER_POINTS = 10;
+export const REMINDER_POINTS = 30;
 
 @Injectable()
 export class NotificationsService {

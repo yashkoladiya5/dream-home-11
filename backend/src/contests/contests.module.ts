@@ -10,6 +10,7 @@ import { ContestSchedulerService } from './contest-scheduler.service';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 import { QUEUES } from '../queue/queue.constants';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { QUEUES } from '../queue/queue.constants';
     BullModule.registerQueue({ name: QUEUES.PRIZE_DISTRIBUTION }),
     UsersModule,
     AuthModule,
+    WalletModule,
   ],
   providers: [ContestsService, ContestsGateway, ContestSchedulerService],
   controllers: [ContestsController],

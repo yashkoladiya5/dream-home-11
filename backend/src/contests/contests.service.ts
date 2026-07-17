@@ -21,6 +21,7 @@ import { PointsEngineService } from '../points/points-engine.service';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { QueryContestsDto } from './dto/query-contests.dto';
 import { CreatePrivateContestDto } from './dto/create-private-contest.dto';
+import { WalletService } from '../wallet/wallet.service';
 
 @Injectable()
 export class ContestsService {
@@ -34,6 +35,7 @@ export class ContestsService {
     private readonly contestMemberRepository: Repository<ContestMember>,
     private readonly dataSource: DataSource,
     private readonly pointsEngineService: PointsEngineService,
+    private readonly walletService: WalletService,
   ) {}
 
   async findAll(query: QueryContestsDto): Promise<{
@@ -385,11 +387,27 @@ export class ContestsService {
         contest.pointsToJoin,
         user.currentTier,
       );
-      user.walletBalanceInr =
-        Number(user.walletBalanceInr) - Number(contest.entryFeeInr);
-      user.pointsBalance = Number(user.pointsBalance) + finalPoints;
-      user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
+      const { transaction: cashTx } = await this.walletService.debitBalance(
+        userId,
+        Number(contest.entryFeeInr),
+        { type: 'contest', id: contestId, description: `Joined contest: ${contest.title}` },
+        entityManager,
+      );
 
+      const pointsWallet = await this.walletService.creditPoints(
+        userId,
+        finalPoints,
+        { type: 'contest', id: contestId },
+        entityManager,
+      );
+
+      // Merge points info into the cashTx that was just created, to match original behavior
+      cashTx.pointsAmount = finalPoints;
+      cashTx.pointsBalanceBefore = Number(pointsWallet.pointsBalance) - finalPoints;
+      cashTx.pointsBalanceAfter = Number(pointsWallet.pointsBalance);
+      await entityManager.save(cashTx);
+
+      user.lifetimePoints = Number(user.lifetimePoints) + finalPoints;
       if (user.lifetimePoints >= 15000) {
         user.currentTier = UserLevel.PLATINUM;
       } else if (user.lifetimePoints >= 5000) {
@@ -397,7 +415,6 @@ export class ContestsService {
       } else if (user.lifetimePoints >= 1000) {
         user.currentTier = UserLevel.SILVER;
       }
-
       await entityManager.save(user);
 
       await this.pointsEngineService.logPointActionWithEntityManager(
@@ -407,25 +424,6 @@ export class ContestsService {
         contest.pointsToJoin,
         multiplier,
         finalPoints,
-      );
-
-      await entityManager.save(
-        Transaction,
-        entityManager.create(Transaction, {
-          userId,
-          type: 'entry_fee',
-          cashAmount: Number(contest.entryFeeInr),
-          pointsAmount: finalPoints,
-          cashBalanceBefore:
-            Number(user.walletBalanceInr) + Number(contest.entryFeeInr),
-          cashBalanceAfter: Number(user.walletBalanceInr),
-          pointsBalanceBefore: Number(user.pointsBalance) - finalPoints,
-          pointsBalanceAfter: Number(user.pointsBalance),
-          description: `Joined contest: ${contest.title}`,
-          referenceType: 'contest',
-          referenceId: contestId,
-          status: 'completed',
-        }),
       );
 
       const member = entityManager.create(ContestMember, {
@@ -626,22 +624,16 @@ export class ContestsService {
           });
 
           if (user) {
-            const balanceBefore = Number(user.walletBalanceInr);
-            user.walletBalanceInr = balanceBefore + winner.amount;
-            await manager.save(user);
-
-            const transaction = manager.create(Transaction, {
-              userId: winner.userId,
-              type: 'prize',
-              cashAmount: winner.amount,
-              cashBalanceBefore: balanceBefore,
-              cashBalanceAfter: Number(user.walletBalanceInr),
-              description: `Prize for contest: ${contest.title} (${winner.prize})`,
-              referenceType: 'contest',
-              referenceId: contestId,
-              status: 'completed',
-            });
-            await manager.save(transaction);
+            await this.walletService.creditBalance(
+              winner.userId,
+              winner.amount,
+              {
+                type: 'contest',
+                id: contestId,
+                description: `Prize for contest: ${contest.title} (${winner.prize})`,
+              },
+              manager,
+            );
           }
         }
       }
@@ -665,8 +657,13 @@ export class ContestsService {
             finalPoints,
           );
 
-          member.user.pointsBalance =
-            Number(member.user.pointsBalance) + finalPoints;
+          await this.walletService.creditPoints(
+            member.userId,
+            finalPoints,
+            { type: 'contest', id: contestId },
+            manager,
+          );
+
           member.user.lifetimePoints =
             Number(member.user.lifetimePoints) + finalPoints;
 

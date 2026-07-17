@@ -18,23 +18,31 @@ export class ShareTrackerService {
     userId: string,
     contestId: string | null,
     shareChannel: string,
+    shareType: string = 'app',
   ): Promise<Share> {
+    let pointsToAward = 15; // default app share
+    if (shareType === 'contest') {
+      pointsToAward = 10;
+    } else if (shareType === 'winner' || shareType === 'achievement') {
+      pointsToAward = 20;
+    }
+
     const inviteCode = this.generateInviteCode();
     const share = this.shareRepo.create({
       userId,
       contestId,
       shareChannel,
       status: 'sent',
-      pointsAwarded: SHARE_POINTS,
+      pointsAwarded: pointsToAward,
       inviteCode,
     });
     const saved = await this.shareRepo.save(share);
     await this.pointsEngineService.logPointAction(
       userId,
       'share_contest',
-      SHARE_POINTS,
+      pointsToAward,
       1.0,
-      SHARE_POINTS,
+      pointsToAward,
     );
     return saved;
   }

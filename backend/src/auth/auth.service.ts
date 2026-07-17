@@ -48,10 +48,12 @@ export class AuthService {
   ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
     const { phoneNumber } = await this.firebaseService.verifyIdToken(idToken);
 
-    if (!otpCode) {
-      throw new UnauthorizedException('OTP code is required');
+    if (idToken.startsWith('mock-token-')) {
+      if (!otpCode) {
+        throw new UnauthorizedException('OTP code is required');
+      }
+      await this.redisOtpService.verifyOtp(phoneNumber, otpCode);
     }
-    await this.redisOtpService.verifyOtp(phoneNumber, otpCode);
 
     const existingUser = await this.usersService.findByPhoneNumber(phoneNumber);
     const isNewUser = !existingUser;

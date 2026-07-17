@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { RedisService } from '@liaoliaots/nestjs-redis';
+import { WalletService } from '../wallet/wallet.service';
 import { ContestsService } from './contests.service';
 import {
   Contest,
@@ -116,6 +119,16 @@ describe('ContestsService', () => {
         },
         { provide: DataSource, useValue: dataSource },
         { provide: PointsEngineService, useValue: mockPointsEngineService },
+        { 
+          provide: WalletService,
+          useValue: { 
+            debitBalance: jest.fn().mockResolvedValue({ 
+              wallet: { balanceInr: 900 }, 
+              transaction: { id: 'tx-1' } 
+            }),
+            creditPoints: jest.fn().mockResolvedValue({ pointsBalance: 150 })
+          } 
+        },
       ],
     }).compile();
 

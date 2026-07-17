@@ -15,6 +15,8 @@ import { AuditAction } from '../audit/entities/audit-log.entity';
 import { EncryptionService } from '../common/encryption/encryption.service';
 import { ConfigService } from '../config/config.service';
 
+import { WalletService } from '../wallet/wallet.service';
+
 @Injectable()
 export class WithdrawalsService {
   constructor(
@@ -22,8 +24,7 @@ export class WithdrawalsService {
     private readonly withdrawalRepo: Repository<Withdrawal>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(Transaction)
-    private readonly transactionRepo: Repository<Transaction>,
+    private readonly walletService: WalletService,
     private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
     private readonly encryptionService: EncryptionService,
@@ -88,10 +89,6 @@ export class WithdrawalsService {
         );
       }
 
-      const balanceBefore = Number(user.walletBalanceInr);
-      user.walletBalanceInr = balanceBefore - amount;
-      await entityManager.save(user);
-
       const rawBankAccount = bankDetails.bankAccountNumber || user.bankAccountNumber || null;
       const encryptedBankAccount = rawBankAccount
         ? this.encryptionService.encrypt(rawBankAccount)
@@ -107,19 +104,16 @@ export class WithdrawalsService {
         upiId: bankDetails.upiId || user.upiId || null,
       } as any);
 
-      const transaction = entityManager.create(Transaction, {
+      await this.walletService.debitBalance(
         userId,
-        type: 'withdrawal',
-        cashAmount: amount,
-        cashBalanceBefore: balanceBefore,
-        cashBalanceAfter: Number(user.walletBalanceInr),
-        pointsAmount: 0,
-        description: `Withdrawal request of ₹${amount}`,
-        referenceType: 'withdrawal',
-        referenceId: savedWithdrawal.id,
-        status: 'completed',
-      });
-      await entityManager.save(transaction);
+        amount,
+        {
+          type: 'withdrawal',
+          id: savedWithdrawal.id,
+          description: `Withdrawal request of ₹${amount}`,
+        },
+        entityManager,
+      );
 
       return savedWithdrawal;
     });

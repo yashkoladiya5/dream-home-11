@@ -27,10 +27,11 @@ export class WalletService {
     userId: string,
     amount: number,
     reference: { type: string; id: string; description: string },
+    manager?: import('typeorm').EntityManager,
   ): Promise<{ wallet: Wallet; transaction: Transaction }> {
     if (amount <= 0) throw new BadRequestException('Amount must be greater than 0');
 
-    return this.dataSource.transaction(async (entityManager) => {
+    const execute = async (entityManager: import('typeorm').EntityManager) => {
       const wallet = await entityManager.findOne(Wallet, {
         where: { userId },
         lock: { mode: 'pessimistic_write' },
@@ -41,9 +42,10 @@ export class WalletService {
       wallet.balanceInr = balanceBefore + amount;
       const savedWallet = await entityManager.save(wallet);
 
+      const txType = reference.type === 'contest' ? 'prize' : 'deposit';
       const transaction = entityManager.create(Transaction, {
         userId,
-        type: 'deposit',
+        type: txType as any,
         cashAmount: amount,
         cashBalanceBefore: balanceBefore,
         cashBalanceAfter: Number(savedWallet.balanceInr),
@@ -54,18 +56,24 @@ export class WalletService {
       });
       const savedTransaction = await entityManager.save(transaction);
 
+      // sync legacy user wallet balance field
+      await entityManager.query('UPDATE users SET wallet_balance_inr = $1 WHERE id = $2', [wallet.balanceInr, userId]);
+
       return { wallet: savedWallet, transaction: savedTransaction };
-    });
+    };
+
+    return manager ? execute(manager) : this.dataSource.transaction(execute);
   }
 
   async debitBalance(
     userId: string,
     amount: number,
     reference: { type: string; id: string; description: string },
+    manager?: import('typeorm').EntityManager,
   ): Promise<{ wallet: Wallet; transaction: Transaction }> {
     if (amount <= 0) throw new BadRequestException('Amount must be greater than 0');
 
-    return this.dataSource.transaction(async (entityManager) => {
+    const execute = async (entityManager: import('typeorm').EntityManager) => {
       const wallet = await entityManager.findOne(Wallet, {
         where: { userId },
         lock: { mode: 'pessimistic_write' },
@@ -92,8 +100,13 @@ export class WalletService {
       });
       const savedTransaction = await entityManager.save(transaction);
 
+      // sync legacy user wallet balance field
+      await entityManager.query('UPDATE users SET wallet_balance_inr = $1 WHERE id = $2', [wallet.balanceInr, userId]);
+
       return { wallet: savedWallet, transaction: savedTransaction };
-    });
+    };
+
+    return manager ? execute(manager) : this.dataSource.transaction(execute);
   }
 
   async lockBalance(userId: string, amount: number): Promise<Wallet> {
@@ -138,10 +151,11 @@ export class WalletService {
     userId: string,
     points: number,
     reference?: Record<string, any>,
+    manager?: import('typeorm').EntityManager,
   ): Promise<Wallet> {
     if (points <= 0) throw new BadRequestException('Points must be greater than 0');
 
-    return this.dataSource.transaction(async (entityManager) => {
+    const execute = async (entityManager: import('typeorm').EntityManager) => {
       const wallet = await entityManager.findOne(Wallet, {
         where: { userId },
         lock: { mode: 'pessimistic_write' },
@@ -149,14 +163,25 @@ export class WalletService {
       if (!wallet) throw new NotFoundException('Wallet not found');
 
       wallet.pointsBalance = Number(wallet.pointsBalance) + points;
-      return entityManager.save(wallet);
-    });
+      const savedWallet = await entityManager.save(wallet);
+      
+      // sync legacy user field
+      await entityManager.query('UPDATE users SET points_balance = $1 WHERE id = $2', [wallet.pointsBalance, userId]);
+
+      return savedWallet;
+    };
+
+    return manager ? execute(manager) : this.dataSource.transaction(execute);
   }
 
-  async debitPoints(userId: string, points: number): Promise<Wallet> {
+  async debitPoints(
+    userId: string, 
+    points: number,
+    manager?: import('typeorm').EntityManager,
+  ): Promise<Wallet> {
     if (points <= 0) throw new BadRequestException('Points must be greater than 0');
 
-    return this.dataSource.transaction(async (entityManager) => {
+    const execute = async (entityManager: import('typeorm').EntityManager) => {
       const wallet = await entityManager.findOne(Wallet, {
         where: { userId },
         lock: { mode: 'pessimistic_write' },
@@ -166,8 +191,15 @@ export class WalletService {
       if (Number(wallet.pointsBalance) < points) throw new BadRequestException('Insufficient points');
 
       wallet.pointsBalance = Number(wallet.pointsBalance) - points;
-      return entityManager.save(wallet);
-    });
+      const savedWallet = await entityManager.save(wallet);
+      
+      // sync legacy user field
+      await entityManager.query('UPDATE users SET points_balance = $1 WHERE id = $2', [wallet.pointsBalance, userId]);
+
+      return savedWallet;
+    };
+
+    return manager ? execute(manager) : this.dataSource.transaction(execute);
   }
 
   async getBalance(userId: string): Promise<{ balanceInr: number; lockedBalanceInr: number; availableBalance: number; pointsBalance: number }> {

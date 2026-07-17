@@ -9,6 +9,7 @@ import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service';
 import { EncryptionService } from '../common/encryption/encryption.service';
 import { ConfigService } from '../config/config.service';
+import { WalletService } from '../wallet/wallet.service';
 
 describe('WithdrawalsService', () => {
   let service: WithdrawalsService;
@@ -94,6 +95,10 @@ describe('WithdrawalsService', () => {
         { provide: AuditService, useValue: mockAuditService },
         { provide: EncryptionService, useValue: mockEncryptionService },
         { provide: ConfigService, useValue: mockConfigService },
+        {
+          provide: WalletService,
+          useValue: { debitBalance: jest.fn() },
+        },
       ],
     }).compile();
 

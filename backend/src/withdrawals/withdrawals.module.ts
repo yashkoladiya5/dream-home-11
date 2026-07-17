@@ -10,6 +10,7 @@ import { UsersModule } from '../users/users.module';
 import { AuditModule } from '../audit/audit.module';
 import { EncryptionModule } from '../common/encryption/encryption.module';
 import { AppConfigModule } from '../config/config.module';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AppConfigModule } from '../config/config.module';
     AuditModule,
     EncryptionModule,
     AppConfigModule,
+    WalletModule,
   ],
   controllers: [WithdrawalsController],
   providers: [WithdrawalsService],

@@ -29,6 +29,7 @@ describe('WalletService', () => {
       findOne: jest.fn().mockImplementation(() => Promise.resolve({ ...mockWallet })),
       save: jest.fn().mockImplementation((w) => Promise.resolve(w)),
       create: jest.fn((_e: any, data: any) => data),
+      query: jest.fn().mockResolvedValue([]),
       ...overrides,
     };
   }
