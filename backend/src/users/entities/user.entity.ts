@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Kyc } from '../../kyc/entities/kyc.entity';
 import { Wallet } from '../../wallet/entities/wallet.entity';
+import { EncryptionTransformer } from '../../common/encryption/encryption.transformer';
 
 export enum UserLevel {
   BRONZE = 'bronze',
@@ -97,16 +98,29 @@ export class User {
     type: 'varchar',
     length: 255,
     nullable: true,
+    transformer: new EncryptionTransformer(),
   })
   bankAccountNumber: string;
 
-  @Column({ name: 'bank_ifsc', type: 'varchar', length: 20, nullable: true })
+  @Column({
+    name: 'bank_ifsc',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    transformer: new EncryptionTransformer(),
+  })
   bankIfsc: string;
 
   @Column({ name: 'bank_name', type: 'varchar', length: 100, nullable: true })
   bankName: string;
 
-  @Column({ name: 'upi_id', type: 'varchar', length: 512, nullable: true })
+  @Column({
+    name: 'upi_id',
+    type: 'varchar',
+    length: 512,
+    nullable: true,
+    transformer: new EncryptionTransformer(),
+  })
   upiId: string;
 
   @Column({

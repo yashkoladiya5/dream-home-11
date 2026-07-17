@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { EncryptionTransformer } from '../../common/encryption/encryption.transformer';
 
 export enum KycStatus {
   PENDING = 'pending',
@@ -33,6 +34,7 @@ export class Kyc {
     length: 255,
     unique: true,
     nullable: true,
+    transformer: new EncryptionTransformer(),
   })
   aadhaarNumber: string;
 
@@ -42,6 +44,7 @@ export class Kyc {
     length: 255,
     unique: true,
     nullable: true,
+    transformer: new EncryptionTransformer(),
   })
   panNumber: string;
 

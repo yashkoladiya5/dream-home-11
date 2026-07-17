@@ -168,10 +168,9 @@ export class CompensationService {
           continue;
         }
 
-        const multiplier = this.pointsEngineService.getMultiplier(
-          user.currentTier,
-        );
-        const finalPoints = Math.round(points * multiplier);
+        // Compensation MUST NOT apply multipliers based on user tier.
+        const multiplier = 1.0;
+        const finalPoints = points;
 
         await this.userRepo.manager.transaction(
           async (entityManager: EntityManager) => {

@@ -32,8 +32,6 @@ export class AuthService {
 
     this.redisOtpService.storeOtp(phoneNumber, otpCode);
 
-    this.logger.debug(`OTP stored for ${phoneNumber} (length: ${otpCode.length})`);
-
     this.queueService.add(QUEUES.OTP_SMS, { phoneNumber, code: otpCode });
 
     return {
