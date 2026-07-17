@@ -24,6 +24,7 @@ describe('ContestsService', () => {
   >;
   let dataSource: Partial<Record<keyof DataSource, jest.Mock>>;
   let mockEntityManager: Partial<Record<keyof EntityManager, jest.Mock>>;
+  let walletService: WalletService;
 
   const mockUser: User = {
     id: 'user-1',
@@ -133,6 +134,7 @@ describe('ContestsService', () => {
     }).compile();
 
     service = module.get<ContestsService>(ContestsService);
+    walletService = module.get<WalletService>(WalletService);
   });
 
   it('should be defined', () => {
@@ -158,9 +160,8 @@ describe('ContestsService', () => {
       const result = await service.joinContest('user-1', 'contest-1');
 
       expect(result).toBeDefined();
-      expect(result.user.pointsBalance).toBe(50);
-      expect(result.user.lifetimePoints).toBe(50);
-      expect(result.user.walletBalanceInr).toBe(900);
+      expect(walletService.debitBalance).toHaveBeenCalled();
+      expect(walletService.creditPoints).toHaveBeenCalled();
       expect(result.contest.filledSlots).toBe(51);
     });
 

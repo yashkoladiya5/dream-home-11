@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
+import * as Sentry from '@sentry/node';
 import { PinoLoggerService } from '../logger/pino-logger.service';
 
 @Catch()
@@ -68,6 +69,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
       },
       'AllExceptionsFilter',
     );
+
+    Sentry.addBreadcrumb({
+      category: 'http.response',
+      message: 'Global Exception Filter Caught Error',
+      level: status >= 500 ? 'error' : 'warning',
+      data: {
+        statusCode: status,
+        method: request.method,
+        url: request.url,
+        requestId,
+      },
+    });
 
     response.status(status).json(errorResponse);
   }

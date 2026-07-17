@@ -11,6 +11,7 @@ import {
   HttpStatus,
   UsePipes,
   ValidationPipe,
+  Delete,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -187,5 +188,11 @@ export class UsersController {
       Math.max(1, parseInt(limit || '20', 10) || 20),
     );
     return this.usersService.searchUsers(query || '', pageNum, limitNum);
+  @Delete('me')
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteAccount(@GetUser() user: User) {
+    await this.usersService.deleteAccount(user.id);
   }
 }

@@ -15,6 +15,7 @@ describe('WithdrawalsService', () => {
   let service: WithdrawalsService;
   let mockEntityManager: Partial<Record<keyof EntityManager, jest.Mock>>;
   let dataSource: Partial<Record<keyof DataSource, jest.Mock>>;
+  let walletService: WalletService;
 
   const mockUser = {
     id: 'user-1',
@@ -103,6 +104,7 @@ describe('WithdrawalsService', () => {
     }).compile();
 
     service = module.get<WithdrawalsService>(WithdrawalsService);
+    walletService = module.get<WalletService>(WalletService);
   });
 
   it('should be defined', () => {
@@ -237,30 +239,21 @@ describe('WithdrawalsService', () => {
       expect(result.bankName).toBe('HDFC Bank');
     });
 
-    it('should deduct balance correctly', async () => {
-      let savedUser: any = null;
-
+    it('should deduct balance correctly via WalletService', async () => {
       (mockEntityManager.findOne as jest.Mock)
         .mockResolvedValueOnce({ ...mockUser })
         .mockResolvedValueOnce({ status: 'approved' });
-      (mockEntityManager.save as jest.Mock).mockImplementation(
-        (...args: any[]) => {
-          if (args.length === 1) {
-            const entity = args[0];
-            if (entity.walletBalanceInr !== undefined) {
-              savedUser = entity;
-            }
-            return entity;
-          }
-          return {};
-        },
-      );
       (mockEntityManager.create as jest.Mock).mockReturnValue({});
+      (mockEntityManager.save as jest.Mock).mockResolvedValue({ id: 'w1' });
 
       await service.requestWithdrawal('user-1', 2000, {});
 
-      expect(savedUser).not.toBeNull();
-      expect(Number(savedUser.walletBalanceInr)).toBe(3000);
+      expect(walletService.debitBalance).toHaveBeenCalledWith(
+        'user-1',
+        2000,
+        { type: 'withdrawal', id: 'w1', description: 'Withdrawal request of ₹2000' },
+        mockEntityManager
+      );
     });
   });
 

@@ -574,4 +574,27 @@ export class UsersService {
       limit,
     };
   }
+
+  async deleteAccount(userId: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    
+    // Instead of hard deleting, we typically deactivate the account for compliance/auditing
+    // Or we anonymize personal data. Here we do a soft delete + anonymization.
+    const randomSuffix = randomBytes(4).toString('hex');
+    user.isActive = false;
+    user.phoneNumber = `deleted_${randomSuffix}`; // Anonymize PII
+    user.fullName = 'Deleted User';
+    user.email = user.email ? `deleted_${randomSuffix}@example.com` : null;
+    user.deviceToken = null;
+    user.appleId = null;
+    user.googleId = null;
+    
+    await this.userRepository.save(user);
+    
+    // In a real app we might also need to clean up sessions and queue 
+    // a background job for hard-deleting transactional data if required by GDPR.
+  }
 }
