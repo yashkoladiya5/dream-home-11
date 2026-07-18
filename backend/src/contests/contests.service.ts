@@ -685,4 +685,43 @@ export class ContestsService {
       return { contest, winners };
     });
   }
+
+  async cancelContest(contestId: string): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      const contest = await manager.findOne(Contest, {
+        where: { id: contestId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!contest) throw new NotFoundException('Contest not found');
+      if (contest.status === ContestStatus.COMPLETED || contest.status === ContestStatus.CANCELLED) {
+        throw new BadRequestException('Contest is already completed or cancelled');
+      }
+
+      const members = await manager.find(ContestMember, {
+        where: { contestId },
+        relations: { user: true },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      const entryFee = Number(contest.entryFeeInr);
+      if (entryFee > 0) {
+        for (const member of members) {
+          await this.walletService.creditBalance(
+            member.userId,
+            entryFee,
+            {
+              type: 'refund',
+              id: contestId,
+              description: `Refund for cancelled contest: ${contest.title}`,
+            },
+            manager,
+          );
+        }
+      }
+
+      contest.status = ContestStatus.CANCELLED;
+      await manager.save(contest);
+    });
+  }
 }

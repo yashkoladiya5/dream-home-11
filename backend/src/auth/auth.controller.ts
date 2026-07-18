@@ -89,4 +89,13 @@ export class AuthController {
     }
     return this.authService.createMockToken(dto.phoneNumber, dto.role);
   }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async logout(@Body() dto: RefreshTokenDto): Promise<{ success: boolean; message: string }> {
+    const tokenHash = this.refreshTokenService.hashToken(dto.refreshToken);
+    await this.refreshTokenService.revokeToken(tokenHash);
+    return { success: true, message: 'Logged out successfully' };
+  }
 }
