@@ -587,11 +587,8 @@ export class UsersService {
     user.isActive = false;
     user.phoneNumber = `deleted_${randomSuffix}`; // Anonymize PII
     user.fullName = 'Deleted User';
-    user.email = user.email ? `deleted_${randomSuffix}@example.com` : null;
-    user.deviceToken = null;
-    user.appleId = null;
-    user.googleId = null;
-    
+    user.email = user.email ? `deleted_${randomSuffix}@example.com` : `deleted_${randomSuffix}@example.com`;
+
     await this.userRepository.save(user);
     
     // In a real app we might also need to clean up sessions and queue 

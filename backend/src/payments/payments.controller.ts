@@ -19,6 +19,8 @@ import { UsersService } from '../users/users.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { SkipEnvelope } from '../common/decorators/skip-envelope.decorator';
 import { Public } from '../common/decorators/public.decorator';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { VerifyPaymentDto } from './dto/verify-payment.dto';
 
 @Controller('api/v1/payments')
 @UseGuards(JwtAuthGuard)
@@ -34,13 +36,12 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   async createOrder(
     @GetUser() user: User,
-    @Body('amount') amount: number,
-    @Body('paymentMethod') paymentMethod?: string,
+    @Body() dto: CreateOrderDto,
   ) {
     const payment = await this.paymentsService.createOrder(
       user.id,
-      amount,
-      paymentMethod,
+      dto.amount,
+      dto.paymentMethod,
     );
     return {
       orderId: payment.orderId,
@@ -54,13 +55,12 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   async verifyPayment(
     @GetUser() user: User,
-    @Body('orderId') orderId: string,
-    @Body('paymentId') paymentId: string,
+    @Body() dto: VerifyPaymentDto,
   ) {
     let { payment, bonusPoints, user: updatedUser } = await this.paymentsService.verifyPayment(
       user.id,
-      orderId,
-      paymentId,
+      dto.orderId,
+      dto.paymentId,
     );
 
     if (bonusPoints > 0) {

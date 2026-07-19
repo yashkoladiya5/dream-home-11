@@ -14,6 +14,7 @@ import { WithdrawalsService } from './withdrawals.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { RequestWithdrawalDto } from './dto/request-withdrawal.dto';
 
 @Controller('api/v1/payments')
 @UseGuards(JwtAuthGuard)
@@ -25,22 +26,17 @@ export class WithdrawalsController {
   @HttpCode(HttpStatus.OK)
   async requestWithdrawal(
     @GetUser() user: User,
-    @Body('amount') amount: number,
-    @Body('bankAccountNumber') bankAccountNumber?: string,
-    @Body('bankIfsc') bankIfsc?: string,
-    @Body('bankName') bankName?: string,
-    @Body('upiId') upiId?: string,
+    @Body() dto: RequestWithdrawalDto,
   ) {
-    const parsedAmount =
-      typeof amount === 'string' ? parseFloat(amount) : amount;
+    const parsedAmount = typeof dto.amount === 'string' ? parseFloat(dto.amount as any) : dto.amount;
     const withdrawal = await this.withdrawalsService.requestWithdrawal(
       user.id,
       parsedAmount,
       {
-        bankAccountNumber,
-        bankIfsc,
-        bankName,
-        upiId,
+        bankAccountNumber: dto.bankAccountNumber,
+        bankIfsc: dto.bankIfsc,
+        bankName: dto.bankName,
+        upiId: dto.upiId,
       },
     );
     await this.withdrawalsService.logWithdrawalRequest(

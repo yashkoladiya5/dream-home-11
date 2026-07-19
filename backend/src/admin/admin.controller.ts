@@ -20,6 +20,13 @@ import { UserRole, User } from '../users/entities/user.entity';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '../audit/entities/audit-log.entity';
+import { CreateBannerDto } from '../banners/dto/create-banner.dto';
+import { UpdateBannerDto } from '../banners/dto/update-banner.dto';
+import { ReorderBannersDto } from '../banners/dto/reorder-banners.dto';
+import { CreatePrizeHomeDto } from '../prize-homes/dto/create-prize-home.dto';
+import { UpdatePrizeHomeDto } from '../prize-homes/dto/update-prize-home.dto';
+import { CreateRewardDto } from '../rewards/dto/create-reward.dto';
+import { UpdateRewardDto } from '../rewards/dto/update-reward.dto';
 import {
   QueryUsersDto,
   UpdateUserDto,
@@ -332,7 +339,7 @@ export class AdminController {
 
   @Post('banners')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async createBanner(@Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async createBanner(@Body() dto: CreateBannerDto, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.createBanner(dto);
     await this.auditService.log({
       adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
@@ -343,7 +350,7 @@ export class AdminController {
 
   @Patch('banners/:id')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updateBanner(@Param('id') id: string, @Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async updateBanner(@Param('id') id: string, @Body() dto: UpdateBannerDto, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.updateBanner(id, dto);
     await this.auditService.log({
       adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
@@ -365,7 +372,7 @@ export class AdminController {
 
   @Post('banners/reorder')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async reorderBanners(@Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async reorderBanners(@Body() dto: ReorderBannersDto, @GetUser() admin: User, @Req() req: any) {
     await this.adminService.reorderBanners(dto);
     await this.auditService.log({
       adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
@@ -382,7 +389,7 @@ export class AdminController {
 
   @Post('prize-homes')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async createPrizeHome(@Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async createPrizeHome(@Body() dto: CreatePrizeHomeDto, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.createPrizeHome(dto);
     await this.auditService.log({
       adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
@@ -393,7 +400,7 @@ export class AdminController {
 
   @Patch('prize-homes/:id')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updatePrizeHome(@Param('id') id: string, @Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async updatePrizeHome(@Param('id') id: string, @Body() dto: UpdatePrizeHomeDto, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.updatePrizeHome(id, dto);
     await this.auditService.log({
       adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
@@ -512,7 +519,7 @@ export class AdminController {
 
   @Post('rewards')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async createReward(@Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async createReward(@Body() dto: CreateRewardDto, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.createReward(dto);
     await this.auditService.log({
       adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
@@ -523,7 +530,7 @@ export class AdminController {
 
   @Patch('rewards/:id')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updateReward(@Param('id') id: string, @Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async updateReward(@Param('id') id: string, @Body() dto: UpdateRewardDto, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.updateReward(id, dto);
     await this.auditService.log({
       adminId: admin.id, action: AuditAction.UPDATE_CONFIG,

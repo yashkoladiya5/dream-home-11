@@ -4,6 +4,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 
+import { GetTransactionsDto } from './dto/get-transactions.dto';
+
 @Controller('api/v1/transactions')
 @UseGuards(JwtAuthGuard)
 export class TransactionsController {
@@ -12,15 +14,13 @@ export class TransactionsController {
   @Get()
   async getHistory(
     @GetUser() user: User,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('type') type?: string,
+    @Query() dto: GetTransactionsDto,
   ) {
     return this.transactionsService.getHistory(
       user.id,
-      page ?? 1,
-      limit ?? 20,
-      type,
+      dto.page ?? 1,
+      dto.limit ?? 20,
+      dto.type,
     );
   }
 

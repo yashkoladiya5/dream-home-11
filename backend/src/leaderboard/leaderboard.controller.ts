@@ -27,6 +27,8 @@ import { LeaderboardResetService } from './leaderboard-reset.service';
 import { LeaderboardSyncService } from './leaderboard-sync.service';
 import { CacheControl } from '../common/decorators/cache-control.decorator';
 
+import { GetLeaderboardDto } from './dto/get-leaderboard.dto';
+
 @Controller('api/v1/leaderboard')
 @UseGuards(JwtAuthGuard)
 @Throttle({ default: { ttl: 60000, limit: 10000 } })
@@ -46,16 +48,11 @@ export class LeaderboardController {
   @Get()
   async getGlobalLeaderboard(
     @GetUser() user: User,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('cycle') cycle?: string,
+    @Query() dto: GetLeaderboardDto,
   ) {
-    const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
-    const limitNum = Math.min(
-      100,
-      Math.max(1, parseInt(limit || '20', 10) || 20),
-    );
-    const cycleStr = cycle || 'all_time';
+    const pageNum = Math.max(1, dto.page || 1);
+    const limitNum = Math.min(100, Math.max(1, dto.limit || 20));
+    const cycleStr = dto.cycle || 'all_time';
     const key = this.leaderboardRedis.getCycleKey(cycleStr);
 
     const result = await this.leaderboardRedis.getTopWithUserRank(
@@ -140,7 +137,11 @@ export class LeaderboardController {
     const key = this.leaderboardRedis.getCycleKey(cycle || 'all_time');
 
     if (!query || query.trim().length === 0) {
-      return this.getGlobalLeaderboard(user, page, limit, cycle);
+      return this.getGlobalLeaderboard(user, {
+        page: page ? parseInt(page, 10) : undefined,
+        limit: limit ? parseInt(limit, 10) : undefined,
+        cycle,
+      });
     }
 
     const [matchingUsers, totalCount] = await this.userRepo.findAndCount({

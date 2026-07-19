@@ -16,6 +16,9 @@ import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CacheControl } from '../common/decorators/cache-control.decorator';
 
+import { RegisterTokenDto } from './dto/register-token.dto';
+import { CreateReminderDto } from './dto/create-reminder.dto';
+
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -29,15 +32,14 @@ export class NotificationsController {
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   async registerToken(
     @Req() req,
-    @Body('token') token: string,
-    @Body('deviceType') deviceType: string,
+    @Body() dto: RegisterTokenDto,
   ) {
     const userId = req.user.id;
-    if (!token) return { success: false, reason: 'Token is required' };
+    if (!dto.token) return { success: false, reason: 'Token is required' };
     await this.notificationsService.registerToken(
       userId,
-      token,
-      deviceType || 'ios',
+      dto.token,
+      dto.deviceType || 'ios',
     );
     return { success: true };
   }
@@ -51,18 +53,13 @@ export class NotificationsController {
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   async createReminder(
     @Req() req,
-    @Body('contestId') contestId: string,
-    @Body('remindAt') remindAt: string,
+    @Body() dto: CreateReminderDto,
   ) {
     const userId = req.user.id;
-    if (!contestId || !remindAt)
-      return { success: false, reason: 'contestId and remindAt are required' };
-    if (!UUID_REGEX.test(contestId))
-      throw new BadRequestException('Invalid contest ID format');
     const reminder = await this.notificationsService.createReminder(
       userId,
-      contestId,
-      new Date(remindAt),
+      dto.contestId,
+      new Date(dto.remindAt),
     );
     const reminders = await this.notificationsService.getUserReminders(userId);
     const created = reminders.find((r) => r.id === reminder.id);

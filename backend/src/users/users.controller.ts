@@ -188,6 +188,8 @@ export class UsersController {
       Math.max(1, parseInt(limit || '20', 10) || 20),
     );
     return this.usersService.searchUsers(query || '', pageNum, limitNum);
+  }
+
   @Delete('me')
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   @UseGuards(JwtAuthGuard)

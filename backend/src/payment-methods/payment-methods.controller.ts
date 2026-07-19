@@ -15,6 +15,7 @@ import { PaymentMethodsService } from './payment-methods.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 
 @Controller('api/v1/payment-methods')
 @UseGuards(JwtAuthGuard)
@@ -36,15 +37,9 @@ export class PaymentMethodsController {
   @HttpCode(HttpStatus.CREATED)
   async create(
     @GetUser() user: User,
-    @Body()
-    body: {
-      category: string;
-      label: string;
-      displayValue: string;
-      providerName?: string;
-    },
+    @Body() dto: CreatePaymentMethodDto,
   ) {
-    return this.service.create(user.id, body);
+    return this.service.create(user.id, dto);
   }
 
   @Delete(':id')
