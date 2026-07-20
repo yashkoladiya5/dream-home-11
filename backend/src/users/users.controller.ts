@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -26,6 +27,8 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { VerifyAgeDto } from './dto/verify-age.dto';
 import { RecordConsentDto } from './dto/record-consent.dto';
 
+@ApiTags('Users')
+@ApiBearerAuth()
 @Controller('api/v1/users')
 export class UsersController {
   constructor(

@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -14,6 +15,7 @@ import { REDIS_CLIENT } from '../redis/redis.constants';
 import * as os from 'os';
 
 @SkipThrottle()
+@ApiTags('Health')
 @Controller('health')
 export class HealthController {
   private readonly startTime: number;

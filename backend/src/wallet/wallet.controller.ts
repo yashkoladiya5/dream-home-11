@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -5,6 +6,8 @@ import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { TransactionsService } from '../transactions/transactions.service';
 
+@ApiTags('Wallet')
+@ApiBearerAuth()
 @Controller('api/v1/wallet')
 @UseGuards(JwtAuthGuard)
 export class WalletController {

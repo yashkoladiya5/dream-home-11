@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -22,6 +23,8 @@ import { CreateReminderDto } from './dto/create-reminder.dto';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+@ApiTags('Notifications')
+@ApiBearerAuth()
 @Controller('api/v1/notifications')
 @UseGuards(JwtAuthGuard)
 @CacheControl(30)

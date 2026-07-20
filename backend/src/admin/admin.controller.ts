@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -36,6 +37,8 @@ import {
   ComplianceSettingsDto,
 } from './dto';
 
+@ApiTags('Admin')
+@ApiBearerAuth()
 @Controller('api/v1/admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)

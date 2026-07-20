@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -5,6 +6,8 @@ import { ChatHistoryService } from './chat-history.service';
 import { QueryMessagesDto } from './dto/query-messages.dto';
 import { User } from '../users/entities/user.entity';
 
+@ApiTags('Chats')
+@ApiBearerAuth()
 @Controller('api/v1/chats')
 @UseGuards(JwtAuthGuard)
 export class ChatHistoryController {

@@ -1,8 +1,11 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Controller, Post, Get, Req, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { GamificationService } from './gamification.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('Gamification')
+@ApiBearerAuth()
 @Controller('api/v1/gamification')
 @UseGuards(JwtAuthGuard)
 export class GamificationController {

@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Controller, Post, Get, Body, Req, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ShareTrackerService } from './share-tracker.service';
@@ -5,6 +6,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { TrackShareDto } from './dto/track-share.dto';
 
+@ApiTags('Shares')
+@ApiBearerAuth()
 @Controller('api/v1/shares')
 @UseGuards(JwtAuthGuard)
 export class ShareTrackerController {

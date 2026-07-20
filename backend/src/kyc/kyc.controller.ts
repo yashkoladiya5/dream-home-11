@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -41,6 +42,8 @@ function validateImageMagicBytes(buffer: Buffer): void {
   }
 }
 
+@ApiTags('Kyc')
+@ApiBearerAuth()
 @Controller('api/v1/kyc')
 @UseGuards(JwtAuthGuard)
 export class KycController {

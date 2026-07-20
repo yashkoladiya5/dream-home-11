@@ -1,7 +1,9 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { PrometheusService } from './prometheus.service';
 
+@ApiTags('App')
 @Controller()
 export class MetricsController {
   constructor(private readonly prometheusService: PrometheusService) {}

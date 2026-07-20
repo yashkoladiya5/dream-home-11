@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -29,6 +30,8 @@ import { CacheControl } from '../common/decorators/cache-control.decorator';
 
 import { GetLeaderboardDto } from './dto/get-leaderboard.dto';
 
+@ApiTags('Leaderboard')
+@ApiBearerAuth()
 @Controller('api/v1/leaderboard')
 @UseGuards(JwtAuthGuard)
 @Throttle({ default: { ttl: 60000, limit: 10000 } })

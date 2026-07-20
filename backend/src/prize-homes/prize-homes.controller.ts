@@ -1,8 +1,11 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { PrizeHomesService } from './prize-homes.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CacheControl } from '../common/decorators/cache-control.decorator';
 
+@ApiTags('Prize-homes')
+@ApiBearerAuth()
 @Controller('api/v1/prize-homes')
 @UseGuards(JwtAuthGuard)
 @CacheControl(300)

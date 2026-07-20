@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { ConfigService } from './config.service';
@@ -8,6 +9,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { CacheControl } from '../common/decorators/cache-control.decorator';
 
+@ApiTags('Config')
+@ApiBearerAuth()
 @Controller('api/v1/config')
 @CacheControl(300)
 export class ConfigController {

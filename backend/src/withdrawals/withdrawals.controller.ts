@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -16,6 +17,8 @@ import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { RequestWithdrawalDto } from './dto/request-withdrawal.dto';
 
+@ApiTags('Payments')
+@ApiBearerAuth()
 @Controller('api/v1/payments')
 @UseGuards(JwtAuthGuard)
 export class WithdrawalsController {

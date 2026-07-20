@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -20,6 +21,7 @@ import { AdminLoginDto } from './dto/admin-login.dto';
 import { User } from '../users/entities/user.entity';
 import { SkipEnvelope } from '../common/decorators/skip-envelope.decorator';
 
+@ApiTags('Auth')
 @Controller('api/v1/auth')
 export class AuthController {
   constructor(

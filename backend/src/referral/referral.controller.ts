@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -14,6 +15,8 @@ import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { ApplyReferralDto } from './dto/apply-referral.dto';
 
+@ApiTags('Referral')
+@ApiBearerAuth()
 @Controller('api/v1/referral')
 @UseGuards(JwtAuthGuard)
 export class ReferralController {

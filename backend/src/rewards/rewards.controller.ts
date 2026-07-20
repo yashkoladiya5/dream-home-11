@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -11,6 +12,8 @@ import { Throttle } from '@nestjs/throttler';
 import { RewardsService } from './rewards.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('Rewards')
+@ApiBearerAuth()
 @Controller('api/v1/rewards')
 @UseGuards(JwtAuthGuard)
 export class RewardsController {

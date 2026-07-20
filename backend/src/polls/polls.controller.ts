@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -11,6 +12,8 @@ import { Throttle } from '@nestjs/throttler';
 import { PollsService } from './polls.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('Polls')
+@ApiBearerAuth()
 @Controller('api/v1/polls')
 @UseGuards(JwtAuthGuard)
 export class PollsController {

@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -25,6 +26,7 @@ class BatchResponseItem {
   body: any;
 }
 
+@ApiTags('Batch')
 @Controller('api/v1/batch')
 export class BatchController {
   private readonly maxBatchSize = 10;

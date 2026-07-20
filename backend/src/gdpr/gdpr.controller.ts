@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -12,6 +13,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 
+@ApiTags('Gdpr')
+@ApiBearerAuth()
 @Controller('api/v1/gdpr')
 @UseGuards(JwtAuthGuard)
 export class GdprController {

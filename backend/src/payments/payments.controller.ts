@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -22,6 +23,8 @@ import { Public } from '../common/decorators/public.decorator';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 
+@ApiTags('Payments')
+@ApiBearerAuth()
 @Controller('api/v1/payments')
 @UseGuards(JwtAuthGuard)
 export class PaymentsController {

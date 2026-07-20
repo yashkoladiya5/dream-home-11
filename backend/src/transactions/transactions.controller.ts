@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -6,6 +7,8 @@ import { User } from '../users/entities/user.entity';
 
 import { GetTransactionsDto } from './dto/get-transactions.dto';
 
+@ApiTags('Transactions')
+@ApiBearerAuth()
 @Controller('api/v1/transactions')
 @UseGuards(JwtAuthGuard)
 export class TransactionsController {
