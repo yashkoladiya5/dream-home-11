@@ -57,6 +57,7 @@ dependencies:
   shared_preferences: ^2.2.2
   intl: any
   permission_handler: ^11.3.0
+  confetti: ^0.8.0
 
 dev_dependencies:
   flutter_test:

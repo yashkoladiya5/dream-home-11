@@ -220,7 +220,7 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
 
   Widget _buildContent(List<ContestModel> homeContests, List<PrizeHome> prizeHomes) {
     final availableHomes = prizeHomes.where((p) => p.isActive).toList();
-    final displayHomes = availableHomes.isNotEmpty ? availableHomes : _fallbackHomes();
+    final displayHomes = availableHomes;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -247,8 +247,8 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildFeaturedHome(displayHomes.first),
-          const SizedBox(height: 28),
+          if (displayHomes.isNotEmpty) _buildFeaturedHome(displayHomes.first),
+          if (displayHomes.isNotEmpty) const SizedBox(height: 28),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
@@ -259,27 +259,36 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          SizedBox(
-            height: 210,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: displayHomes.length,
-              itemBuilder: (context, index) {
-                final home = displayHomes[index];
-                return _AnimatedSlideFadeItem(
-                  index: index,
-                  child: HomePrizeCard(
-                    name: home.title,
-                    location: home.locationDisplay,
-                    value: home.formattedValue,
-                    emoji: home.emoji ?? '\u{1F3E0}',
-                    onTap: () => context.push('/prize-homes'),
-                  ),
-                );
-              },
+          if (displayHomes.isNotEmpty)
+            SizedBox(
+              height: 210,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: displayHomes.length,
+                itemBuilder: (context, index) {
+                  final home = displayHomes[index];
+                  return _AnimatedSlideFadeItem(
+                    index: index,
+                    child: HomePrizeCard(
+                      name: home.title,
+                      location: home.locationDisplay,
+                      value: home.formattedValue,
+                      emoji: home.emoji ?? '\u{1F3E0}',
+                      onTap: () => context.push('/prize-homes'),
+                    ),
+                  );
+                },
+              ),
+            )
+          else
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'No prize homes available right now.',
+                style: TextStyle(color: AppTheme.greyMedium),
+              ),
             ),
-          ),
           const SizedBox(height: 28),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -293,7 +302,10 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
           const SizedBox(height: 14),
           ...List.generate(homeContests.length, (index) {
             final contest = homeContests[index];
-            final homeData = displayHomes[index % displayHomes.length];
+            final homeData = displayHomes.isNotEmpty 
+                ? displayHomes[index % displayHomes.length]
+                : null;
+                
             return _AnimatedSlideFadeItem(
               index: index,
               child: Padding(
@@ -302,46 +314,25 @@ class _HomeContestScreenState extends ConsumerState<HomeContestScreen> {
                   right: 20,
                   bottom: index == homeContests.length - 1 ? 24 : 12,
                 ),
-                child: _buildHomeContestCard(contest, homeData),
+                child: homeData != null 
+                    ? _buildHomeContestCard(contest, homeData)
+                    : Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSlate,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${contest.title} - ${contest.spotsLeft} spots left',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
               ),
             );
           }),
         ],
       ),
     );
-  }
-
-  List<PrizeHome> _fallbackHomes() {
-    return [
-      PrizeHome(
-        id: 'fallback-1',
-        title: '3 BHK Luxury Apartment',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        valueInr: 12000000,
-        emoji: '\u{1F3E0}',
-        isActive: true,
-        createdAt: DateTime.now(),
-      ),
-      PrizeHome(
-        id: 'fallback-2',
-        title: 'Premium Villa',
-        city: 'Goa',
-        valueInr: 8500000,
-        emoji: '\u{1F3E1}',
-        isActive: true,
-        createdAt: DateTime.now(),
-      ),
-      PrizeHome(
-        id: 'fallback-3',
-        title: 'Beachfront Villa',
-        city: 'Kerala',
-        valueInr: 25000000,
-        emoji: '\u{1F3D6}\uFE0F',
-        isActive: true,
-        createdAt: DateTime.now(),
-      ),
-    ];
   }
 
   Widget _buildFeaturedHome(PrizeHome featured) {

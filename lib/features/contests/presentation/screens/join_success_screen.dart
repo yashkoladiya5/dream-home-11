@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/contest_model.dart';
 import '../../../dashboard/data/models/user_profile.dart';
@@ -24,10 +25,13 @@ class _JoinSuccessScreenState extends State<JoinSuccessScreen>
   late Animation<double> _scaleAnim;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -50,11 +54,15 @@ class _JoinSuccessScreenState extends State<JoinSuccessScreen>
         curve: const Interval(0.4, 1.0, curve: Curves.easeOutCubic),
       ),
     );
-    _controller.forward();
+    
+    _controller.forward().then((_) {
+      _confettiController.play();
+    });
   }
 
   @override
   void dispose() {
+    _confettiController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -64,26 +72,45 @@ class _JoinSuccessScreenState extends State<JoinSuccessScreen>
     return PopScope(
       canPop: false,
       child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.darkSlate, Color(0xFF0A0E1A)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppTheme.darkSlate, Color(0xFF0A0E1A)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    const Spacer(flex: 2),
+                    _buildSuccessAnimation(),
+                    const Spacer(flex: 1),
+                    _buildDetails(context),
+                    const Spacer(flex: 2),
+                    _buildActions(context),
+                  ],
+                ),
+              ),
             ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                const Spacer(flex: 2),
-                _buildSuccessAnimation(),
-                const Spacer(flex: 1),
-                _buildDetails(context),
-                const Spacer(flex: 2),
-                _buildActions(context),
-              ],
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  Colors.green,
+                  Colors.blue,
+                  Colors.pink,
+                  Colors.orange,
+                  Colors.purple
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
