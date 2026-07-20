@@ -30,12 +30,27 @@ export class HealthController {
   }
 
   @Get()
-  check() {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-    };
+  async check() {
+    try {
+      await Promise.all([
+        this.dataSource.query('SELECT 1'),
+        this.redis.ping(),
+      ]);
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: 'error',
+          timestamp: new Date().toISOString(),
+          message: 'Health check failed',
+        },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
   }
 
   @Get('ready')
