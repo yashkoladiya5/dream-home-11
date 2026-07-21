@@ -16,6 +16,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, extname } from 'path';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '../audit/entities/audit-log.entity';
+import { KycProviderService } from './kyc.provider.service';
 
 @Injectable()
 export class KycService {
@@ -27,6 +28,7 @@ export class KycService {
     private readonly referralService: ReferralService,
     private readonly auditService: AuditService,
     private readonly encryptionService: EncryptionService,
+    private readonly kycProviderService: KycProviderService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -42,18 +44,32 @@ export class KycService {
       throw new ConflictException('KYC already submitted for this user');
     }
 
+    // Call Provider to verify Aadhaar and PAN immediately
+    const aadhaarResult = await this.kycProviderService.verifyAadhaar(aadhaarNumber);
+    if (!aadhaarResult.success) {
+      throw new BadRequestException(`Aadhaar verification failed: ${aadhaarResult.errorReason || 'Unknown error'}`);
+    }
+
+    const panResult = await this.kycProviderService.verifyPan(panNumber);
+    if (!panResult.success) {
+      throw new BadRequestException(`PAN verification failed: ${panResult.errorReason || 'Unknown error'}`);
+    }
+
     const kyc = this.kycRepository.create({
       userId,
       aadhaarNumber: this.encryptionService.encrypt(aadhaarNumber),
       panNumber: this.encryptionService.encrypt(panNumber),
-      status: KycStatus.PENDING,
+      status: KycStatus.VERIFIED, // Auto-verify since provider confirmed it
+      verifiedAt: new Date(),
       dateOfBirth,
     });
 
     const saved = await this.kycRepository.save(kyc);
 
-    if (fullName) {
-      await this.userRepository.update(userId, { fullName });
+    // Update User Profile with verified name
+    const updatedName = aadhaarResult.verifiedName || panResult.verifiedName || fullName;
+    if (updatedName) {
+      await this.userRepository.update(userId, { fullName: updatedName });
     }
 
     await this.auditService.log({
@@ -61,7 +77,7 @@ export class KycService {
       action: AuditAction.SUBMIT_KYC,
       targetId: saved.id,
       targetType: 'kyc',
-      metadata: { status: saved.status },
+      metadata: { status: saved.status, provider: '3rd_party_api_auto_verify' },
     });
 
     await this.referralService.processKycReferral(userId);

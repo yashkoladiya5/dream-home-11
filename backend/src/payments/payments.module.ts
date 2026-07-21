@@ -8,9 +8,12 @@ import { TransactionsModule } from '../transactions/transactions.module';
 import { AppConfigModule } from '../config/config.module';
 import { WalletModule } from '../wallet/wallet.module';
 
+import { Transaction } from '../transactions/entities/transaction.entity';
+import { User } from '../users/entities/user.entity';
+
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Payment]),
+    TypeOrmModule.forFeature([Payment, User, Transaction]),
     UsersModule,
     TransactionsModule,
     AppConfigModule,

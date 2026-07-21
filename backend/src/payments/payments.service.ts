@@ -26,6 +26,8 @@ export class PaymentsService {
     private readonly paymentRepo: Repository<Payment>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(Transaction)
+    private readonly transactionRepo: Repository<Transaction>,
     private readonly dataSource: DataSource,
     private readonly nestConfigService: NestConfigService,
     private readonly appConfigService: ConfigService,
@@ -89,7 +91,7 @@ export class PaymentsService {
         .update(payload)
         .digest('hex');
 
-      const bonusPoints = await this.calculateBonusPoints(Number(payment.amount));
+      const bonusPoints = await this.calculateBonusPoints(userId, Number(payment.amount), entityManager);
 
       payment.paymentId = paymentId;
       payment.status = 'completed';
@@ -132,12 +134,33 @@ export class PaymentsService {
     });
   }
 
-  async calculateBonusPoints(amount: number): Promise<number> {
+  async calculateBonusPoints(userId: string, amount: number, entityManager?: import('typeorm').EntityManager): Promise<number> {
     const config = await this.appConfigService.getConfig();
-    if (amount >= Number(config.bonusTier3Threshold)) return config.bonusTier3Points;
-    if (amount >= Number(config.bonusTier2Threshold)) return config.bonusTier2Points;
-    if (amount >= Number(config.bonusTier1Threshold)) return config.bonusTier1Points;
-    return 0;
+    let bonus = 0;
+    
+    if (amount >= Number(config.bonusTier3Threshold)) bonus = config.bonusTier3Points;
+    else if (amount >= Number(config.bonusTier2Threshold)) bonus = config.bonusTier2Points;
+    else if (amount >= Number(config.bonusTier1Threshold)) bonus = config.bonusTier1Points;
+
+    if (bonus === 0) return 0;
+
+    // Check monthly limits (5 times per month)
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    const repo = entityManager ? entityManager.getRepository(Transaction) : this.transactionRepo;
+    const bonusCountThisMonth = await repo.createQueryBuilder('t')
+      .where('t.userId = :userId', { userId })
+      .andWhere('t.type = :type', { type: 'points_bonus' })
+      .andWhere('t.createdAt >= :startDate', { startDate: firstDayOfMonth })
+      .getCount();
+
+    if (bonusCountThisMonth >= 5) {
+      this.logger.log(`User ${userId} has reached the max deposit bonus limit of 5 this month.`);
+      return 0; // Cap reached
+    }
+
+    return bonus;
   }
 
   verifyWebhookSignature(payload: string, signature: string): boolean {
@@ -169,7 +192,7 @@ export class PaymentsService {
         });
         if (!lockedPayment || lockedPayment.status !== 'pending') return;
 
-        const bonusPoints = await this.calculateBonusPoints(Number(lockedPayment.amount));
+        const bonusPoints = await this.calculateBonusPoints(lockedPayment.userId, Number(lockedPayment.amount), entityManager);
 
         lockedPayment.paymentId = paymentId;
         lockedPayment.status = 'completed';

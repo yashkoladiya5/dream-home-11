@@ -25,6 +25,8 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { SmsModule } from '../sms/sms.module';
 import { AuditModule } from '../audit/audit.module';
 
+import { PenaltyExpiryCronService } from './penalty-expiry.cron';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -53,7 +55,7 @@ import { AuditModule } from '../audit/audit.module';
     SmsModule,
   ],
   controllers: [AdminController],
-  providers: [AdminService],
+  providers: [AdminService, PenaltyExpiryCronService],
   exports: [AdminService],
 })
 export class AdminModule {}

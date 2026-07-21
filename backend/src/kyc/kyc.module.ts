@@ -8,6 +8,8 @@ import { UsersModule } from '../users/users.module';
 import { ReferralModule } from '../referral/referral.module';
 import { AuditModule } from '../audit/audit.module';
 import { EncryptionModule } from '../common/encryption/encryption.module';
+import { HttpModule } from '@nestjs/axios';
+import { KycProviderService } from './kyc.provider.service';
 
 @Module({
   imports: [
@@ -16,9 +18,10 @@ import { EncryptionModule } from '../common/encryption/encryption.module';
     ReferralModule,
     AuditModule,
     EncryptionModule,
+    HttpModule,
   ],
   controllers: [KycController],
-  providers: [KycService],
-  exports: [KycService],
+  providers: [KycService, KycProviderService],
+  exports: [KycService, KycProviderService],
 })
 export class KycModule {}
