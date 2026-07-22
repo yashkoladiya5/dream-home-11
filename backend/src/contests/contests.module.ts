@@ -12,6 +12,8 @@ import { AuthModule } from '../auth/auth.module';
 import { QUEUES } from '../queue/queue.constants';
 import { WalletModule } from '../wallet/wallet.module';
 
+import { AppConfigModule } from '../config/config.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Contest, ContestMember]),
@@ -19,6 +21,7 @@ import { WalletModule } from '../wallet/wallet.module';
     UsersModule,
     AuthModule,
     WalletModule,
+    AppConfigModule,
   ],
   providers: [ContestsService, ContestsGateway, ContestSchedulerService],
   controllers: [ContestsController],

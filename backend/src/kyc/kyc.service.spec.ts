@@ -10,6 +10,7 @@ import { createMockDataSource, createMockReferralService, createMockAuditService
 import { ReferralService } from '../referral/referral.service';
 import { AuditService } from '../audit/audit.service';
 import { EncryptionService } from '../common/encryption/encryption.service';
+import { KycProviderService } from './kyc.provider.service';
 
 describe('KycService', () => {
   let service: KycService;
@@ -54,6 +55,7 @@ describe('KycService', () => {
         { provide: ReferralService, useValue: mockReferralService },
         { provide: AuditService, useValue: mockAuditService },
         { provide: EncryptionService, useValue: mockEncryptionService },
+        { provide: KycProviderService, useValue: { verifyAadhaar: jest.fn().mockResolvedValue({ success: true }), verifyPan: jest.fn().mockResolvedValue({ success: true }) } },
       ],
     }).compile();
 
@@ -70,7 +72,7 @@ describe('KycService', () => {
       (kycRepo.create as jest.Mock).mockReturnValue(mockKyc);
       (kycRepo.save as jest.Mock).mockResolvedValue(mockKyc);
 
-      const result = await service.submitKyc('user-1', '123456789012', 'ABCDE1234F', 'Test User');
+      const result = await service.submitKyc('user-1', '123456789012', 'ABCDE1234F', 'Test User', '1990-01-01');
       expect(result.status).toBe(KycStatus.PENDING);
       expect(mockEncryptionService.encrypt).toHaveBeenCalledTimes(2);
       expect(mockAuditService.log).toHaveBeenCalled();
@@ -87,7 +89,7 @@ describe('KycService', () => {
       (kycRepo.create as jest.Mock).mockReturnValue(mockKyc);
       (kycRepo.save as jest.Mock).mockResolvedValue(mockKyc);
 
-      await service.submitKyc('user-1', '123456789012', 'ABCDE1234F', 'Updated Name');
+      await service.submitKyc('user-1', '123456789012', 'ABCDE1234F', 'Updated Name', '1990-01-01');
       expect(userRepo.update).toHaveBeenCalledWith('user-1', { fullName: 'Updated Name' });
     });
 
@@ -96,7 +98,7 @@ describe('KycService', () => {
       (kycRepo.create as jest.Mock).mockReturnValue(mockKyc);
       (kycRepo.save as jest.Mock).mockResolvedValue(mockKyc);
 
-      await service.submitKyc('user-1', '123456789012', 'ABCDE1234F', '');
+      await service.submitKyc('user-1', '123456789012', 'ABCDE1234F', '', '1990-01-01');
       expect(userRepo.update).not.toHaveBeenCalled();
     });
   });

@@ -200,4 +200,16 @@ export class UsersController {
   async deleteAccount(@GetUser() user: User) {
     await this.usersService.deleteAccount(user.id);
   }
+
+  @Post('self-exclude')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async selfExclude(@GetUser() user: User, @Body() body: { days: number }) {
+    if (!body.days || body.days <= 0) {
+      throw new BadRequestException('Days must be a positive number');
+    }
+    await this.usersService.selfExclude(user.id, body.days);
+    return { message: 'Self-exclusion activated successfully' };
+  }
 }

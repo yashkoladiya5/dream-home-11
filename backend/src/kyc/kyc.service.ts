@@ -44,6 +44,18 @@ export class KycService {
       throw new ConflictException('KYC already submitted for this user');
     }
 
+    if (dateOfBirth) {
+      const dob = new Date(dateOfBirth);
+      const ageDifMs = Date.now() - dob.getTime();
+      const ageDate = new Date(ageDifMs);
+      const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+      if (age < 18) {
+        throw new BadRequestException('You must be at least 18 years old to complete KYC');
+      }
+    } else {
+        throw new BadRequestException('Date of birth is required for 18+ age verification');
+    }
+
     // Call Provider to verify Aadhaar and PAN immediately
     const aadhaarResult = await this.kycProviderService.verifyAadhaar(aadhaarNumber);
     if (!aadhaarResult.success) {

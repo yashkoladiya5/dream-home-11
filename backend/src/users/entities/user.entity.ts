@@ -138,6 +138,16 @@ export class User {
   @Column({ name: 'device_id', type: 'varchar', length: 255, nullable: false })
   deviceId: string;
 
+  @Column({ name: 'is_self_excluded', type: 'boolean', default: false })
+  isSelfExcluded: boolean;
+
+  @Column({
+    name: 'self_excluded_until',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
+  selfExcludedUntil: Date;
+
   @Column({
     name: 'role',
     type: 'varchar',

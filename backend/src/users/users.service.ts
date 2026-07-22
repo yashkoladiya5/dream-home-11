@@ -46,6 +46,8 @@ export class UsersService {
         referralCode: true,
         role: true,
         password: true,
+        isSelfExcluded: true,
+        selfExcludedUntil: true,
       },
     });
   }
@@ -65,6 +67,8 @@ export class UsersService {
         avatarUrl: true,
         isActive: true,
         role: true,
+        isSelfExcluded: true,
+        selfExcludedUntil: true,
         kyc: { status: true },
         wallet: { id: true, balanceInr: true, pointsBalance: true },
       },
@@ -202,6 +206,8 @@ export class UsersService {
       walletBalanceInr: user.walletBalanceInr,
       pointsBalance: user.pointsBalance,
       isActive: user.isActive,
+      isSelfExcluded: user.isSelfExcluded,
+      selfExcludedUntil: user.selfExcludedUntil,
       state: user.state,
       referralCode: user.referralCode,
       role: user.role,
@@ -248,7 +254,21 @@ export class UsersService {
       user.avatarUrl = updateData.avatarUrl;
     }
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // Profile Completion Bonus
+    if (savedUser.fullName && savedUser.email && savedUser.avatarUrl) {
+      const hasReceived = await this.pointsEngineService.hasActionEverBeenPerformed(userId, 'profile_complete');
+      if (!hasReceived) {
+        const basePoints = 50;
+        const multiplier = this.pointsEngineService.getMultiplier(savedUser.currentTier);
+        const finalPoints = Math.round(basePoints * multiplier);
+        await this.pointsEngineService.logPointAction(userId, 'profile_complete', basePoints, multiplier, finalPoints);
+        await this.awardPoints(userId, finalPoints);
+      }
+    }
+
+    return savedUser;
   }
 
   async getMultiplierInfo(userId: string): Promise<{
@@ -593,5 +613,14 @@ export class UsersService {
     
     // In a real app we might also need to clean up sessions and queue 
     // a background job for hard-deleting transactional data if required by GDPR.
+  }
+  async selfExclude(userId: string, days: number): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    user.isSelfExcluded = true;
+    user.selfExcludedUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    await this.userRepository.save(user);
   }
 }

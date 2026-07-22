@@ -8,6 +8,7 @@ import { Payment } from './entities/payment.entity';
 import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 import { ConfigService } from '../config/config.service';
+import { Transaction } from '../transactions/entities/transaction.entity';
 import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
 import { createMockDataSource, createMockWalletService, createMockAppConfigService, createMockConfigService } from '../test/mock-services.factory';
 
@@ -76,6 +77,14 @@ describe('PaymentsService', () => {
         PaymentsService,
         { provide: getRepositoryToken(Payment), useValue: paymentRepo },
         { provide: getRepositoryToken(User), useValue: userRepo },
+        { provide: getRepositoryToken(Transaction), useValue: {
+            createQueryBuilder: jest.fn().mockReturnValue({
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              getCount: jest.fn().mockResolvedValue(0),
+            })
+          } 
+        },
         { provide: DataSource, useValue: mockDataSource },
         { provide: NestConfigService, useValue: mockNestConfigService },
         { provide: ConfigService, useValue: mockAppConfigService },
@@ -112,22 +121,22 @@ describe('PaymentsService', () => {
 
   describe('calculateBonusPoints', () => {
     it('should return tier 3 bonus for high amounts', async () => {
-      const points = await service.calculateBonusPoints(1000);
+      const points = await service.calculateBonusPoints('user-1', 1000);
       expect(points).toBe(100);
     });
 
     it('should return tier 2 bonus for medium amounts', async () => {
-      const points = await service.calculateBonusPoints(500);
+      const points = await service.calculateBonusPoints('user-1', 500);
       expect(points).toBe(50);
     });
 
     it('should return tier 1 bonus for low amounts', async () => {
-      const points = await service.calculateBonusPoints(100);
+      const points = await service.calculateBonusPoints('user-1', 100);
       expect(points).toBe(10);
     });
 
     it('should return 0 for amounts below tier 1', async () => {
-      const points = await service.calculateBonusPoints(50);
+      const points = await service.calculateBonusPoints('user-1', 50);
       expect(points).toBe(0);
     });
   });
@@ -139,6 +148,12 @@ describe('PaymentsService', () => {
         findOne: jest.fn().mockResolvedValue(highAmountPayment),
         save: jest.fn().mockResolvedValue({ ...highAmountPayment, status: 'completed' }),
         create: jest.fn().mockReturnValue({}),
+        getRepository: jest.fn().mockReturnValue({
+          createQueryBuilder: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          getCount: jest.fn().mockResolvedValue(0),
+        }),
       };
       mockDataSource.transaction.mockImplementation(async (cb: any) => {
         const result = await cb(manager);
@@ -208,6 +223,12 @@ describe('PaymentsService', () => {
           findOne: jest.fn().mockResolvedValue(mockPayment),
           save: managerSave,
           create: jest.fn().mockReturnValue({}),
+          getRepository: jest.fn().mockReturnValue({
+            createQueryBuilder: jest.fn().mockReturnThis(),
+            where: jest.fn().mockReturnThis(),
+            andWhere: jest.fn().mockReturnThis(),
+            getCount: jest.fn().mockResolvedValue(0),
+          }),
         };
         return cb(manager);
       });

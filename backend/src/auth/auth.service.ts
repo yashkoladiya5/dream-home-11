@@ -56,6 +56,15 @@ export class AuthService {
     }
 
     const existingUser = await this.usersService.findByPhoneNumber(phoneNumber);
+    if (existingUser && existingUser.isSelfExcluded && existingUser.selfExcludedUntil) {
+      if (new Date() < existingUser.selfExcludedUntil) {
+        throw new UnauthorizedException('Account is self-excluded for responsible gaming');
+      } else {
+        existingUser.isSelfExcluded = false;
+        existingUser.selfExcludedUntil = null;
+        await this.usersService.updateUser(existingUser);
+      }
+    }
     const isNewUser = !existingUser;
 
     const user = await this.usersService.upsertUser(phoneNumber, deviceId);

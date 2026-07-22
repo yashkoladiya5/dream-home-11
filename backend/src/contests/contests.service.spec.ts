@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { ConfigService } from '../config/config.service';
 import { Repository, DataSource, EntityManager } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService as NestConfigService } from '@nestjs/config';
 import { RedisService } from '@liaoliaots/nestjs-redis';
 import { WalletService } from '../wallet/wallet.service';
 import { ContestsService } from './contests.service';
@@ -130,6 +131,7 @@ describe('ContestsService', () => {
             creditPoints: jest.fn().mockResolvedValue({ pointsBalance: 150 })
           } 
         },
+        { provide: ConfigService, useValue: { getConfig: jest.fn().mockResolvedValue({ restrictedStates: [] }) } }
       ],
     }).compile();
 

@@ -53,6 +53,12 @@ export class PointsEngineService {
       basePoints: 50,
       dailyCap: 20,
     },
+    profile_complete: {
+      name: 'Profile Complete',
+      description: 'Complete your profile for a one-time bonus',
+      basePoints: 50,
+      dailyCap: 1, // Only granted once per account logically
+    },
   };
 
   constructor(
@@ -155,6 +161,16 @@ export class PointsEngineService {
       },
     });
     return count;
+  }
+
+  async hasActionEverBeenPerformed(userId: string, action: string): Promise<boolean> {
+    const count = await this.pointLogRepo.count({
+      where: {
+        userId,
+        action,
+      },
+    });
+    return count > 0;
   }
 
   async canPerformAction(

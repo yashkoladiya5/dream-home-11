@@ -55,6 +55,11 @@ export class PaymentsService {
       throw new BadRequestException(`Amount must be between ₹${minAmount} and ₹${maxAmount}`);
     }
 
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (user && user.state && config.restrictedStates && config.restrictedStates.includes(user.state)) {
+      throw new BadRequestException(`Deposits are restricted in your state (${user.state})`);
+    }
+
     const orderId = `ORD_${Date.now()}_${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
     const payment = this.paymentRepo.create({

@@ -23,6 +23,8 @@ import { QueryContestsDto } from './dto/query-contests.dto';
 import { CreatePrivateContestDto } from './dto/create-private-contest.dto';
 import { WalletService } from '../wallet/wallet.service';
 
+import { ConfigService } from '../config/config.service';
+
 @Injectable()
 export class ContestsService {
   static readonly DEFAULT_POINTS_NORMAL = 50;
@@ -36,6 +38,7 @@ export class ContestsService {
     private readonly dataSource: DataSource,
     private readonly pointsEngineService: PointsEngineService,
     private readonly walletService: WalletService,
+    private readonly configService: ConfigService,
   ) {}
 
   async findAll(query: QueryContestsDto): Promise<{
@@ -348,7 +351,7 @@ export class ContestsService {
       }
 
       if (contest.status !== ContestStatus.RUNNING) {
-        throw new BadRequestException('Contest is not currently running');
+        throw new BadRequestException('Contest is not open for joining');
       }
 
       if (contest.filledSlots >= contest.maxSlots) {
@@ -362,6 +365,13 @@ export class ContestsService {
 
       if (!user) {
         throw new NotFoundException('User not found');
+      }
+
+      if (Number(contest.entryFeeInr) > 0) {
+        const config = await this.configService.getConfig();
+        if (user.state && config.restrictedStates && config.restrictedStates.includes(user.state)) {
+          throw new BadRequestException(`Paid contests are restricted in your state (${user.state})`);
+        }
       }
 
       if (!user.isActive) {

@@ -53,6 +53,12 @@ export function createMockDataSource() {
         decrement: jest.fn(),
         create: jest.fn(),
         createQueryBuilder: jest.fn().mockReturnThis(),
+        getRepository: jest.fn().mockReturnValue({
+          createQueryBuilder: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          getCount: jest.fn().mockResolvedValue(0),
+        }),
       };
       return cb(manager);
     }),
