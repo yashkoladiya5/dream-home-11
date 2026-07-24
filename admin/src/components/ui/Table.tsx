@@ -70,9 +70,9 @@ export default function Table<T extends { id: string }>({
                 </td>
               </tr>
             ) : (
-              data.map((item) => (
+              data.map((item, index) => (
                 <tr
-                  key={item.id}
+                  key={item.id || `row-${index}`}
                   onClick={() => onRowClick?.(item)}
                   className={onRowClick ? 'cursor-pointer' : ''}
                 >

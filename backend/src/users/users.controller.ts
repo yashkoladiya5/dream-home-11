@@ -13,6 +13,7 @@ import {
   UsePipes,
   ValidationPipe,
   Delete,
+  BadRequestException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { InjectRepository } from '@nestjs/typeorm';

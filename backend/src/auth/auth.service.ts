@@ -61,7 +61,7 @@ export class AuthService {
         throw new UnauthorizedException('Account is self-excluded for responsible gaming');
       } else {
         existingUser.isSelfExcluded = false;
-        existingUser.selfExcludedUntil = null;
+        existingUser.selfExcludedUntil = null as any;
         await this.usersService.updateUser(existingUser);
       }
     }

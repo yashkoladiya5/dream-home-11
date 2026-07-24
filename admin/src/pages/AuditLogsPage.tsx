@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -124,9 +124,8 @@ export default function AuditLogsPage() {
               </tr>
             ) : (
               logs.map((log) => (
-                <>
+                <React.Fragment key={log.id}>
                   <tr
-                    key={log.id}
                     className="cursor-pointer"
                     onClick={() => toggleExpand(log.id)}
                   >
@@ -160,7 +159,7 @@ export default function AuditLogsPage() {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))
             )}
           </tbody>

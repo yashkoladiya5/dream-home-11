@@ -71,7 +71,7 @@ export class KycService {
       userId,
       aadhaarNumber: this.encryptionService.encrypt(aadhaarNumber),
       panNumber: this.encryptionService.encrypt(panNumber),
-      status: KycStatus.VERIFIED, // Auto-verify since provider confirmed it
+      status: KycStatus.APPROVED, // Auto-verify since provider confirmed it
       verifiedAt: new Date(),
       dateOfBirth,
     });

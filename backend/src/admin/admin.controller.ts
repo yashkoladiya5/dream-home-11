@@ -486,6 +486,12 @@ export class AdminController {
     return this.adminService.getTransactions(query);
   }
 
+  @Get('withdrawals/stats')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  async getWithdrawalStats() {
+    return this.adminService.getWithdrawalStats();
+  }
+
   @Get('withdrawals')
   @Throttle({ default: { ttl: 60000, limit: 30 } })
   async getWithdrawals(@Query() query: { page?: number; limit?: number; status?: string }) {

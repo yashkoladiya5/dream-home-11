@@ -858,6 +858,27 @@ export class AdminService {
     return { transactions, total, page, limit };
   }
 
+  async getWithdrawalStats() {
+    const stats = await this.withdrawalRepo
+      .createQueryBuilder('w')
+      .select('COUNT(*)', 'totalRequests')
+      .addSelect('COALESCE(SUM(CASE WHEN w.status = :pending THEN 1 ELSE 0 END), 0)', 'pending')
+      .addSelect('COALESCE(SUM(CASE WHEN w.status = :approved AND DATE(w.created_at) = CURRENT_DATE THEN 1 ELSE 0 END), 0)', 'approvedToday')
+      .addSelect('COALESCE(SUM(CASE WHEN w.status = :approved THEN w.amount ELSE 0 END), 0)', 'totalAmount')
+      .setParameters({
+        pending: 'pending',
+        approved: 'approved',
+      })
+      .getRawOne();
+
+    return {
+      totalRequests: stats ? Number(stats.totalRequests) : 0,
+      pending: stats ? Number(stats.pending) : 0,
+      approvedToday: stats ? Number(stats.approvedToday) : 0,
+      totalAmount: stats ? Math.round(Number(stats.totalAmount) * 100) / 100 : 0,
+    };
+  }
+
   async getWithdrawals(query: { page?: number; limit?: number; status?: string }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 50, 100);
