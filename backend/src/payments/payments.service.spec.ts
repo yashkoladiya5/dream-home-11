@@ -9,8 +9,16 @@ import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 import { ConfigService } from '../config/config.service';
 import { Transaction } from '../transactions/entities/transaction.entity';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
-import { createMockDataSource, createMockWalletService, createMockAppConfigService, createMockConfigService } from '../test/mock-services.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
+import {
+  createMockDataSource,
+  createMockWalletService,
+  createMockAppConfigService,
+  createMockConfigService,
+} from '../test/mock-services.factory';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
@@ -70,20 +78,24 @@ describe('PaymentsService', () => {
     mockDataSource = createMockDataSource();
     mockWalletService = createMockWalletService();
     mockAppConfigService = createMockAppConfigService();
-    mockNestConfigService = createMockConfigService({ WEBHOOK_SECRET: 'test-webhook-secret' });
+    mockNestConfigService = createMockConfigService({
+      WEBHOOK_SECRET: 'test-webhook-secret',
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentsService,
         { provide: getRepositoryToken(Payment), useValue: paymentRepo },
         { provide: getRepositoryToken(User), useValue: userRepo },
-        { provide: getRepositoryToken(Transaction), useValue: {
+        {
+          provide: getRepositoryToken(Transaction),
+          useValue: {
             createQueryBuilder: jest.fn().mockReturnValue({
               where: jest.fn().mockReturnThis(),
               andWhere: jest.fn().mockReturnThis(),
               getCount: jest.fn().mockResolvedValue(0),
-            })
-          } 
+            }),
+          },
         },
         { provide: DataSource, useValue: mockDataSource },
         { provide: NestConfigService, useValue: mockNestConfigService },
@@ -111,11 +123,15 @@ describe('PaymentsService', () => {
     });
 
     it('should throw BadRequestException for amount below minimum', async () => {
-      await expect(service.createOrder('user-1', 5)).rejects.toThrow(BadRequestException);
+      await expect(service.createOrder('user-1', 5)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException for amount above maximum', async () => {
-      await expect(service.createOrder('user-1', 100000)).rejects.toThrow(BadRequestException);
+      await expect(service.createOrder('user-1', 100000)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -146,7 +162,9 @@ describe('PaymentsService', () => {
       const highAmountPayment = { ...mockPayment, amount: 1500 };
       const manager = {
         findOne: jest.fn().mockResolvedValue(highAmountPayment),
-        save: jest.fn().mockResolvedValue({ ...highAmountPayment, status: 'completed' }),
+        save: jest
+          .fn()
+          .mockResolvedValue({ ...highAmountPayment, status: 'completed' }),
         create: jest.fn().mockReturnValue({}),
         getRepository: jest.fn().mockReturnValue({
           createQueryBuilder: jest.fn().mockReturnThis(),
@@ -162,35 +180,54 @@ describe('PaymentsService', () => {
       (userRepo.findOne as jest.Mock).mockResolvedValue(mockUser);
       (userRepo.save as jest.Mock).mockResolvedValue(mockUser);
 
-      const result = await service.verifyPayment('user-1', 'ORD_1234567890_ABCD', 'pay_abc123');
+      const result = await service.verifyPayment(
+        'user-1',
+        'ORD_1234567890_ABCD',
+        'pay_abc123',
+      );
       expect(result.payment.status).toBe('completed');
       expect(result.bonusPoints).toBe(100);
     });
 
     it('should throw NotFoundException when payment order not found', async () => {
       mockDataSource.transaction.mockImplementation(async (cb: any) => {
-        const manager = { findOne: jest.fn().mockResolvedValue(null), save: jest.fn() };
+        const manager = {
+          findOne: jest.fn().mockResolvedValue(null),
+          save: jest.fn(),
+        };
         return cb(manager);
       });
-      await expect(service.verifyPayment('user-1', 'invalid-order', 'pay_abc')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.verifyPayment('user-1', 'invalid-order', 'pay_abc'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException for mismatched user', async () => {
       const otherPayment = { ...mockPayment, userId: 'other-user' };
       mockDataSource.transaction.mockImplementation(async (cb: any) => {
-        const manager = { findOne: jest.fn().mockResolvedValue(otherPayment), save: jest.fn() };
+        const manager = {
+          findOne: jest.fn().mockResolvedValue(otherPayment),
+          save: jest.fn(),
+        };
         return cb(manager);
       });
-      await expect(service.verifyPayment('user-1', 'ORD_123', 'pay_abc')).rejects.toThrow(BadRequestException);
+      await expect(
+        service.verifyPayment('user-1', 'ORD_123', 'pay_abc'),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException when payment already processed', async () => {
       const processedPayment = { ...mockPayment, status: 'completed' };
       mockDataSource.transaction.mockImplementation(async (cb: any) => {
-        const manager = { findOne: jest.fn().mockResolvedValue(processedPayment), save: jest.fn() };
+        const manager = {
+          findOne: jest.fn().mockResolvedValue(processedPayment),
+          save: jest.fn(),
+        };
         return cb(manager);
       });
-      await expect(service.verifyPayment('user-1', 'ORD_123', 'pay_abc')).rejects.toThrow(BadRequestException);
+      await expect(
+        service.verifyPayment('user-1', 'ORD_123', 'pay_abc'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -209,13 +246,19 @@ describe('PaymentsService', () => {
     });
 
     it('should return false for mismatched signature', () => {
-      expect(service.verifyWebhookSignature('payload', 'invalid-signature')).toBe(false);
+      expect(
+        service.verifyWebhookSignature('payload', 'invalid-signature'),
+      ).toBe(false);
     });
   });
 
   describe('handleWebhookEvent', () => {
     it('should process payment.captured event', async () => {
-      const eventBody = { event: 'payment.captured', order_id: 'ORD_123', payment_id: 'pay_abc' };
+      const eventBody = {
+        event: 'payment.captured',
+        order_id: 'ORD_123',
+        payment_id: 'pay_abc',
+      };
       (paymentRepo.findOne as jest.Mock).mockResolvedValue(mockPayment);
       const managerSave = jest.fn().mockResolvedValue({});
       mockDataSource.transaction.mockImplementation(async (cb: any) => {
@@ -234,7 +277,9 @@ describe('PaymentsService', () => {
       });
 
       await service.handleWebhookEvent(eventBody);
-      expect(paymentRepo.findOne).toHaveBeenCalledWith({ where: { orderId: 'ORD_123' } });
+      expect(paymentRepo.findOne).toHaveBeenCalledWith({
+        where: { orderId: 'ORD_123' },
+      });
       expect(managerSave).toHaveBeenCalled();
     });
 
@@ -245,7 +290,13 @@ describe('PaymentsService', () => {
 
     it('should silently skip if payment not found or already processed', async () => {
       (paymentRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.handleWebhookEvent({ event: 'payment.captured', order_id: 'ORD_123', payment_id: 'pay_abc' })).resolves.toBeUndefined();
+      await expect(
+        service.handleWebhookEvent({
+          event: 'payment.captured',
+          order_id: 'ORD_123',
+          payment_id: 'pay_abc',
+        }),
+      ).resolves.toBeUndefined();
     });
 
     it('should ignore unknown event types', async () => {

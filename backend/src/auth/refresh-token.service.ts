@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -81,7 +77,9 @@ export class RefreshTokenService {
       });
       if (revokedToken) {
         await this.revokeFamily(revokedToken.family);
-        this.logger.warn(`Refresh token replay detected — family ${revokedToken.family} revoked`);
+        this.logger.warn(
+          `Refresh token replay detected — family ${revokedToken.family} revoked`,
+        );
       }
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -99,7 +97,10 @@ export class RefreshTokenService {
       throw new UnauthorizedException('Refresh token has been revoked');
     }
 
-    await this.refreshTokenRepo.update(storedToken.id, { revoked: true, revokedAt: new Date() });
+    await this.refreshTokenRepo.update(storedToken.id, {
+      revoked: true,
+      revokedAt: new Date(),
+    });
 
     const user = storedToken.user;
     return this.generateTokens(

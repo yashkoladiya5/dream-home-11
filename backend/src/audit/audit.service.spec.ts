@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuditService } from './audit.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -79,10 +79,14 @@ describe('AuditService', () => {
     });
 
     it('should propagate repository save errors', async () => {
-      mockAuditLogRepo.create.mockReturnValue({ action: AuditAction.POINTS_EARNED });
+      mockAuditLogRepo.create.mockReturnValue({
+        action: AuditAction.POINTS_EARNED,
+      });
       mockAuditLogRepo.save.mockRejectedValue(new Error('DB error'));
 
-      await expect(service.log({ action: AuditAction.POINTS_EARNED })).rejects.toThrow('DB error');
+      await expect(
+        service.log({ action: AuditAction.POINTS_EARNED }),
+      ).rejects.toThrow('DB error');
     });
   });
 

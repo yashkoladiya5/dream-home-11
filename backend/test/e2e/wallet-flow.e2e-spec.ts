@@ -1,8 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  INestApplication,
-  HttpStatus,
-} from '@nestjs/common';
+import { INestApplication, HttpStatus } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../../src/app.module';
@@ -11,7 +8,11 @@ import { DataSource } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { REDIS_CLIENT } from '../../src/redis/redis.constants';
 
-import { User, UserRole, UserLevel } from '../../src/users/entities/user.entity';
+import {
+  User,
+  UserRole,
+  UserLevel,
+} from '../../src/users/entities/user.entity';
 import { Kyc, KycStatus } from '../../src/kyc/entities/kyc.entity';
 import { Contest } from '../../src/contests/entities/contest.entity';
 import { ContestMember } from '../../src/contests/entities/contest-member.entity';
@@ -29,7 +30,10 @@ import { PrizeHome } from '../../src/prize-homes/entities/prize-home.entity';
 import { Transaction } from '../../src/transactions/entities/transaction.entity';
 import { Payment } from '../../src/payments/entities/payment.entity';
 import { SavedPaymentMethod } from '../../src/payment-methods/entities/saved-payment-method.entity';
-import { Withdrawal, WithdrawalStatus } from '../../src/withdrawals/entities/withdrawal.entity';
+import {
+  Withdrawal,
+  WithdrawalStatus,
+} from '../../src/withdrawals/entities/withdrawal.entity';
 import { Post } from '../../src/feed/entities/post.entity';
 import { Like } from '../../src/feed/entities/like.entity';
 import { Comment } from '../../src/feed/entities/comment.entity';
@@ -45,13 +49,38 @@ import { CompensationLog } from '../../src/compensation/entities/compensation.en
 import { AuditLog } from '../../src/audit/entities/audit-log.entity';
 
 const ALL_ENTITIES = [
-  User, Kyc, Contest, ContestMember, PointLog,
-  FcmToken, Reminder, NotificationLog, Share, Reward,
-  RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome,
-  Transaction, Payment, SavedPaymentMethod, Withdrawal,
-  Post, Like, Comment, Poll, PollVote,
-  Referral, Chat, ChatMessage, ChatParticipant,
-  SupportTicket, SystemConfig, CompensationLog, AuditLog,
+  User,
+  Kyc,
+  Contest,
+  ContestMember,
+  PointLog,
+  FcmToken,
+  Reminder,
+  NotificationLog,
+  Share,
+  Reward,
+  RewardRedemption,
+  Banner,
+  Achievement,
+  UserAchievement,
+  PrizeHome,
+  Transaction,
+  Payment,
+  SavedPaymentMethod,
+  Withdrawal,
+  Post,
+  Like,
+  Comment,
+  Poll,
+  PollVote,
+  Referral,
+  Chat,
+  ChatMessage,
+  ChatParticipant,
+  SupportTicket,
+  SystemConfig,
+  CompensationLog,
+  AuditLog,
 ];
 
 function createQueryBuilderMock() {
@@ -93,7 +122,9 @@ function createMockRepo() {
     create: jest.fn().mockImplementation((e: any) => e || {}),
     update: jest.fn().mockResolvedValue({ affected: 1, generatedMaps: [] }),
     delete: jest.fn().mockResolvedValue({ affected: 1 }),
-    insert: jest.fn().mockResolvedValue({ identifiers: [{ id: 'mock' }], generatedMaps: [] }),
+    insert: jest
+      .fn()
+      .mockResolvedValue({ identifiers: [{ id: 'mock' }], generatedMaps: [] }),
     upsert: jest.fn().mockResolvedValue({ identifiers: [], generatedMaps: [] }),
     softDelete: jest.fn().mockResolvedValue({ affected: 1 }),
     restore: jest.fn().mockResolvedValue({ affected: 1 }),
@@ -178,13 +209,23 @@ describe('Wallet Flow E2E', () => {
       initialize: jest.fn(),
       transaction: jest.fn().mockImplementation(async (cb: Function) => {
         const mockEntityManager = {
-          findOne: jest.fn().mockImplementation(async (entity: any, opts?: any) => {
-            if (entity === User) return mockUserRepo.findOne(opts);
-            return null;
-          }),
+          findOne: jest
+            .fn()
+            .mockImplementation(async (entity: any, opts?: any) => {
+              if (entity === User) return mockUserRepo.findOne(opts);
+              return null;
+            }),
           find: jest.fn().mockResolvedValue([]),
-          save: jest.fn().mockImplementation((arg1: any, arg2?: any) => Promise.resolve(arg2 ? arg2 : arg1)),
-          create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
+          save: jest
+            .fn()
+            .mockImplementation((arg1: any, arg2?: any) =>
+              Promise.resolve(arg2 ? arg2 : arg1),
+            ),
+          create: jest
+            .fn()
+            .mockImplementation((cls: any, obj: any) =>
+              obj ? obj : cls || {},
+            ),
         };
         return cb(mockEntityManager);
       }),
@@ -200,7 +241,10 @@ describe('Wallet Flow E2E', () => {
       multi: jest.fn(() => ({
         incr: jest.fn(),
         pttl: jest.fn(),
-        exec: jest.fn().mockResolvedValue([[null, 1], [null, -1]]),
+        exec: jest.fn().mockResolvedValue([
+          [null, 1],
+          [null, -1],
+        ]),
       })),
       incr: jest.fn().mockResolvedValue(1),
       pttl: jest.fn().mockResolvedValue(-1),
@@ -221,7 +265,7 @@ describe('Wallet Flow E2E', () => {
 
     let builder = Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DataSource)
-      .useValue(mockDataSource as any)
+      .useValue(mockDataSource)
       .overrideProvider(REDIS_CLIENT)
       .useValue(mockRedisClient as any);
 
@@ -250,9 +294,24 @@ describe('Wallet Flow E2E', () => {
     mockTxRepo.createQueryBuilder.mockReturnValue({
       ...createQueryBuilderMock(),
       getRawMany: jest.fn().mockResolvedValue([
-        { type: 'deposit', status: 'completed', totalCash: 5000, totalPoints: 0 },
-        { type: 'entry_fee', status: 'completed', totalCash: 500, totalPoints: 0 },
-        { type: 'points_earned', status: 'completed', totalCash: 0, totalPoints: 2000 },
+        {
+          type: 'deposit',
+          status: 'completed',
+          totalCash: 5000,
+          totalPoints: 0,
+        },
+        {
+          type: 'entry_fee',
+          status: 'completed',
+          totalCash: 500,
+          totalPoints: 0,
+        },
+        {
+          type: 'points_earned',
+          status: 'completed',
+          totalCash: 0,
+          totalPoints: 2000,
+        },
       ]),
     });
 
@@ -264,7 +323,9 @@ describe('Wallet Flow E2E', () => {
     });
 
     mockPaymentRepo.findOne.mockResolvedValue(null);
-    mockPaymentRepo.save.mockImplementation(async (p: any) => Promise.resolve(p));
+    mockPaymentRepo.save.mockImplementation(async (p: any) =>
+      Promise.resolve(p),
+    );
 
     moduleFixture = await builder.compile();
     app = moduleFixture.createNestApplication();
@@ -282,13 +343,21 @@ describe('Wallet Flow E2E', () => {
     jest.clearAllMocks();
     mockDataSource.transaction.mockImplementation(async (cb: Function) => {
       const mockEntityManager = {
-        findOne: jest.fn().mockImplementation(async (entity: any, opts?: any) => {
-          if (entity === User) return mockUserRepo.findOne(opts);
-          return null;
-        }),
+        findOne: jest
+          .fn()
+          .mockImplementation(async (entity: any, opts?: any) => {
+            if (entity === User) return mockUserRepo.findOne(opts);
+            return null;
+          }),
         find: jest.fn().mockResolvedValue([]),
-        save: jest.fn().mockImplementation((arg1: any, arg2?: any) => Promise.resolve(arg2 ? arg2 : arg1)),
-        create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
+        save: jest
+          .fn()
+          .mockImplementation((arg1: any, arg2?: any) =>
+            Promise.resolve(arg2 ? arg2 : arg1),
+          ),
+        create: jest
+          .fn()
+          .mockImplementation((cls: any, obj: any) => (obj ? obj : cls || {})),
       };
       return cb(mockEntityManager);
     });
@@ -380,14 +449,27 @@ describe('Wallet Flow E2E', () => {
           }
           return null;
         });
-        const emSave = jest.fn().mockImplementation(async (arg1: any, arg2?: any) => {
-          const obj = arg2 ? arg2 : arg1;
-          if (arg1 === Withdrawal || obj.constructor?.name === 'Withdrawal' || obj.userId) {
-            return { ...obj, id: 'wd-1', createdAt: new Date(), status: 'pending' };
-          }
-          return obj;
-        });
-        const emCreate = jest.fn().mockImplementation((e: any, data: any) => data || e);
+        const emSave = jest
+          .fn()
+          .mockImplementation(async (arg1: any, arg2?: any) => {
+            const obj = arg2 ? arg2 : arg1;
+            if (
+              arg1 === Withdrawal ||
+              obj.constructor?.name === 'Withdrawal' ||
+              obj.userId
+            ) {
+              return {
+                ...obj,
+                id: 'wd-1',
+                createdAt: new Date(),
+                status: 'pending',
+              };
+            }
+            return obj;
+          });
+        const emCreate = jest
+          .fn()
+          .mockImplementation((e: any, data: any) => data || e);
         return cb({
           findOne: emFindOne,
           save: emSave,
@@ -399,7 +481,12 @@ describe('Wallet Flow E2E', () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/payments/withdraw')
         .set('Authorization', `Bearer ${userToken}`)
-        .send({ amount: 500, bankAccountNumber: '1234567890', bankIfsc: 'HDFC0001234', bankName: 'HDFC Bank' })
+        .send({
+          amount: 500,
+          bankAccountNumber: '1234567890',
+          bankIfsc: 'HDFC0001234',
+          bankName: 'HDFC Bank',
+        })
         .expect(HttpStatus.OK);
 
       expect(res.body).toHaveProperty('id');

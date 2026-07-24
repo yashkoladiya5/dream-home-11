@@ -36,7 +36,9 @@ describe('JwtAuthGuard', () => {
     mockUsersService = {
       findById: jest.fn(),
     } as any;
-    guard = new JwtAuthGuard(mockJwtService, mockUsersService, { getAllAndOverride: jest.fn().mockReturnValue(false) } as any);
+    guard = new JwtAuthGuard(mockJwtService, mockUsersService, {
+      getAllAndOverride: jest.fn().mockReturnValue(false),
+    } as any);
   });
 
   describe('valid token', () => {

@@ -6,9 +6,7 @@ import { User } from '../../users/entities/user.entity';
 import { FraudAlert } from '../../admin/entities/fraud-alert.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Withdrawal, User, FraudAlert]),
-  ],
+  imports: [TypeOrmModule.forFeature([Withdrawal, User, FraudAlert])],
   providers: [FraudService],
   exports: [FraudService],
 })

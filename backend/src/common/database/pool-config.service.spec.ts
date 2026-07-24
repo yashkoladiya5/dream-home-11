@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/unbound-method, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { PoolConfigService } from './pool-config.service';
 import { ConfigService } from '@nestjs/config';
 
 function mockConfigService(overrides: Record<string, any> = {}) {
   return {
-    get: jest.fn((key: string, defaultValue?: any) => overrides[key] ?? defaultValue),
+    get: jest.fn(
+      (key: string, defaultValue?: any) => overrides[key] ?? defaultValue,
+    ),
   };
 }
 
@@ -64,7 +65,9 @@ describe('PoolConfigService', () => {
       service = await buildService();
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       service.logPoolStatus(10, 5, 2);
-      expect(consoleSpy).toHaveBeenCalledWith('[DB Pool] total: 10, idle: 5, waiting: 2');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[DB Pool] total: 10, idle: 5, waiting: 2',
+      );
       consoleSpy.mockRestore();
     });
   });

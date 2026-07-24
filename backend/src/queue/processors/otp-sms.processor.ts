@@ -9,7 +9,9 @@ export class OtpSmsProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<{ phoneNumber: string; code: string }>): Promise<void> {
+  async process(
+    job: Job<{ phoneNumber: string; code: string }>,
+  ): Promise<void> {
     const { phoneNumber, code } = job.data;
     const message = `Dream Home 11 verification code: ${code}`;
     await this.smsService.sendSms(phoneNumber, message);

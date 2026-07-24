@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString, Matches } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsDateString,
+  Matches,
+} from 'class-validator';
 
 export class SubmitKycDto {
   @IsString()
@@ -8,7 +14,9 @@ export class SubmitKycDto {
 
   @IsString()
   @IsNotEmpty()
-  @Matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: 'PAN number must be valid (e.g., ABCDE1234F)' })
+  @Matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, {
+    message: 'PAN number must be valid (e.g., ABCDE1234F)',
+  })
   panNumber: string;
 
   @IsString()

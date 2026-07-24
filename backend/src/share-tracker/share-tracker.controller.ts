@@ -15,10 +15,7 @@ export class ShareTrackerController {
 
   @Post()
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async logShare(
-    @Req() req,
-    @Body() dto: TrackShareDto,
-  ) {
+  async logShare(@Req() req, @Body() dto: TrackShareDto) {
     const share = await this.shareTrackerService.logShare(
       req.user.id,
       dto.contestId,

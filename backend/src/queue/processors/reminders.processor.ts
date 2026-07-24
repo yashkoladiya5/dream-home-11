@@ -86,13 +86,17 @@ export class RemindersProcessor extends WorkerHost {
           data: { contestId: reminder.contestId, type: 'contest_reminder' },
         });
       } catch (error: any) {
-        this.logger.error(`FCM send failed for token ${fcmToken.id}: ${error.message}`);
+        this.logger.error(
+          `FCM send failed for token ${fcmToken.id}: ${error.message}`,
+        );
       }
     }
 
     reminder.status = 'sent';
     await this.reminderRepo.save(reminder);
 
-    this.logger.log(`Reminder ${reminder.id} sent for contest ${reminder.contestId}`);
+    this.logger.log(
+      `Reminder ${reminder.id} sent for contest ${reminder.contestId}`,
+    );
   }
 }

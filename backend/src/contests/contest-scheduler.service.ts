@@ -5,7 +5,10 @@ import { Repository, LessThanOrEqual } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Contest, ContestStatus } from './entities/contest.entity';
 import { ContestsService } from './contests.service';
-import { DomainEventNames, createDomainEvent } from '../common/events/domain-events';
+import {
+  DomainEventNames,
+  createDomainEvent,
+} from '../common/events/domain-events';
 
 @Injectable()
 export class ContestSchedulerService {

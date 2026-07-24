@@ -34,14 +34,20 @@ export class ConsentService {
     });
   }
 
-  async getLatestConsent(userId: string, consentType: string): Promise<ConsentRecord | null> {
+  async getLatestConsent(
+    userId: string,
+    consentType: string,
+  ): Promise<ConsentRecord | null> {
     return this.consentRepo.findOne({
       where: { userId, consentType },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async getConsentLogs(limit = 50, offset = 0): Promise<{ records: ConsentRecord[]; total: number }> {
+  async getConsentLogs(
+    limit = 50,
+    offset = 0,
+  ): Promise<{ records: ConsentRecord[]; total: number }> {
     const [records, total] = await this.consentRepo.findAndCount({
       order: { createdAt: 'DESC' },
       take: limit,

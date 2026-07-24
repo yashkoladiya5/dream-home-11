@@ -269,7 +269,7 @@ describe('Security E2E', () => {
         exec: jest.fn().mockResolvedValue([
           [null, 1],
           [null, -1],
-         ]),
+        ]),
       })),
       incr: jest.fn().mockResolvedValue(1),
       pttl: jest.fn().mockResolvedValue(-1),

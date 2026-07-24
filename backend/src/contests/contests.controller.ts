@@ -47,7 +47,9 @@ export class ContestsController {
 
   @Get('winners/:contestId')
   @UseGuards(JwtAuthGuard)
-  async getContestWinnersDetail(@Param('contestId', ParseUUIDPipe) contestId: string) {
+  async getContestWinnersDetail(
+    @Param('contestId', ParseUUIDPipe) contestId: string,
+  ) {
     return this.contestsService.getContestWinnersDetail(contestId);
   }
 

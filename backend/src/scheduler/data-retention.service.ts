@@ -20,14 +20,17 @@ export class DataRetentionService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async enforceDataRetention() {
-    const retentionDays = this.configService.get<number>('DATA_RETENTION_DAYS', 90);
+    const retentionDays = this.configService.get<number>(
+      'DATA_RETENTION_DAYS',
+      90,
+    );
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - retentionDays);
 
     this.logger.log(`Enforcing data retention policy: ${retentionDays} days`);
 
     const deletedUsers = await this.userRepo.find({
-      where: { deletedAt: LessThan(cutoff) as any },
+      where: { deletedAt: LessThan(cutoff) },
       withDeleted: true,
     });
 
@@ -47,9 +50,9 @@ export class DataRetentionService {
         await this.kycRepo.update(
           { userId: user.id },
           {
-            dateOfBirth: undefined as any,
-            panNumber: '' as any,
-            aadhaarNumber: '' as any,
+            dateOfBirth: undefined,
+            panNumber: '',
+            aadhaarNumber: '',
             status: 'expired' as any,
           },
         );

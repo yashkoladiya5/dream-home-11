@@ -12,7 +12,10 @@ export function createWebSocketCorsConfig() {
     : defaultOrigins;
 
   return {
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       if (!isProd || !origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {

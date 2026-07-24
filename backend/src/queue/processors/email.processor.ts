@@ -31,11 +31,14 @@ export class EmailProcessor extends WorkerHost {
     }>,
   ): Promise<void> {
     const { to, subject, body, type } = job.data;
-    this.logger.log(`Sending email to ${to}: ${subject} (${type || 'general'})`);
+    this.logger.log(
+      `Sending email to ${to}: ${subject} (${type || 'general'})`,
+    );
 
     try {
       const info = await this.transporter.sendMail({
-        from: process.env.EMAIL_FROM || '"Dream Home 11" <noreply@dreamhome11.com>',
+        from:
+          process.env.EMAIL_FROM || '"Dream Home 11" <noreply@dreamhome11.com>',
         to,
         subject,
         html: body,

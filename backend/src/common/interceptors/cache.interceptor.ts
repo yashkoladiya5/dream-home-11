@@ -81,13 +81,15 @@ export class CacheInterceptor implements NestInterceptor {
   }
 
   private resolveTtl(context: ExecutionContext, req: Request): number {
-    const ttl = this.reflector.getAllAndOverride<number>(CACHE_TTL_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]) || this.reflector.getAllAndOverride<number>(CACHE_TTL, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const ttl =
+      this.reflector.getAllAndOverride<number>(CACHE_TTL_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) ||
+      this.reflector.getAllAndOverride<number>(CACHE_TTL, [
+        context.getHandler(),
+        context.getClass(),
+      ]);
     if (ttl) return ttl;
     if (this.isReferenceData(req.path)) return this.referenceDataTtl;
     return this.defaultTtl;

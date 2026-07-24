@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsUUID, IsOptional, IsIn } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsUUID,
+  IsOptional,
+  IsIn,
+} from 'class-validator';
 
 export class TrackShareDto {
   @IsUUID()

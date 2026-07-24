@@ -37,10 +37,7 @@ export class PaymentsController {
   @Post('order')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
-  async createOrder(
-    @GetUser() user: User,
-    @Body() dto: CreateOrderDto,
-  ) {
+  async createOrder(@GetUser() user: User, @Body() dto: CreateOrderDto) {
     const payment = await this.paymentsService.createOrder(
       user.id,
       dto.amount,
@@ -56,11 +53,12 @@ export class PaymentsController {
   @Post('verify')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
-  async verifyPayment(
-    @GetUser() user: User,
-    @Body() dto: VerifyPaymentDto,
-  ) {
-    let { payment, bonusPoints, user: updatedUser } = await this.paymentsService.verifyPayment(
+  async verifyPayment(@GetUser() user: User, @Body() dto: VerifyPaymentDto) {
+    let {
+      payment,
+      bonusPoints,
+      user: updatedUser,
+    } = await this.paymentsService.verifyPayment(
       user.id,
       dto.orderId,
       dto.paymentId,

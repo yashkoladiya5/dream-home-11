@@ -5,7 +5,11 @@ import { AppModule } from '../../src/app.module';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { REDIS_CLIENT } from '../../src/redis/redis.constants';
-import { User, UserRole, UserLevel } from '../../src/users/entities/user.entity';
+import {
+  User,
+  UserRole,
+  UserLevel,
+} from '../../src/users/entities/user.entity';
 import { Kyc } from '../../src/kyc/entities/kyc.entity';
 import { Contest } from '../../src/contests/entities/contest.entity';
 import { ContestMember } from '../../src/contests/entities/contest-member.entity';
@@ -45,7 +49,7 @@ describe('Extra Features (Referrals, Spin, Support, Config, Leaderboard) Flow E2
   let app: INestApplication;
   let moduleFixture: TestingModule;
   let jwtService: JwtService;
-  
+
   let userToken: string;
   let adminToken: string;
 
@@ -91,7 +95,11 @@ describe('Extra Features (Referrals, Spin, Support, Config, Leaderboard) Flow E2
           findOne: jest.fn().mockResolvedValue(null),
           find: jest.fn().mockResolvedValue([]),
           save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
-          create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
+          create: jest
+            .fn()
+            .mockImplementation((cls: any, obj: any) =>
+              obj ? obj : cls || {},
+            ),
           increment: jest.fn().mockResolvedValue(undefined),
         };
         return cb(mockEntityManager);
@@ -107,11 +115,20 @@ describe('Extra Features (Referrals, Spin, Support, Config, Leaderboard) Flow E2
             setLock: jest.fn().mockReturnThis(),
             where: jest.fn().mockReturnThis(),
             getOne: jest.fn().mockImplementation(async () => {
-              return { id: 'referrer-101', pointsBalance: 100, lifetimePoints: 100, currentTier: UserLevel.SILVER };
+              return {
+                id: 'referrer-101',
+                pointsBalance: 100,
+                lifetimePoints: 100,
+                currentTier: UserLevel.SILVER,
+              };
             }),
           }),
           save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
-          create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
+          create: jest
+            .fn()
+            .mockImplementation((cls: any, obj: any) =>
+              obj ? obj : cls || {},
+            ),
         },
       }),
     };
@@ -126,7 +143,10 @@ describe('Extra Features (Referrals, Spin, Support, Config, Leaderboard) Flow E2
       multi: jest.fn(() => ({
         incr: jest.fn(),
         pttl: jest.fn(),
-        exec: jest.fn().mockResolvedValue([[null, 1], [null, -1]]),
+        exec: jest.fn().mockResolvedValue([
+          [null, 1],
+          [null, -1],
+        ]),
       })),
       zrevrank: jest.fn().mockResolvedValue(0),
       zscore: jest.fn().mockResolvedValue(500),
@@ -153,18 +173,28 @@ describe('Extra Features (Referrals, Spin, Support, Config, Leaderboard) Flow E2
     };
 
     const repoMocks: Record<string, ReturnType<typeof createMockRepo>> = {};
-    const ALL_ENTITIES = [User, Kyc, Contest, ContestMember, Referral, SupportTicket, SystemConfig];
-    
+    const ALL_ENTITIES = [
+      User,
+      Kyc,
+      Contest,
+      ContestMember,
+      Referral,
+      SupportTicket,
+      SystemConfig,
+    ];
+
     let builder = Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DataSource)
       .useValue(mockDataSource as any)
       .overrideProvider(REDIS_CLIENT)
-      .useValue(mockRedisClient as any);
+      .useValue(mockRedisClient);
 
     for (const entity of ALL_ENTITIES) {
       const mock = createMockRepo();
       repoMocks[(entity as any).name || String(entity)] = mock;
-      builder = builder.overrideProvider(getRepositoryToken(entity)).useValue(mock);
+      builder = builder
+        .overrideProvider(getRepositoryToken(entity))
+        .useValue(mock);
     }
 
     mockUserRepo = repoMocks['User'];
@@ -197,7 +227,10 @@ describe('Extra Features (Referrals, Spin, Support, Config, Leaderboard) Flow E2
 
     jwtService = moduleFixture.get<JwtService>(JwtService);
     userToken = jwtService.sign({ sub: USER_ID, phoneNumber: USER_PHONE });
-    adminToken = jwtService.sign({ sub: ADMIN_ID, phoneNumber: '+919999999999' });
+    adminToken = jwtService.sign({
+      sub: ADMIN_ID,
+      phoneNumber: '+919999999999',
+    });
   });
 
   afterAll(async () => {
@@ -224,12 +257,25 @@ describe('Extra Features (Referrals, Spin, Support, Config, Leaderboard) Flow E2
     });
 
     mockReferralRepo.findOne.mockResolvedValue(null);
-    mockReferralRepo.save.mockImplementation(async (r: any) => Promise.resolve(r));
+    mockReferralRepo.save.mockImplementation(async (r: any) =>
+      Promise.resolve(r),
+    );
 
-    mockSupportTicketRepo.save.mockImplementation(async (t: any) => Promise.resolve({ id: 'ticket-123', status: 'OPEN', ...t }));
-    mockSupportTicketRepo.findAndCount.mockResolvedValue([[
-      { id: 'ticket-123', subject: 'Need Help', message: 'Problem', status: 'OPEN', userId: USER_ID }
-    ], 1]);
+    mockSupportTicketRepo.save.mockImplementation(async (t: any) =>
+      Promise.resolve({ id: 'ticket-123', status: 'OPEN', ...t }),
+    );
+    mockSupportTicketRepo.findAndCount.mockResolvedValue([
+      [
+        {
+          id: 'ticket-123',
+          subject: 'Need Help',
+          message: 'Problem',
+          status: 'OPEN',
+          userId: USER_ID,
+        },
+      ],
+      1,
+    ]);
 
     const configInstance = {
       id: 'config-123',
@@ -248,16 +294,24 @@ describe('Extra Features (Referrals, Spin, Support, Config, Leaderboard) Flow E2
     };
     mockSystemConfigRepo.find.mockResolvedValue([configInstance]);
     mockSystemConfigRepo.findOne.mockResolvedValue(configInstance);
-    mockSystemConfigRepo.update.mockImplementation(async (id: any, updates: any) => {
-      Object.assign(configInstance, updates);
-      return { affected: 1 };
-    });
+    mockSystemConfigRepo.update.mockImplementation(
+      async (id: any, updates: any) => {
+        Object.assign(configInstance, updates);
+        return { affected: 1 };
+      },
+    );
   });
 
   describe('Referral System (Sprint 7)', () => {
     it('should successfully apply referral code', async () => {
-      const referrerUser = { id: 'referrer-101', phoneNumber: '+911111111111', referralCode: 'REF101', pointsBalance: 100, deviceId: 'device-referrer' };
-      
+      const referrerUser = {
+        id: 'referrer-101',
+        phoneNumber: '+911111111111',
+        referralCode: 'REF101',
+        pointsBalance: 100,
+        deviceId: 'device-referrer',
+      };
+
       // Override findOne to resolve referrer by referralCode
       mockUserRepo.findOne.mockImplementation(async (opts: any) => {
         const referralCode = opts?.where?.referralCode;

@@ -36,7 +36,7 @@ describe('Security: Injection Prevention', () => {
     });
 
     test('array of SQL injection attempts is preserved as data', () => {
-      const input = ["' OR 1=1--", "1; DELETE FROM users"];
+      const input = ["' OR 1=1--", '1; DELETE FROM users'];
       const result = sanitizePipe.transform(input);
       expect(result).toEqual(input);
     });
@@ -44,27 +44,27 @@ describe('Security: Injection Prevention', () => {
 
   describe('NoSQL Injection Prevention', () => {
     test('$ne operator in key throws BadRequestException', () => {
-      const input = { '$ne': 'admin' };
+      const input = { $ne: 'admin' };
       expect(() => sanitizePipe.transform(input)).toThrow(BadRequestException);
     });
 
     test('$gt operator in key throws BadRequestException', () => {
-      const input = { '$gt': 'test' };
+      const input = { $gt: 'test' };
       expect(() => sanitizePipe.transform(input)).toThrow(BadRequestException);
     });
 
     test('$where operator in key throws BadRequestException', () => {
-      const input = { '$where': '1=1' };
+      const input = { $where: '1=1' };
       expect(() => sanitizePipe.transform(input)).toThrow(BadRequestException);
     });
 
     test('nested $ operator in object throws BadRequestException', () => {
-      const input = { username: { '$ne': '' }, password: { '$ne': '' } };
+      const input = { username: { $ne: '' }, password: { $ne: '' } };
       expect(() => sanitizePipe.transform(input)).toThrow(BadRequestException);
     });
 
     test('$regex operator in key throws BadRequestException', () => {
-      const input = { '$regex': '.*' };
+      const input = { $regex: '.*' };
       expect(() => sanitizePipe.transform(input)).toThrow(BadRequestException);
     });
 
@@ -75,7 +75,7 @@ describe('Security: Injection Prevention', () => {
     });
 
     test('$in operator in key throws BadRequestException', () => {
-      const input = { '$in': ['admin', 'moderator'] };
+      const input = { $in: ['admin', 'moderator'] };
       expect(() => sanitizePipe.transform(input)).toThrow(BadRequestException);
     });
 
@@ -94,12 +94,16 @@ describe('Security: Injection Prevention', () => {
     });
 
     test('<iframe> tags are stripped', () => {
-      const result = sanitizePipe.transform('<iframe src="http://evil.com"></iframe>');
+      const result = sanitizePipe.transform(
+        '<iframe src="http://evil.com"></iframe>',
+      );
       expect(result).not.toContain('<iframe>');
     });
 
     test('<object> tags are stripped', () => {
-      const result = sanitizePipe.transform('<object data="http://evil.com"></object>');
+      const result = sanitizePipe.transform(
+        '<object data="http://evil.com"></object>',
+      );
       expect(result).not.toContain('<object>');
     });
 
@@ -109,12 +113,16 @@ describe('Security: Injection Prevention', () => {
     });
 
     test('on* event handlers are stripped', () => {
-      const result = sanitizePipe.transform('<div onload="alert(1)">text</div>');
+      const result = sanitizePipe.transform(
+        '<div onload="alert(1)">text</div>',
+      );
       expect(result).not.toContain('onload=');
     });
 
     test('javascript: URIs are stripped', () => {
-      const result = sanitizePipe.transform('<a href="javascript:alert(1)">click</a>');
+      const result = sanitizePipe.transform(
+        '<a href="javascript:alert(1)">click</a>',
+      );
       expect(result).not.toContain('javascript:');
     });
 
@@ -124,7 +132,10 @@ describe('Security: Injection Prevention', () => {
     });
 
     test('nested XSS in object fields is sanitized', () => {
-      const input = { name: '<script>alert(1)</script>', bio: '<img src=x onerror=alert(1)>' };
+      const input = {
+        name: '<script>alert(1)</script>',
+        bio: '<img src=x onerror=alert(1)>',
+      };
       const result = sanitizePipe.transform(input);
       expect(result.name).not.toContain('<script>');
       expect(result.bio).not.toContain('<img');

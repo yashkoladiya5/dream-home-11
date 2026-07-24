@@ -6,7 +6,7 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
+    files: ['**/*.{js,mjs,jsx,ts,tsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -17,10 +17,11 @@ export default [
         console: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        process: 'readonly',
       },
     },
     rules: {
-      'no-unused-vars': 'warn',
+      'no-unused-vars': 'off',
       'no-console': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-explicit-any': 'off',

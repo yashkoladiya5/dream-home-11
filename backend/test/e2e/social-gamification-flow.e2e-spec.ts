@@ -5,7 +5,11 @@ import { AppModule } from '../../src/app.module';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { REDIS_CLIENT } from '../../src/redis/redis.constants';
-import { User, UserRole, UserLevel } from '../../src/users/entities/user.entity';
+import {
+  User,
+  UserRole,
+  UserLevel,
+} from '../../src/users/entities/user.entity';
 import { Kyc } from '../../src/kyc/entities/kyc.entity';
 import { Contest } from '../../src/contests/entities/contest.entity';
 import { ContestMember } from '../../src/contests/entities/contest-member.entity';
@@ -118,7 +122,11 @@ describe('Social & Gamification (Feed, Chat, Achievements, Share Tracker) Flow E
           findOne: jest.fn().mockResolvedValue(null),
           find: jest.fn().mockResolvedValue([]),
           save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
-          create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
+          create: jest
+            .fn()
+            .mockImplementation((cls: any, obj: any) =>
+              obj ? obj : cls || {},
+            ),
           increment: jest.fn().mockResolvedValue(undefined),
         };
         return cb(mockEntityManager);
@@ -140,8 +148,19 @@ describe('Social & Gamification (Feed, Chat, Achievements, Share Tracker) Flow E
 
     const repoMocks: Record<string, ReturnType<typeof createMockRepo>> = {};
     const ALL_ENTITIES = [
-      User, Kyc, Contest, ContestMember, FeedPost, FeedLike, FeedComment,
-      Achievement, UserAchievement, Chat, ChatMessage, Share, RewardRedemption
+      User,
+      Kyc,
+      Contest,
+      ContestMember,
+      FeedPost,
+      FeedLike,
+      FeedComment,
+      Achievement,
+      UserAchievement,
+      Chat,
+      ChatMessage,
+      Share,
+      RewardRedemption,
     ];
 
     let builder = Test.createTestingModule({ imports: [AppModule] })
@@ -153,7 +172,9 @@ describe('Social & Gamification (Feed, Chat, Achievements, Share Tracker) Flow E
     for (const entity of ALL_ENTITIES) {
       const mock = createMockRepo();
       repoMocks[(entity as any).name || String(entity)] = mock;
-      builder = builder.overrideProvider(getRepositoryToken(entity)).useValue(mock);
+      builder = builder
+        .overrideProvider(getRepositoryToken(entity))
+        .useValue(mock);
     }
 
     mockUserRepo = repoMocks['User'];
@@ -199,18 +220,35 @@ describe('Social & Gamification (Feed, Chat, Achievements, Share Tracker) Flow E
       if (id === POST_ID) return { ...mockPost };
       return null;
     });
-    mockPostRepo.save.mockImplementation(async (p: any) => Promise.resolve({ id: POST_ID, ...p }));
+    mockPostRepo.save.mockImplementation(async (p: any) =>
+      Promise.resolve({ id: POST_ID, ...p }),
+    );
 
     mockLikeRepo.findOne.mockResolvedValue(null);
     mockLikeRepo.save.mockImplementation(async (l: any) => Promise.resolve(l));
 
-    mockCommentRepo.save.mockImplementation(async (c: any) => Promise.resolve({ id: 'comment-1', ...c }));
+    mockCommentRepo.save.mockImplementation(async (c: any) =>
+      Promise.resolve({ id: 'comment-1', ...c }),
+    );
     mockCommentRepo.find.mockResolvedValue([
-      { id: 'comment-1', postId: POST_ID, userId: USER_ID, content: 'Nice!', user: mockUser }
+      {
+        id: 'comment-1',
+        postId: POST_ID,
+        userId: USER_ID,
+        content: 'Nice!',
+        user: mockUser,
+      },
     ]);
 
     mockAchievementRepo.find.mockResolvedValue([
-      { id: 'ach-1', key: 'first_contest', title: 'First Contest', description: 'Join one contest', bonusPoints: 50, sortOrder: 1 }
+      {
+        id: 'ach-1',
+        key: 'first_contest',
+        title: 'First Contest',
+        description: 'Join one contest',
+        bonusPoints: 50,
+        sortOrder: 1,
+      },
     ]);
     mockAchievementRepo.findOne.mockImplementation(async (opts: any) => {
       const key = opts?.where?.key || 'first_contest';
@@ -230,7 +268,9 @@ describe('Social & Gamification (Feed, Chat, Achievements, Share Tracker) Flow E
     mockChatRepo.find.mockResolvedValue([]);
     mockChatMessageRepo.find.mockResolvedValue([]);
 
-    mockShareRepo.save.mockImplementation(async (s: any) => Promise.resolve({ id: 'share-1', ...s }));
+    mockShareRepo.save.mockImplementation(async (s: any) =>
+      Promise.resolve({ id: 'share-1', ...s }),
+    );
     mockShareRepo.count.mockResolvedValue(2);
   });
 

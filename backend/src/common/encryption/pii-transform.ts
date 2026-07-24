@@ -17,8 +17,9 @@ export function maskUpi(upi: string): string {
   if (!upi) return upi;
   const [name, provider] = upi.split('@');
   if (!name) return upi;
-  const masked = name.length <= 2
-    ? name[0] + '*'
-    : name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  const masked =
+    name.length <= 2
+      ? name[0] + '*'
+      : name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
   return `${masked}@${provider || ''}`;
 }

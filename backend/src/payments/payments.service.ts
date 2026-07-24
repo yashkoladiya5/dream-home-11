@@ -41,8 +41,6 @@ export class PaymentsService {
     this.webhookSecret = secret;
   }
 
-
-
   async createOrder(
     userId: string,
     amount: number,
@@ -52,12 +50,21 @@ export class PaymentsService {
     const minAmount = 10;
     const maxAmount = Number(config.maxWithdrawalAmount) || 50000;
     if (amount < minAmount || amount > maxAmount) {
-      throw new BadRequestException(`Amount must be between ₹${minAmount} and ₹${maxAmount}`);
+      throw new BadRequestException(
+        `Amount must be between ₹${minAmount} and ₹${maxAmount}`,
+      );
     }
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (user && user.state && config.restrictedStates && config.restrictedStates.includes(user.state)) {
-      throw new BadRequestException(`Deposits are restricted in your state (${user.state})`);
+    if (
+      user &&
+      user.state &&
+      config.restrictedStates &&
+      config.restrictedStates.includes(user.state)
+    ) {
+      throw new BadRequestException(
+        `Deposits are restricted in your state (${user.state})`,
+      );
     }
 
     const orderId = `ORD_${Date.now()}_${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
@@ -96,7 +103,11 @@ export class PaymentsService {
         .update(payload)
         .digest('hex');
 
-      const bonusPoints = await this.calculateBonusPoints(userId, Number(payment.amount), entityManager);
+      const bonusPoints = await this.calculateBonusPoints(
+        userId,
+        Number(payment.amount),
+        entityManager,
+      );
 
       payment.paymentId = paymentId;
       payment.status = 'completed';
@@ -139,29 +150,41 @@ export class PaymentsService {
     });
   }
 
-  async calculateBonusPoints(userId: string, amount: number, entityManager?: import('typeorm').EntityManager): Promise<number> {
+  async calculateBonusPoints(
+    userId: string,
+    amount: number,
+    entityManager?: import('typeorm').EntityManager,
+  ): Promise<number> {
     const config = await this.appConfigService.getConfig();
     let bonus = 0;
-    
-    if (amount >= Number(config.bonusTier3Threshold)) bonus = config.bonusTier3Points;
-    else if (amount >= Number(config.bonusTier2Threshold)) bonus = config.bonusTier2Points;
-    else if (amount >= Number(config.bonusTier1Threshold)) bonus = config.bonusTier1Points;
+
+    if (amount >= Number(config.bonusTier3Threshold))
+      bonus = config.bonusTier3Points;
+    else if (amount >= Number(config.bonusTier2Threshold))
+      bonus = config.bonusTier2Points;
+    else if (amount >= Number(config.bonusTier1Threshold))
+      bonus = config.bonusTier1Points;
 
     if (bonus === 0) return 0;
 
     // Check monthly limits (5 times per month)
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
-    const repo = entityManager ? entityManager.getRepository(Transaction) : this.transactionRepo;
-    const bonusCountThisMonth = await repo.createQueryBuilder('t')
+
+    const repo = entityManager
+      ? entityManager.getRepository(Transaction)
+      : this.transactionRepo;
+    const bonusCountThisMonth = await repo
+      .createQueryBuilder('t')
       .where('t.userId = :userId', { userId })
       .andWhere('t.type = :type', { type: 'points_bonus' })
       .andWhere('t.createdAt >= :startDate', { startDate: firstDayOfMonth })
       .getCount();
 
     if (bonusCountThisMonth >= 5) {
-      this.logger.log(`User ${userId} has reached the max deposit bonus limit of 5 this month.`);
+      this.logger.log(
+        `User ${userId} has reached the max deposit bonus limit of 5 this month.`,
+      );
       return 0; // Cap reached
     }
 
@@ -175,7 +198,10 @@ export class PaymentsService {
       .update(payload)
       .digest('hex');
     if (computed.length !== signature.length) return false;
-    return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(signature));
+    return crypto.timingSafeEqual(
+      Buffer.from(computed),
+      Buffer.from(signature),
+    );
   }
 
   async handleWebhookEvent(body: any): Promise<void> {
@@ -197,7 +223,11 @@ export class PaymentsService {
         });
         if (!lockedPayment || lockedPayment.status !== 'pending') return;
 
-        const bonusPoints = await this.calculateBonusPoints(lockedPayment.userId, Number(lockedPayment.amount), entityManager);
+        const bonusPoints = await this.calculateBonusPoints(
+          lockedPayment.userId,
+          Number(lockedPayment.amount),
+          entityManager,
+        );
 
         lockedPayment.paymentId = paymentId;
         lockedPayment.status = 'completed';

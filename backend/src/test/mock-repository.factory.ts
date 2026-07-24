@@ -1,8 +1,12 @@
 import { ObjectLiteral, Repository } from 'typeorm';
 
-export type MockRepository<T extends ObjectLiteral = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
+export type MockRepository<T extends ObjectLiteral = any> = Partial<
+  Record<keyof Repository<T>, jest.Mock>
+>;
 
-export function createMockRepository<T extends ObjectLiteral>(): MockRepository<T> {
+export function createMockRepository<
+  T extends ObjectLiteral,
+>(): MockRepository<T> {
   return {
     find: jest.fn(),
     findOne: jest.fn(),
@@ -17,13 +21,15 @@ export function createMockRepository<T extends ObjectLiteral>(): MockRepository<
     decrement: jest.fn(),
     createQueryBuilder: jest.fn(() => createMockQueryBuilder()),
     manager: {
-      transaction: jest.fn((cb) => cb({
-        findOne: jest.fn(),
-        save: jest.fn(),
-        update: jest.fn(),
-        create: jest.fn(),
-        delete: jest.fn(),
-      })),
+      transaction: jest.fn((cb) =>
+        cb({
+          findOne: jest.fn(),
+          save: jest.fn(),
+          update: jest.fn(),
+          create: jest.fn(),
+          delete: jest.fn(),
+        }),
+      ),
     } as any,
   };
 }

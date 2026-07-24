@@ -89,7 +89,8 @@ export class WithdrawalsService {
         );
       }
 
-      const rawBankAccount = bankDetails.bankAccountNumber || user.bankAccountNumber || null;
+      const rawBankAccount =
+        bankDetails.bankAccountNumber || user.bankAccountNumber || null;
       const encryptedBankAccount = rawBankAccount
         ? this.encryptionService.encrypt(rawBankAccount)
         : null;
@@ -182,10 +183,22 @@ export class WithdrawalsService {
     const stats = await this.withdrawalRepo
       .createQueryBuilder('w')
       .select('COUNT(*)', 'totalCount')
-      .addSelect('COALESCE(SUM(CASE WHEN w.status = :approved THEN w.amount ELSE 0 END), 0)', 'totalWithdrawn')
-      .addSelect('COALESCE(SUM(CASE WHEN w.status = :pending THEN 1 ELSE 0 END), 0)', 'pendingCount')
-      .addSelect('COALESCE(SUM(CASE WHEN w.status = :approved THEN 1 ELSE 0 END), 0)', 'approvedCount')
-      .addSelect('COALESCE(SUM(CASE WHEN w.status = :rejected THEN 1 ELSE 0 END), 0)', 'rejectedCount')
+      .addSelect(
+        'COALESCE(SUM(CASE WHEN w.status = :approved THEN w.amount ELSE 0 END), 0)',
+        'totalWithdrawn',
+      )
+      .addSelect(
+        'COALESCE(SUM(CASE WHEN w.status = :pending THEN 1 ELSE 0 END), 0)',
+        'pendingCount',
+      )
+      .addSelect(
+        'COALESCE(SUM(CASE WHEN w.status = :approved THEN 1 ELSE 0 END), 0)',
+        'approvedCount',
+      )
+      .addSelect(
+        'COALESCE(SUM(CASE WHEN w.status = :rejected THEN 1 ELSE 0 END), 0)',
+        'rejectedCount',
+      )
       .where('w.userId = :userId', { userId })
       .setParameters({
         approved: WithdrawalStatus.APPROVED,
@@ -195,7 +208,9 @@ export class WithdrawalsService {
       .getRawOne();
 
     return {
-      totalWithdrawn: stats ? Math.round(Number(stats.totalWithdrawn) * 100) / 100 : 0,
+      totalWithdrawn: stats
+        ? Math.round(Number(stats.totalWithdrawn) * 100) / 100
+        : 0,
       pendingCount: stats ? Number(stats.pendingCount) : 0,
       approvedCount: stats ? Number(stats.approvedCount) : 0,
       rejectedCount: stats ? Number(stats.rejectedCount) : 0,

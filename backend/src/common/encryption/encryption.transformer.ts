@@ -15,7 +15,9 @@ function getKey(): Buffer {
     }
     encryptionKey = Buffer.from(key, 'hex');
     if (encryptionKey.length !== 32) {
-      throw new Error('ENCRYPTION_KEY must be a 64-character hex string (32 bytes)');
+      throw new Error(
+        'ENCRYPTION_KEY must be a 64-character hex string (32 bytes)',
+      );
     }
   }
   return encryptionKey;
@@ -24,10 +26,14 @@ function getKey(): Buffer {
 export class EncryptionTransformer implements ValueTransformer {
   to(value: string | null | undefined): string | null {
     if (!value) return null;
-    
+
     // Check if it's already encrypted (format: iv:authTag:encrypted)
     const parts = value.split(':');
-    if (parts.length === 3 && parts[0].length === 32 && parts[1].length === 32) {
+    if (
+      parts.length === 3 &&
+      parts[0].length === 32 &&
+      parts[1].length === 32
+    ) {
       return value;
     }
 
@@ -41,7 +47,7 @@ export class EncryptionTransformer implements ValueTransformer {
 
   from(value: string | null | undefined): string | null {
     if (!value) return null;
-    
+
     const parts = value.split(':');
     if (parts.length !== 3) {
       // Return as-is if not encrypted (fallback for existing plain-text data)
@@ -58,7 +64,7 @@ export class EncryptionTransformer implements ValueTransformer {
       decrypted += decipher.final('utf8');
       return decrypted;
     } catch (e) {
-      // In case decryption fails, return null or throw. 
+      // In case decryption fails, return null or throw.
       // Falling back to raw value might leak encrypted text, so we return a placeholder or throw.
       // But if it's somehow not encrypted data that accidentally has 2 colons, we could return value.
       // Let's just return value for safety against data loss.

@@ -7,7 +7,10 @@ import { DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { User } from '../../users/entities/user.entity';
 import { Transaction } from '../../transactions/entities/transaction.entity';
-import { DomainEventNames, createDomainEvent } from '../../common/events/domain-events';
+import {
+  DomainEventNames,
+  createDomainEvent,
+} from '../../common/events/domain-events';
 
 interface DistributionEntry {
   userId: string;
@@ -16,9 +19,9 @@ interface DistributionEntry {
 }
 
 const PRIZE_SHARES: Record<number, number> = {
-  1: 0.50,
-  2: 0.30,
-  3: 0.20,
+  1: 0.5,
+  2: 0.3,
+  3: 0.2,
 };
 
 @Injectable()
@@ -100,15 +103,10 @@ export class PrizeDistributionProcessor extends WorkerHost {
       }),
     );
 
-    this.logger.log(
-      `Prize distribution complete for contest ${contestId}`,
-    );
+    this.logger.log(`Prize distribution complete for contest ${contestId}`);
   }
 
   private calculateTotalPrize(distributionPlan: DistributionEntry[]): number {
-    return distributionPlan.reduce(
-      (sum, entry) => sum + entry.pointsEarned,
-      0,
-    );
+    return distributionPlan.reduce((sum, entry) => sum + entry.pointsEarned, 0);
   }
 }

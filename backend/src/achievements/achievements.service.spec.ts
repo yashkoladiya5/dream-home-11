@@ -8,7 +8,10 @@ import { Share } from '../share-tracker/entities/share.entity';
 import { RewardRedemption } from '../rewards/entities/reward-redemption.entity';
 import { User } from '../users/entities/user.entity';
 import { PointsEngineService } from '../points/points-engine.service';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
 import { createMockPointsEngineService } from '../test/mock-services.factory';
 
 describe('AchievementsService', () => {
@@ -22,9 +25,36 @@ describe('AchievementsService', () => {
   let mockPointsEngineService: ReturnType<typeof createMockPointsEngineService>;
 
   const mockAchievements: Achievement[] = [
-    { id: 'ach-1', key: 'first_contest', title: 'First Contest', description: 'Join your first contest', icon: 'trophy', bonusPoints: 50, sortOrder: 1, createdAt: new Date() },
-    { id: 'ach-2', key: 'ten_contests', title: '10 Contests', description: 'Join 10 contests', icon: 'star', bonusPoints: 100, sortOrder: 2, createdAt: new Date() },
-    { id: 'ach-3', key: 'points_5000', title: '5K Points', description: 'Earn 5000 lifetime points', icon: 'fire', bonusPoints: 200, sortOrder: 3, createdAt: new Date() },
+    {
+      id: 'ach-1',
+      key: 'first_contest',
+      title: 'First Contest',
+      description: 'Join your first contest',
+      icon: 'trophy',
+      bonusPoints: 50,
+      sortOrder: 1,
+      createdAt: new Date(),
+    },
+    {
+      id: 'ach-2',
+      key: 'ten_contests',
+      title: '10 Contests',
+      description: 'Join 10 contests',
+      icon: 'star',
+      bonusPoints: 100,
+      sortOrder: 2,
+      createdAt: new Date(),
+    },
+    {
+      id: 'ach-3',
+      key: 'points_5000',
+      title: '5K Points',
+      description: 'Earn 5000 lifetime points',
+      icon: 'fire',
+      bonusPoints: 200,
+      sortOrder: 3,
+      createdAt: new Date(),
+    },
   ];
 
   const mockUser: User = {
@@ -70,11 +100,20 @@ describe('AchievementsService', () => {
       providers: [
         AchievementsService,
         { provide: getRepositoryToken(Achievement), useValue: achievementRepo },
-        { provide: getRepositoryToken(UserAchievement), useValue: userAchievementRepo },
+        {
+          provide: getRepositoryToken(UserAchievement),
+          useValue: userAchievementRepo,
+        },
         { provide: getRepositoryToken(User), useValue: userRepo },
-        { provide: getRepositoryToken(ContestMember), useValue: contestMemberRepo },
+        {
+          provide: getRepositoryToken(ContestMember),
+          useValue: contestMemberRepo,
+        },
         { provide: getRepositoryToken(Share), useValue: shareRepo },
-        { provide: getRepositoryToken(RewardRedemption), useValue: redemptionRepo },
+        {
+          provide: getRepositoryToken(RewardRedemption),
+          useValue: redemptionRepo,
+        },
         { provide: PointsEngineService, useValue: mockPointsEngineService },
       ],
     }).compile();
@@ -90,7 +129,13 @@ describe('AchievementsService', () => {
     it('should return all achievements with earned status', async () => {
       (achievementRepo.find as jest.Mock).mockResolvedValue(mockAchievements);
       (userAchievementRepo.find as jest.Mock).mockResolvedValue([
-        { id: 'ua-1', userId: 'user-1', achievementId: 'ach-1', earnedAt: new Date(), achievement: mockAchievements[0] },
+        {
+          id: 'ua-1',
+          userId: 'user-1',
+          achievementId: 'ach-1',
+          earnedAt: new Date(),
+          achievement: mockAchievements[0],
+        },
       ]);
 
       const result = await service.getAchievementsWithProgress('user-1');
@@ -117,36 +162,57 @@ describe('AchievementsService', () => {
       (shareRepo.count as jest.Mock).mockResolvedValue(0);
       (redemptionRepo.count as jest.Mock).mockResolvedValue(0);
       (userRepo.findOne as jest.Mock).mockResolvedValue(mockUser);
-      (achievementRepo.findOne as jest.Mock).mockResolvedValue(mockAchievements[0]);
+      (achievementRepo.findOne as jest.Mock).mockResolvedValue(
+        mockAchievements[0],
+      );
       (userAchievementRepo.create as jest.Mock).mockReturnValue({});
       (userAchievementRepo.save as jest.Mock).mockResolvedValue({});
       (userRepo.save as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await service.checkAndAwardAchievements('user-1');
-      expect(userAchievementRepo.create).toHaveBeenCalledWith({ userId: 'user-1', achievementId: 'ach-1' });
+      expect(userAchievementRepo.create).toHaveBeenCalledWith({
+        userId: 'user-1',
+        achievementId: 'ach-1',
+      });
     });
 
     it('should award points_5000 achievement and give bonus points', async () => {
       const pointsAchievement = mockAchievements[2];
-      (achievementRepo.find as jest.Mock).mockResolvedValue([pointsAchievement]);
+      (achievementRepo.find as jest.Mock).mockResolvedValue([
+        pointsAchievement,
+      ]);
       (userAchievementRepo.find as jest.Mock).mockResolvedValue([]);
       (contestMemberRepo.count as jest.Mock).mockResolvedValue(0);
       (shareRepo.count as jest.Mock).mockResolvedValue(0);
       (redemptionRepo.count as jest.Mock).mockResolvedValue(0);
       (userRepo.findOne as jest.Mock).mockResolvedValue(mockUser);
-      (achievementRepo.findOne as jest.Mock).mockResolvedValue(pointsAchievement);
+      (achievementRepo.findOne as jest.Mock).mockResolvedValue(
+        pointsAchievement,
+      );
       (userAchievementRepo.create as jest.Mock).mockReturnValue({});
       (userAchievementRepo.save as jest.Mock).mockResolvedValue({});
       (userRepo.save as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await service.checkAndAwardAchievements('user-1');
-      expect(mockPointsEngineService.logPointAction).toHaveBeenCalledWith('user-1', 'achievement_bonus', 200, 1.0, 200);
+      expect(mockPointsEngineService.logPointAction).toHaveBeenCalledWith(
+        'user-1',
+        'achievement_bonus',
+        200,
+        1.0,
+        200,
+      );
     });
 
     it('should skip already earned achievements', async () => {
       (achievementRepo.find as jest.Mock).mockResolvedValue(mockAchievements);
       (userAchievementRepo.find as jest.Mock).mockResolvedValue([
-        { id: 'ua-1', userId: 'user-1', achievementId: 'ach-1', earnedAt: new Date(), achievement: mockAchievements[0] },
+        {
+          id: 'ua-1',
+          userId: 'user-1',
+          achievementId: 'ach-1',
+          earnedAt: new Date(),
+          achievement: mockAchievements[0],
+        },
       ]);
 
       const result = await service.checkAndAwardAchievements('user-1');
@@ -166,17 +232,31 @@ describe('AchievementsService', () => {
     });
 
     it('should upgrade tier when bonus points push over threshold', async () => {
-      const nearGoldUser = { ...mockUser, lifetimePoints: 5000, pointsBalance: 400, currentTier: 'silver' as any };
-      (achievementRepo.find as jest.Mock).mockResolvedValue([mockAchievements[2]]);
+      const nearGoldUser = {
+        ...mockUser,
+        lifetimePoints: 5000,
+        pointsBalance: 400,
+        currentTier: 'silver' as any,
+      };
+      (achievementRepo.find as jest.Mock).mockResolvedValue([
+        mockAchievements[2],
+      ]);
       (userAchievementRepo.find as jest.Mock).mockResolvedValue([]);
       (contestMemberRepo.count as jest.Mock).mockResolvedValue(0);
       (shareRepo.count as jest.Mock).mockResolvedValue(0);
       (redemptionRepo.count as jest.Mock).mockResolvedValue(0);
       (userRepo.findOne as jest.Mock).mockResolvedValue(nearGoldUser);
-      (achievementRepo.findOne as jest.Mock).mockResolvedValue(mockAchievements[2]);
+      (achievementRepo.findOne as jest.Mock).mockResolvedValue(
+        mockAchievements[2],
+      );
       (userAchievementRepo.create as jest.Mock).mockReturnValue({});
       (userAchievementRepo.save as jest.Mock).mockResolvedValue({});
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...nearGoldUser, lifetimePoints: 5200, pointsBalance: 600, currentTier: 'gold' });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...nearGoldUser,
+        lifetimePoints: 5200,
+        pointsBalance: 600,
+        currentTier: 'gold',
+      });
 
       const result = await service.checkAndAwardAchievements('user-1');
       expect(userRepo.save).toHaveBeenCalled();

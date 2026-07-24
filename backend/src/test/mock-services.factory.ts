@@ -36,7 +36,10 @@ export function createMockJwtService() {
     sign: jest.fn(() => 'mock-token'),
     signAsync: jest.fn(async () => 'mock-token'),
     verify: jest.fn(() => ({ sub: 'mock-id', phone: '+911234567890' })),
-    verifyAsync: jest.fn(async () => ({ sub: 'mock-id', phone: '+911234567890' })),
+    verifyAsync: jest.fn(async () => ({
+      sub: 'mock-id',
+      phone: '+911234567890',
+    })),
     decode: jest.fn(() => ({ sub: 'mock-id' })),
   };
 }
@@ -106,7 +109,8 @@ export function createMockEncryptionService() {
   return {
     encrypt: jest.fn((plaintext: string) => `encrypted:${plaintext}`),
     decrypt: jest.fn((encrypted: string) => {
-      if (encrypted.startsWith('encrypted:')) return encrypted.replace('encrypted:', '');
+      if (encrypted.startsWith('encrypted:'))
+        return encrypted.replace('encrypted:', '');
       return 'decrypted-value';
     }),
   };
@@ -114,19 +118,42 @@ export function createMockEncryptionService() {
 
 export function createMockWalletService() {
   return {
-    initializeWallet: jest.fn().mockResolvedValue({ id: 'wallet-id', userId: 'user-id', balanceInr: 0, lockedBalanceInr: 0, pointsBalance: 0 }),
-    creditBalance: jest.fn().mockResolvedValue({ wallet: { balanceInr: 1000 }, transaction: {} }),
-    debitBalance: jest.fn().mockResolvedValue({ wallet: { balanceInr: 900 }, transaction: {} }),
+    initializeWallet: jest.fn().mockResolvedValue({
+      id: 'wallet-id',
+      userId: 'user-id',
+      balanceInr: 0,
+      lockedBalanceInr: 0,
+      pointsBalance: 0,
+    }),
+    creditBalance: jest
+      .fn()
+      .mockResolvedValue({ wallet: { balanceInr: 1000 }, transaction: {} }),
+    debitBalance: jest
+      .fn()
+      .mockResolvedValue({ wallet: { balanceInr: 900 }, transaction: {} }),
     creditPoints: jest.fn().mockResolvedValue({ pointsBalance: 100 }),
     debitPoints: jest.fn().mockResolvedValue({ pointsBalance: 50 }),
-    getBalance: jest.fn().mockResolvedValue({ balanceInr: 1000, lockedBalanceInr: 0, availableBalance: 1000, pointsBalance: 100 }),
-    getWallet: jest.fn().mockResolvedValue({ id: 'wallet-id', userId: 'user-id', balanceInr: 1000, lockedBalanceInr: 0, pointsBalance: 100 }),
+    getBalance: jest.fn().mockResolvedValue({
+      balanceInr: 1000,
+      lockedBalanceInr: 0,
+      availableBalance: 1000,
+      pointsBalance: 100,
+    }),
+    getWallet: jest.fn().mockResolvedValue({
+      id: 'wallet-id',
+      userId: 'user-id',
+      balanceInr: 1000,
+      lockedBalanceInr: 0,
+      pointsBalance: 100,
+    }),
     lockBalance: jest.fn().mockResolvedValue({}),
     unlockBalance: jest.fn().mockResolvedValue({}),
   };
 }
 
-export function createMockAppConfigService(overrides: Record<string, any> = {}) {
+export function createMockAppConfigService(
+  overrides: Record<string, any> = {},
+) {
   const defaults = {
     maxWithdrawalAmount: 50000,
     bonusTier1Threshold: '100',
@@ -151,14 +178,27 @@ export function createMockPointsEngineService() {
     logPointAction: jest.fn().mockResolvedValue({}),
     logPointActionWithEntityManager: jest.fn().mockResolvedValue({}),
     getTierInfo: jest.fn().mockReturnValue({ tier: 'bronze', multiplier: 1.0 }),
-    getNextTierInfo: jest.fn().mockReturnValue({ nextTier: 'silver', nextMultiplier: 1.1, pointsToNextTier: 1000 }),
+    getNextTierInfo: jest.fn().mockReturnValue({
+      nextTier: 'silver',
+      nextMultiplier: 1.1,
+      pointsToNextTier: 1000,
+    }),
   };
 }
 
 export function createMockReferralService() {
   return {
-    applyReferral: jest.fn().mockResolvedValue({ success: true, message: 'Referral applied', pointsAwarded: 30 }),
-    getReferralStats: jest.fn().mockResolvedValue({ referralCode: 'TESTCODE', totalReferred: 0, totalRewardsEarned: 0, totalKycCompleted: 0 }),
+    applyReferral: jest.fn().mockResolvedValue({
+      success: true,
+      message: 'Referral applied',
+      pointsAwarded: 30,
+    }),
+    getReferralStats: jest.fn().mockResolvedValue({
+      referralCode: 'TESTCODE',
+      totalReferred: 0,
+      totalRewardsEarned: 0,
+      totalKycCompleted: 0,
+    }),
     getReferralHistory: jest.fn().mockResolvedValue([]),
     processKycReferral: jest.fn().mockResolvedValue(undefined),
     ensureReferralCode: jest.fn().mockResolvedValue('TESTCODE'),

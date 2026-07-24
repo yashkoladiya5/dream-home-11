@@ -176,21 +176,33 @@ export class AddSchemaConstraints implements MigrationInterface {
     );
     await queryRunner.createIndex(
       'shares',
-      new TableIndex({ name: 'idx_shares_contest_id', columnNames: ['contest_id'] }),
+      new TableIndex({
+        name: 'idx_shares_contest_id',
+        columnNames: ['contest_id'],
+      }),
     );
 
     await queryRunner.createIndex(
       'support_tickets',
-      new TableIndex({ name: 'idx_support_tickets_user_id', columnNames: ['user_id'] }),
+      new TableIndex({
+        name: 'idx_support_tickets_user_id',
+        columnNames: ['user_id'],
+      }),
     );
     await queryRunner.createIndex(
       'support_tickets',
-      new TableIndex({ name: 'idx_support_tickets_status', columnNames: ['status'] }),
+      new TableIndex({
+        name: 'idx_support_tickets_status',
+        columnNames: ['status'],
+      }),
     );
 
     await queryRunner.createIndex(
       'withdrawals',
-      new TableIndex({ name: 'idx_withdrawals_status', columnNames: ['status'] }),
+      new TableIndex({
+        name: 'idx_withdrawals_status',
+        columnNames: ['status'],
+      }),
     );
 
     await queryRunner.createIndex(
@@ -200,11 +212,17 @@ export class AddSchemaConstraints implements MigrationInterface {
 
     await queryRunner.createIndex(
       'refresh_tokens',
-      new TableIndex({ name: 'idx_refresh_tokens_user_id', columnNames: ['user_id'] }),
+      new TableIndex({
+        name: 'idx_refresh_tokens_user_id',
+        columnNames: ['user_id'],
+      }),
     );
     await queryRunner.createIndex(
       'refresh_tokens',
-      new TableIndex({ name: 'idx_refresh_tokens_revoked', columnNames: ['revoked'] }),
+      new TableIndex({
+        name: 'idx_refresh_tokens_revoked',
+        columnNames: ['revoked'],
+      }),
     );
 
     await queryRunner.createIndex(
@@ -214,22 +232,34 @@ export class AddSchemaConstraints implements MigrationInterface {
 
     await queryRunner.createIndex(
       'polls',
-      new TableIndex({ name: 'idx_polls_is_active', columnNames: ['is_active'] }),
+      new TableIndex({
+        name: 'idx_polls_is_active',
+        columnNames: ['is_active'],
+      }),
     );
 
     await queryRunner.createIndex(
       'rewards',
-      new TableIndex({ name: 'idx_rewards_is_active', columnNames: ['is_active'] }),
+      new TableIndex({
+        name: 'idx_rewards_is_active',
+        columnNames: ['is_active'],
+      }),
     );
 
     await queryRunner.createIndex(
       'banners',
-      new TableIndex({ name: 'idx_banners_is_active', columnNames: ['is_active'] }),
+      new TableIndex({
+        name: 'idx_banners_is_active',
+        columnNames: ['is_active'],
+      }),
     );
 
     await queryRunner.createIndex(
       'prize_homes',
-      new TableIndex({ name: 'idx_prize_homes_is_active', columnNames: ['is_active'] }),
+      new TableIndex({
+        name: 'idx_prize_homes_is_active',
+        columnNames: ['is_active'],
+      }),
     );
 
     await queryRunner.createIndex(
@@ -246,7 +276,9 @@ export class AddSchemaConstraints implements MigrationInterface {
 
   async down(queryRunner: QueryRunner): Promise<void> {
     // === Drop composite index ===
-    await queryRunner.query('DROP INDEX IF EXISTS "idx_contest_members_contest_points"');
+    await queryRunner.query(
+      'DROP INDEX IF EXISTS "idx_contest_members_contest_points"',
+    );
 
     // === Drop simple indexes ===
     await queryRunner.dropIndex('users', 'idx_users_role');
@@ -259,49 +291,123 @@ export class AddSchemaConstraints implements MigrationInterface {
     await queryRunner.dropIndex('refresh_tokens', 'idx_refresh_tokens_user_id');
     await queryRunner.dropIndex('payments', 'idx_payments_status');
     await queryRunner.dropIndex('withdrawals', 'idx_withdrawals_status');
-    await queryRunner.dropIndex('support_tickets', 'idx_support_tickets_status');
-    await queryRunner.dropIndex('support_tickets', 'idx_support_tickets_user_id');
+    await queryRunner.dropIndex(
+      'support_tickets',
+      'idx_support_tickets_status',
+    );
+    await queryRunner.dropIndex(
+      'support_tickets',
+      'idx_support_tickets_user_id',
+    );
     await queryRunner.dropIndex('shares', 'idx_shares_contest_id');
     await queryRunner.dropIndex('shares', 'idx_shares_user_id');
 
     // === Drop CHECK constraints ===
-    await queryRunner.query('ALTER TABLE "reward_redemptions" DROP CONSTRAINT IF EXISTS "chk_reward_redemptions_points_spent_positive"');
-    await queryRunner.query('ALTER TABLE "rewards" DROP CONSTRAINT IF EXISTS "chk_rewards_stock_non_negative"');
-    await queryRunner.query('ALTER TABLE "rewards" DROP CONSTRAINT IF EXISTS "chk_rewards_points_required_positive"');
-    await queryRunner.query('ALTER TABLE "compensation_logs" DROP CONSTRAINT IF EXISTS "chk_compensation_points_non_negative"');
-    await queryRunner.query('ALTER TABLE "compensation_logs" DROP CONSTRAINT IF EXISTS "chk_compensation_entry_fee_non_negative"');
-    await queryRunner.query('ALTER TABLE "fraud_alerts" DROP CONSTRAINT IF EXISTS "chk_fraud_alerts_score_range"');
-    await queryRunner.query('ALTER TABLE "point_logs" DROP CONSTRAINT IF EXISTS "chk_point_logs_final_points_non_negative"');
-    await queryRunner.query('ALTER TABLE "point_logs" DROP CONSTRAINT IF EXISTS "chk_point_logs_base_points_non_negative"');
-    await queryRunner.query('ALTER TABLE "withdrawals" DROP CONSTRAINT IF EXISTS "chk_withdrawals_amount_positive"');
-    await queryRunner.query('ALTER TABLE "payments" DROP CONSTRAINT IF EXISTS "chk_payments_amount_positive"');
-    await queryRunner.query('ALTER TABLE "contest_members" DROP CONSTRAINT IF EXISTS "chk_contest_members_points_non_negative"');
-    await queryRunner.query('ALTER TABLE "contests" DROP CONSTRAINT IF EXISTS "chk_contests_points_to_join_non_negative"');
-    await queryRunner.query('ALTER TABLE "contests" DROP CONSTRAINT IF EXISTS "chk_contests_filled_slots_valid"');
-    await queryRunner.query('ALTER TABLE "contests" DROP CONSTRAINT IF EXISTS "chk_contests_max_slots_positive"');
-    await queryRunner.query('ALTER TABLE "contests" DROP CONSTRAINT IF EXISTS "chk_contests_entry_fee_non_negative"');
-    await queryRunner.query('ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_longest_streak_non_negative"');
-    await queryRunner.query('ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_current_streak_non_negative"');
-    await queryRunner.query('ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_monthly_points_non_negative"');
-    await queryRunner.query('ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_weekly_points_non_negative"');
-    await queryRunner.query('ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_lifetime_points_non_negative"');
-    await queryRunner.query('ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_points_balance_non_negative"');
-    await queryRunner.query('ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_wallet_balance_non_negative"');
+    await queryRunner.query(
+      'ALTER TABLE "reward_redemptions" DROP CONSTRAINT IF EXISTS "chk_reward_redemptions_points_spent_positive"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "rewards" DROP CONSTRAINT IF EXISTS "chk_rewards_stock_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "rewards" DROP CONSTRAINT IF EXISTS "chk_rewards_points_required_positive"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "compensation_logs" DROP CONSTRAINT IF EXISTS "chk_compensation_points_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "compensation_logs" DROP CONSTRAINT IF EXISTS "chk_compensation_entry_fee_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "fraud_alerts" DROP CONSTRAINT IF EXISTS "chk_fraud_alerts_score_range"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "point_logs" DROP CONSTRAINT IF EXISTS "chk_point_logs_final_points_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "point_logs" DROP CONSTRAINT IF EXISTS "chk_point_logs_base_points_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "withdrawals" DROP CONSTRAINT IF EXISTS "chk_withdrawals_amount_positive"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "payments" DROP CONSTRAINT IF EXISTS "chk_payments_amount_positive"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "contest_members" DROP CONSTRAINT IF EXISTS "chk_contest_members_points_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "contests" DROP CONSTRAINT IF EXISTS "chk_contests_points_to_join_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "contests" DROP CONSTRAINT IF EXISTS "chk_contests_filled_slots_valid"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "contests" DROP CONSTRAINT IF EXISTS "chk_contests_max_slots_positive"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "contests" DROP CONSTRAINT IF EXISTS "chk_contests_entry_fee_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_longest_streak_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_current_streak_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_monthly_points_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_weekly_points_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_lifetime_points_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_points_balance_non_negative"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "chk_users_wallet_balance_non_negative"',
+    );
 
     // === Drop FK constraints ===
-    await queryRunner.query('ALTER TABLE "fraud_alerts" DROP CONSTRAINT IF EXISTS "fk_fraud_alerts_resolved_by"');
-    await queryRunner.query('ALTER TABLE "warnings" DROP CONSTRAINT IF EXISTS "fk_warnings_issued_by"');
-    await queryRunner.query('ALTER TABLE "saved_payment_methods" DROP CONSTRAINT IF EXISTS "fk_saved_payment_methods_user_id"');
-    await queryRunner.query('ALTER TABLE "audit_logs" DROP CONSTRAINT IF EXISTS "fk_audit_logs_admin_id"');
-    await queryRunner.query('ALTER TABLE "user_achievements" DROP CONSTRAINT IF EXISTS "fk_user_achievements_achievement_id"');
-    await queryRunner.query('ALTER TABLE "poll_votes" DROP CONSTRAINT IF EXISTS "fk_poll_votes_poll_id"');
-    await queryRunner.query('ALTER TABLE "chat_participants" DROP CONSTRAINT IF EXISTS "fk_chat_participants_chat_id"');
-    await queryRunner.query('ALTER TABLE "chat_messages" DROP CONSTRAINT IF EXISTS "fk_chat_messages_chat_id"');
-    await queryRunner.query('ALTER TABLE "shares" DROP CONSTRAINT IF EXISTS "fk_shares_contest_id"');
-    await queryRunner.query('ALTER TABLE "shares" DROP CONSTRAINT IF EXISTS "fk_shares_user_id"');
+    await queryRunner.query(
+      'ALTER TABLE "fraud_alerts" DROP CONSTRAINT IF EXISTS "fk_fraud_alerts_resolved_by"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "warnings" DROP CONSTRAINT IF EXISTS "fk_warnings_issued_by"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "saved_payment_methods" DROP CONSTRAINT IF EXISTS "fk_saved_payment_methods_user_id"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "audit_logs" DROP CONSTRAINT IF EXISTS "fk_audit_logs_admin_id"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "user_achievements" DROP CONSTRAINT IF EXISTS "fk_user_achievements_achievement_id"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "poll_votes" DROP CONSTRAINT IF EXISTS "fk_poll_votes_poll_id"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "chat_participants" DROP CONSTRAINT IF EXISTS "fk_chat_participants_chat_id"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "chat_messages" DROP CONSTRAINT IF EXISTS "fk_chat_messages_chat_id"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "shares" DROP CONSTRAINT IF EXISTS "fk_shares_contest_id"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "shares" DROP CONSTRAINT IF EXISTS "fk_shares_user_id"',
+    );
 
     // === Drop kyc columns ===
-    await queryRunner.query('ALTER TABLE "kyc" DROP COLUMN IF EXISTS "updated_at"');
-    await queryRunner.query('ALTER TABLE "kyc" DROP COLUMN IF EXISTS "created_at"');
+    await queryRunner.query(
+      'ALTER TABLE "kyc" DROP COLUMN IF EXISTS "updated_at"',
+    );
+    await queryRunner.query(
+      'ALTER TABLE "kyc" DROP COLUMN IF EXISTS "created_at"',
+    );
   }
 }

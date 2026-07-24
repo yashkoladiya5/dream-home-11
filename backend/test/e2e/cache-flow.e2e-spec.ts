@@ -137,7 +137,9 @@ describe('Cache Flow E2E', () => {
       etagApp = moduleFixture.createNestApplication();
       // Apply the ETag middleware manually
       const etagMiddleware = new EtagMiddleware();
-      etagApp.use((req: any, res: any, next: any) => etagMiddleware.use(req, res, next));
+      etagApp.use((req: any, res: any, next: any) =>
+        etagMiddleware.use(req, res, next),
+      );
       await etagApp.init();
     });
 
@@ -232,9 +234,12 @@ describe('Cache Flow E2E', () => {
       invalidationApp = moduleFixture.createNestApplication();
       await invalidationApp.init();
 
-      mockRedisCacheService = invalidationApp.get<RedisCacheService>(RedisCacheService);
+      mockRedisCacheService =
+        invalidationApp.get<RedisCacheService>(RedisCacheService);
       mockInvalidatePrefix = jest.fn().mockResolvedValue(undefined);
-      jest.spyOn(mockRedisCacheService, 'invalidatePrefix').mockImplementation(mockInvalidatePrefix);
+      jest
+        .spyOn(mockRedisCacheService, 'invalidatePrefix')
+        .mockImplementation(mockInvalidatePrefix);
     });
 
     afterAll(async () => {

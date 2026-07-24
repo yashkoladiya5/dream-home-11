@@ -8,8 +8,16 @@ import { ContestMember } from '../contests/entities/contest-member.entity';
 import { Contest } from '../contests/entities/contest.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { CompensationLog } from '../compensation/entities/compensation.entity';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
-import { createMockDataSource, createMockWalletService, createMockEncryptionService, createMockPointsEngineService } from '../test/mock-services.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
+import {
+  createMockDataSource,
+  createMockWalletService,
+  createMockEncryptionService,
+  createMockPointsEngineService,
+} from '../test/mock-services.factory';
 import { WalletService } from '../wallet/wallet.service';
 import { PointsEngineService } from '../points/points-engine.service';
 import { EncryptionService } from '../common/encryption/encryption.service';
@@ -76,10 +84,16 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         { provide: getRepositoryToken(User), useValue: userRepo },
-        { provide: getRepositoryToken(ContestMember), useValue: contestMemberRepo },
+        {
+          provide: getRepositoryToken(ContestMember),
+          useValue: contestMemberRepo,
+        },
         { provide: getRepositoryToken(Contest), useValue: contestRepo },
         { provide: getRepositoryToken(Transaction), useValue: transactionRepo },
-        { provide: getRepositoryToken(CompensationLog), useValue: compensationLogRepo },
+        {
+          provide: getRepositoryToken(CompensationLog),
+          useValue: compensationLogRepo,
+        },
         { provide: DataSource, useValue: mockDataSource },
         { provide: PointsEngineService, useValue: mockPointsEngineService },
         { provide: EncryptionService, useValue: mockEncryptionService },
@@ -102,7 +116,17 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(userRepo.findOne).toHaveBeenCalledWith({
         where: { phoneNumber: '+911234567890' },
-        select: { id: true, phoneNumber: true, fullName: true, isActive: true, referralCode: true, role: true, password: true, isSelfExcluded: true, selfExcludedUntil: true },
+        select: {
+          id: true,
+          phoneNumber: true,
+          fullName: true,
+          isActive: true,
+          referralCode: true,
+          role: true,
+          password: true,
+          isSelfExcluded: true,
+          selfExcludedUntil: true,
+        },
       });
     });
 
@@ -117,31 +141,50 @@ describe('UsersService', () => {
     it('should update device ID for existing user', async () => {
       const existingUser = { ...mockUser, deviceId: 'old-device' };
       (userRepo.findOne as jest.Mock).mockResolvedValue(existingUser);
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...existingUser, deviceId: 'new-device' });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...existingUser,
+        deviceId: 'new-device',
+      });
 
       const result = await service.upsertUser('+911234567890', 'new-device');
       expect(result.deviceId).toBe('new-device');
-      expect(userRepo.save).toHaveBeenCalledWith(expect.objectContaining({ deviceId: 'new-device' }));
+      expect(userRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ deviceId: 'new-device' }),
+      );
     });
 
     it('should create new user with referral code and initialize wallet', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValueOnce(null);
       (userRepo.findOne as jest.Mock).mockResolvedValueOnce(null);
-      (userRepo.create as jest.Mock).mockReturnValue({ ...mockUser, id: 'new-user' });
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...mockUser, id: 'new-user' });
+      (userRepo.create as jest.Mock).mockReturnValue({
+        ...mockUser,
+        id: 'new-user',
+      });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...mockUser,
+        id: 'new-user',
+      });
 
       const result = await service.upsertUser('+919999999999', 'device-2');
       expect(result).toBeDefined();
       expect(userRepo.create).toHaveBeenCalled();
-      expect(mockWalletService.initializeWallet).toHaveBeenCalledWith('new-user');
+      expect(mockWalletService.initializeWallet).toHaveBeenCalledWith(
+        'new-user',
+      );
     });
 
     it('should generate unique referral code for new user', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValueOnce(null);
       (userRepo.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
       (userRepo.findOne as jest.Mock).mockResolvedValueOnce(null);
-      (userRepo.create as jest.Mock).mockReturnValue({ ...mockUser, id: 'new-user' });
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...mockUser, id: 'new-user' });
+      (userRepo.create as jest.Mock).mockReturnValue({
+        ...mockUser,
+        id: 'new-user',
+      });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...mockUser,
+        id: 'new-user',
+      });
 
       const result = await service.upsertUser('+919999999998', 'device-3');
       expect(result).toBeDefined();
@@ -152,44 +195,86 @@ describe('UsersService', () => {
   describe('addCash', () => {
     it('should add cash to user wallet and update balance', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValue(mockUser);
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...mockUser, walletBalanceInr: 1500 });
-      mockWalletService.creditBalance.mockResolvedValue({ wallet: { balanceInr: 1500 }, transaction: {} });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...mockUser,
+        walletBalanceInr: 1500,
+      });
+      mockWalletService.creditBalance.mockResolvedValue({
+        wallet: { balanceInr: 1500 },
+        transaction: {},
+      });
 
       const result = await service.addCash('user-1', 500);
       expect(result.walletBalanceInr).toBe(1500);
-      expect(mockWalletService.creditBalance).toHaveBeenCalledWith('user-1', 500, expect.any(Object));
+      expect(mockWalletService.creditBalance).toHaveBeenCalledWith(
+        'user-1',
+        500,
+        expect.any(Object),
+      );
     });
 
     it('should throw NotFoundException when user not found', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.addCash('invalid-id', 500)).rejects.toThrow(NotFoundException);
+      await expect(service.addCash('invalid-id', 500)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('awardPoints', () => {
     it('should award points and update tier when thresholds met', async () => {
-      const lowTierUser = { ...mockUser, lifetimePoints: 500, pointsBalance: 200 };
+      const lowTierUser = {
+        ...mockUser,
+        lifetimePoints: 500,
+        pointsBalance: 200,
+      };
       (userRepo.findOne as jest.Mock).mockResolvedValue(lowTierUser);
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...lowTierUser, lifetimePoints: 1500, pointsBalance: 1200, currentTier: UserLevel.SILVER });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...lowTierUser,
+        lifetimePoints: 1500,
+        pointsBalance: 1200,
+        currentTier: UserLevel.SILVER,
+      });
 
       const result = await service.awardPoints('user-1', 1000);
-      expect(mockWalletService.creditPoints).toHaveBeenCalledWith('user-1', 1000);
+      expect(mockWalletService.creditPoints).toHaveBeenCalledWith(
+        'user-1',
+        1000,
+      );
       expect(result.currentTier).toBe(UserLevel.SILVER);
     });
 
     it('should promote to GOLD at 2000 lifetime points', async () => {
-      const goldUser = { ...mockUser, lifetimePoints: 1500, pointsBalance: 200 };
+      const goldUser = {
+        ...mockUser,
+        lifetimePoints: 1500,
+        pointsBalance: 200,
+      };
       (userRepo.findOne as jest.Mock).mockResolvedValue(goldUser);
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...goldUser, lifetimePoints: 2000, pointsBalance: 700, currentTier: UserLevel.GOLD });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...goldUser,
+        lifetimePoints: 2000,
+        pointsBalance: 700,
+        currentTier: UserLevel.GOLD,
+      });
 
       const result = await service.awardPoints('user-1', 500);
       expect(result.currentTier).toBe(UserLevel.GOLD);
     });
 
     it('should promote to PLATINUM at 5000 lifetime points', async () => {
-      const platUser = { ...mockUser, lifetimePoints: 4000, pointsBalance: 200 };
+      const platUser = {
+        ...mockUser,
+        lifetimePoints: 4000,
+        pointsBalance: 200,
+      };
       (userRepo.findOne as jest.Mock).mockResolvedValue(platUser);
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...platUser, lifetimePoints: 5000, pointsBalance: 1200, currentTier: UserLevel.PLATINUM });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...platUser,
+        lifetimePoints: 5000,
+        pointsBalance: 1200,
+        currentTier: UserLevel.PLATINUM,
+      });
 
       const result = await service.awardPoints('user-1', 1000);
       expect(result.currentTier).toBe(UserLevel.PLATINUM);
@@ -197,7 +282,9 @@ describe('UsersService', () => {
 
     it('should throw NotFoundException when user does not exist', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.awardPoints('invalid-id', 100)).rejects.toThrow(NotFoundException);
+      await expect(service.awardPoints('invalid-id', 100)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -223,13 +310,21 @@ describe('UsersService', () => {
 
     it('should throw NotFoundException when user not found', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.getProfile('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getProfile('invalid-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should handle decryption errors gracefully', async () => {
-      const userWithBank = { ...mockUser, bankAccountNumber: 'invalid-encrypted', upiId: 'invalid-encrypted' };
+      const userWithBank = {
+        ...mockUser,
+        bankAccountNumber: 'invalid-encrypted',
+        upiId: 'invalid-encrypted',
+      };
       (userRepo.findOne as jest.Mock).mockResolvedValue(userWithBank);
-      mockEncryptionService.decrypt.mockImplementation(() => { throw new Error('decrypt error'); });
+      mockEncryptionService.decrypt.mockImplementation(() => {
+        throw new Error('decrypt error');
+      });
 
       const profile = await service.getProfile('user-1');
       expect(profile.bankAccountNumber).toBeNull();

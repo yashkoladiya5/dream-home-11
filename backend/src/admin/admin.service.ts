@@ -1,6 +1,17 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import {
+  Repository,
+  ILike,
+  Between,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+} from 'typeorm';
 import { User, UserRole } from '../users/entities/user.entity';
 import { Kyc } from '../kyc/entities/kyc.entity';
 import {
@@ -562,7 +573,17 @@ export class AdminService {
     const contest = await this.contestRepo.findOne({ where: { id } });
     if (!contest) throw new NotFoundException('Contest not found');
 
-    const allowedFields = ['title', 'type', 'entryFeeInr', 'pointsToJoin', 'maxSlots', 'prize', 'rules', 'badgeText', 'badgeColor'];
+    const allowedFields = [
+      'title',
+      'type',
+      'entryFeeInr',
+      'pointsToJoin',
+      'maxSlots',
+      'prize',
+      'rules',
+      'badgeText',
+      'badgeColor',
+    ];
     for (const field of allowedFields) {
       if (dto[field] !== undefined) {
         (contest as any)[field] = dto[field];
@@ -623,9 +644,16 @@ export class AdminService {
     await this.bannerRepo.remove(banner);
   }
 
-  async reorderBanners(dto: { bannerId: string; newOrder: number; swapWithId: string; swapWithOrder: number }): Promise<void> {
+  async reorderBanners(dto: {
+    bannerId: string;
+    newOrder: number;
+    swapWithId: string;
+    swapWithOrder: number;
+  }): Promise<void> {
     await this.bannerRepo.update(dto.bannerId, { sortOrder: dto.newOrder });
-    await this.bannerRepo.update(dto.swapWithId, { sortOrder: dto.swapWithOrder });
+    await this.bannerRepo.update(dto.swapWithId, {
+      sortOrder: dto.swapWithOrder,
+    });
   }
 
   async getPrizeHomes(): Promise<PrizeHome[]> {
@@ -684,7 +712,17 @@ export class AdminService {
     await this.prizeHomeRepo.remove(prizeHome);
   }
 
-  async getWarnings(query: { page?: number; limit?: number; status?: string; userId?: string }): Promise<{ warnings: Warning[]; total: number; page: number; limit: number }> {
+  async getWarnings(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    userId?: string;
+  }): Promise<{
+    warnings: Warning[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 50, 100);
     const skip = (page - 1) * limit;
@@ -702,12 +740,16 @@ export class AdminService {
     return { warnings, total, page, limit };
   }
 
-  async issueWarning(dto: { userId: string; level: number; reason: string; notes?: string }, adminId: string): Promise<Warning> {
+  async issueWarning(
+    dto: { userId: string; level: number; reason: string; notes?: string },
+    adminId: string,
+  ): Promise<Warning> {
     const user = await this.userRepo.findOne({ where: { id: dto.userId } });
     if (!user) throw new NotFoundException('User not found');
 
     const pointsDeducted = dto.level === 3 ? 0 : dto.level === 2 ? 1000 : 200;
-    const expiresAt = dto.level < 3 ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) : null;
+    const expiresAt =
+      dto.level < 3 ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) : null;
 
     const warning = this.warningRepo.create({
       userId: dto.userId,
@@ -736,7 +778,18 @@ export class AdminService {
     return this.warningRepo.save(warning);
   }
 
-  async getFraudAlerts(query: { page?: number; limit?: number; severity?: string; status?: string; search?: string }): Promise<{ alerts: FraudAlert[]; total: number; page: number; limit: number }> {
+  async getFraudAlerts(query: {
+    page?: number;
+    limit?: number;
+    severity?: string;
+    status?: string;
+    search?: string;
+  }): Promise<{
+    alerts: FraudAlert[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 50, 100);
     const skip = (page - 1) * limit;
@@ -756,13 +809,20 @@ export class AdminService {
 
   async getFraudStats(): Promise<any> {
     const totalAlerts = await this.fraudAlertRepo.count();
-    const openAlerts = await this.fraudAlertRepo.count({ where: { status: FraudStatus.OPEN } });
-    const criticalAlerts = await this.fraudAlertRepo.count({ where: { severity: 'critical' as any, status: FraudStatus.OPEN } });
+    const openAlerts = await this.fraudAlertRepo.count({
+      where: { status: FraudStatus.OPEN },
+    });
+    const criticalAlerts = await this.fraudAlertRepo.count({
+      where: { severity: 'critical' as any, status: FraudStatus.OPEN },
+    });
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const resolvedToday = await this.fraudAlertRepo.count({
-      where: { status: FraudStatus.RESOLVED, resolvedAt: Between(todayStart, new Date()) },
+      where: {
+        status: FraudStatus.RESOLVED,
+        resolvedAt: Between(todayStart, new Date()),
+      },
     });
 
     const alertsBySeverity = await this.fraudAlertRepo
@@ -797,13 +857,26 @@ export class AdminService {
       openAlerts,
       criticalAlerts,
       resolvedToday,
-      alertsBySeverity: alertsBySeverity.map((a: any) => ({ severity: a.severity, count: Number(a.count) })),
-      topRules: topRules.map((r: any) => ({ rule: r.rule, count: Number(r.count) })),
-      alertsByDay: alertsByDay.map((d: any) => ({ date: d.date, count: Number(d.count) })),
+      alertsBySeverity: alertsBySeverity.map((a: any) => ({
+        severity: a.severity,
+        count: Number(a.count),
+      })),
+      topRules: topRules.map((r: any) => ({
+        rule: r.rule,
+        count: Number(r.count),
+      })),
+      alertsByDay: alertsByDay.map((d: any) => ({
+        date: d.date,
+        count: Number(d.count),
+      })),
     };
   }
 
-  async updateFraudAlert(id: string, status: string, adminId?: string): Promise<FraudAlert> {
+  async updateFraudAlert(
+    id: string,
+    status: string,
+    adminId?: string,
+  ): Promise<FraudAlert> {
     const alert = await this.fraudAlertRepo.findOne({ where: { id } });
     if (!alert) throw new NotFoundException('Fraud alert not found');
     alert.status = status as FraudStatus;
@@ -842,7 +915,12 @@ export class AdminService {
     };
   }
 
-  async getTransactions(query: { page?: number; limit?: number; type?: string; userId?: string }) {
+  async getTransactions(query: {
+    page?: number;
+    limit?: number;
+    type?: string;
+    userId?: string;
+  }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 50, 100);
     const skip = (page - 1) * limit;
@@ -851,7 +929,9 @@ export class AdminService {
     if (query.userId) where.userId = query.userId;
 
     const [transactions, total] = await this.transactionRepo.findAndCount({
-      where, skip, take: limit,
+      where,
+      skip,
+      take: limit,
       order: { createdAt: 'DESC' },
       relations: { user: true },
     });
@@ -862,9 +942,18 @@ export class AdminService {
     const stats = await this.withdrawalRepo
       .createQueryBuilder('w')
       .select('COUNT(*)', 'totalRequests')
-      .addSelect('COALESCE(SUM(CASE WHEN w.status = :pending THEN 1 ELSE 0 END), 0)', 'pending')
-      .addSelect('COALESCE(SUM(CASE WHEN w.status = :approved AND DATE(w.created_at) = CURRENT_DATE THEN 1 ELSE 0 END), 0)', 'approvedToday')
-      .addSelect('COALESCE(SUM(CASE WHEN w.status = :approved THEN w.amount ELSE 0 END), 0)', 'totalAmount')
+      .addSelect(
+        'COALESCE(SUM(CASE WHEN w.status = :pending THEN 1 ELSE 0 END), 0)',
+        'pending',
+      )
+      .addSelect(
+        'COALESCE(SUM(CASE WHEN w.status = :approved AND DATE(w.created_at) = CURRENT_DATE THEN 1 ELSE 0 END), 0)',
+        'approvedToday',
+      )
+      .addSelect(
+        'COALESCE(SUM(CASE WHEN w.status = :approved THEN w.amount ELSE 0 END), 0)',
+        'totalAmount',
+      )
       .setParameters({
         pending: 'pending',
         approved: 'approved',
@@ -875,11 +964,17 @@ export class AdminService {
       totalRequests: stats ? Number(stats.totalRequests) : 0,
       pending: stats ? Number(stats.pending) : 0,
       approvedToday: stats ? Number(stats.approvedToday) : 0,
-      totalAmount: stats ? Math.round(Number(stats.totalAmount) * 100) / 100 : 0,
+      totalAmount: stats
+        ? Math.round(Number(stats.totalAmount) * 100) / 100
+        : 0,
     };
   }
 
-  async getWithdrawals(query: { page?: number; limit?: number; status?: string }) {
+  async getWithdrawals(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }) {
     const page = query.page || 1;
     const limit = Math.min(query.limit || 50, 100);
     const skip = (page - 1) * limit;
@@ -887,7 +982,9 @@ export class AdminService {
     if (query.status) where.status = query.status;
 
     const [withdrawals, total] = await this.withdrawalRepo.findAndCount({
-      where, skip, take: limit,
+      where,
+      skip,
+      take: limit,
       order: { createdAt: 'DESC' },
       relations: { user: true },
     });
@@ -903,7 +1000,11 @@ export class AdminService {
     return withdrawal;
   }
 
-  async rejectWithdrawal(id: string, reason: string, adminId: string): Promise<any> {
+  async rejectWithdrawal(
+    id: string,
+    reason: string,
+    adminId: string,
+  ): Promise<any> {
     const withdrawal = await this.withdrawalRepo.findOne({ where: { id } });
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
     withdrawal.status = 'rejected' as any;
@@ -936,7 +1037,8 @@ export class AdminService {
     if (dto.title !== undefined) reward.title = dto.title;
     if (dto.description !== undefined) reward.description = dto.description;
     if (dto.imageUrl !== undefined) reward.imageUrl = dto.imageUrl;
-    if (dto.pointsRequired !== undefined) reward.pointsRequired = dto.pointsRequired;
+    if (dto.pointsRequired !== undefined)
+      reward.pointsRequired = dto.pointsRequired;
     if (dto.stock !== undefined) reward.stock = dto.stock;
     if (dto.category !== undefined) reward.category = dto.category;
     if (dto.isActive !== undefined) reward.isActive = dto.isActive;
@@ -956,7 +1058,8 @@ export class AdminService {
     const skip = (page - 1) * limit;
 
     const [referrals, total] = await this.referralRepo.findAndCount({
-      skip, take: limit,
+      skip,
+      take: limit,
       order: { createdAt: 'DESC' },
       relations: { referrer: true, referee: true },
     });
@@ -981,7 +1084,9 @@ export class AdminService {
         totalReferrals: total,
         totalReferrers: Number(totalReferrers?.count || 0),
         totalPayouts: Number(totalPayouts?.total || 0),
-        settledCount: await this.referralRepo.count({ where: { status: 'settled' as any } }),
+        settledCount: await this.referralRepo.count({
+          where: { status: 'settled' as any },
+        }),
       },
     };
   }
@@ -1006,7 +1111,8 @@ export class AdminService {
     if (!poll) throw new NotFoundException('Poll not found');
     if (dto.question !== undefined) poll.question = dto.question;
     if (dto.options !== undefined) poll.options = dto.options;
-    if (dto.activeFrom !== undefined) poll.activeFrom = new Date(dto.activeFrom);
+    if (dto.activeFrom !== undefined)
+      poll.activeFrom = new Date(dto.activeFrom);
     if (dto.activeTo !== undefined) poll.activeTo = new Date(dto.activeTo);
     if (dto.isActive !== undefined) poll.isActive = dto.isActive;
     return this.pollRepo.save(poll);
@@ -1020,7 +1126,8 @@ export class AdminService {
 
   async getComplianceSettings() {
     const configs = await this.configRepo.find();
-    const config = configs[0] || await this.configRepo.save(this.configRepo.create());
+    const config =
+      configs[0] || (await this.configRepo.save(this.configRepo.create()));
     return {
       minimumAge: config.minimumAge,
       requireKycForWithdrawal: config.requireKycForWithdrawal,
@@ -1100,10 +1207,15 @@ export class AdminService {
         take: 10000,
       });
       return {
-        data: transactions.map(t => ({
-          id: t.id, userId: t.userId, user: t.user?.fullName || t.user?.phoneNumber,
-          type: t.type, cashAmount: Number(t.cashAmount), pointsAmount: t.pointsAmount,
-          description: t.description, createdAt: t.createdAt,
+        data: transactions.map((t) => ({
+          id: t.id,
+          userId: t.userId,
+          user: t.user?.fullName || t.user?.phoneNumber,
+          type: t.type,
+          cashAmount: Number(t.cashAmount),
+          pointsAmount: t.pointsAmount,
+          description: t.description,
+          createdAt: t.createdAt,
         })),
         total: transactions.length,
       };
@@ -1115,10 +1227,16 @@ export class AdminService {
         take: 10000,
       });
       return {
-        data: users.map(u => ({
-          id: u.id, name: u.fullName, phone: u.phoneNumber, email: u.email,
-          role: u.role, tier: u.currentTier, kycStatus: u.kyc?.status || 'none',
-          walletBalance: Number(u.walletBalanceInr), pointsBalance: u.pointsBalance,
+        data: users.map((u) => ({
+          id: u.id,
+          name: u.fullName,
+          phone: u.phoneNumber,
+          email: u.email,
+          role: u.role,
+          tier: u.currentTier,
+          kycStatus: u.kyc?.status || 'none',
+          walletBalance: Number(u.walletBalanceInr),
+          pointsBalance: u.pointsBalance,
           createdAt: u.createdAt,
         })),
         total: users.length,

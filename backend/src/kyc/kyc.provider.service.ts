@@ -24,14 +24,20 @@ export class KycProviderService {
     private readonly httpService: HttpService,
   ) {
     // Defaulting to Zoop or Digio API configuration
-    this.providerUrl = this.configService.get<string>('KYC_PROVIDER_URL') || 'https://api.testkycprovider.com';
-    this.apiKey = this.configService.get<string>('KYC_API_KEY') || 'mock_key_only';
-    
+    this.providerUrl =
+      this.configService.get<string>('KYC_PROVIDER_URL') ||
+      'https://api.testkycprovider.com';
+    this.apiKey =
+      this.configService.get<string>('KYC_API_KEY') || 'mock_key_only';
+
     // If no real API key is provided, we run in mock/simulation mode so the app doesn't break
-    this.isMockMode = this.apiKey === 'mock_key_only' || this.apiKey.includes('test');
-    
+    this.isMockMode =
+      this.apiKey === 'mock_key_only' || this.apiKey.includes('test');
+
     if (this.isMockMode) {
-      this.logger.warn('Running KYC Provider in MOCK mode. No real API calls will be made.');
+      this.logger.warn(
+        'Running KYC Provider in MOCK mode. No real API calls will be made.',
+      );
     }
   }
 
@@ -48,10 +54,10 @@ export class KycProviderService {
         this.httpService.post(
           `${this.providerUrl}/v1/verify/aadhaar`,
           { aadhaar_number: aadhaarNumber },
-          { headers: { Authorization: `Bearer ${this.apiKey}` } }
-        )
+          { headers: { Authorization: `Bearer ${this.apiKey}` } },
+        ),
       );
-      
+
       const data = response.data;
       return {
         success: data.verified,
@@ -83,8 +89,8 @@ export class KycProviderService {
         this.httpService.post(
           `${this.providerUrl}/v1/verify/pan`,
           { pan_number: panNumber },
-          { headers: { Authorization: `Bearer ${this.apiKey}` } }
-        )
+          { headers: { Authorization: `Bearer ${this.apiKey}` } },
+        ),
       );
 
       const data = response.data;
@@ -104,15 +110,25 @@ export class KycProviderService {
     }
   }
 
-  private simulateAadhaarVerification(aadhaarNumber: string): KycVerificationResult {
+  private simulateAadhaarVerification(
+    aadhaarNumber: string,
+  ): KycVerificationResult {
     // Basic mod10 or length check simulation
     if (aadhaarNumber.length !== 12 || !/^\d+$/.test(aadhaarNumber)) {
-      return { success: false, provider: 'mock_provider', errorReason: 'Invalid Aadhaar format' };
+      return {
+        success: false,
+        provider: 'mock_provider',
+        errorReason: 'Invalid Aadhaar format',
+      };
     }
-    
+
     // Simulate failing numbers for testing
     if (aadhaarNumber.startsWith('0000')) {
-      return { success: false, provider: 'mock_provider', errorReason: 'Aadhaar suspended by UIDAI' };
+      return {
+        success: false,
+        provider: 'mock_provider',
+        errorReason: 'Aadhaar suspended by UIDAI',
+      };
     }
 
     return {
@@ -128,12 +144,20 @@ export class KycProviderService {
     // Regex for PAN: 5 letters, 4 numbers, 1 letter
     const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
     if (!panRegex.test(panNumber)) {
-      return { success: false, provider: 'mock_provider', errorReason: 'Invalid PAN format' };
+      return {
+        success: false,
+        provider: 'mock_provider',
+        errorReason: 'Invalid PAN format',
+      };
     }
 
     // Simulate failing PANs
     if (panNumber.startsWith('FAIL')) {
-      return { success: false, provider: 'mock_provider', errorReason: 'PAN blocked by ITD' };
+      return {
+        success: false,
+        provider: 'mock_provider',
+        errorReason: 'PAN blocked by ITD',
+      };
     }
 
     return {

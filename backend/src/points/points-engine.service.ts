@@ -163,7 +163,10 @@ export class PointsEngineService {
     return count;
   }
 
-  async hasActionEverBeenPerformed(userId: string, action: string): Promise<boolean> {
+  async hasActionEverBeenPerformed(
+    userId: string,
+    action: string,
+  ): Promise<boolean> {
     const count = await this.pointLogRepo.count({
       where: {
         userId,
@@ -305,11 +308,7 @@ export class PointsEngineService {
       finalPoints,
     );
 
-    await this.userRepo.increment(
-      { id: userId },
-      'pointsBalance',
-      finalPoints,
-    );
+    await this.userRepo.increment({ id: userId }, 'pointsBalance', finalPoints);
     await this.userRepo.increment(
       { id: userId },
       'lifetimePoints',

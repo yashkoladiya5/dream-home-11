@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/unbound-method, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { SeedService } from './seed.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -75,27 +74,66 @@ describe('SeedService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SeedService,
-        { provide: getRepositoryToken(Contest), useValue: mockRepos.contestRepo },
-        { provide: getRepositoryToken(ContestMember), useValue: mockRepos.contestMemberRepo },
+        {
+          provide: getRepositoryToken(Contest),
+          useValue: mockRepos.contestRepo,
+        },
+        {
+          provide: getRepositoryToken(ContestMember),
+          useValue: mockRepos.contestMemberRepo,
+        },
         { provide: getRepositoryToken(User), useValue: mockRepos.userRepo },
         { provide: getRepositoryToken(Reward), useValue: mockRepos.rewardRepo },
         { provide: getRepositoryToken(Banner), useValue: mockRepos.bannerRepo },
-        { provide: getRepositoryToken(Achievement), useValue: mockRepos.achievementRepo },
-        { provide: getRepositoryToken(PrizeHome), useValue: mockRepos.prizeHomeRepo },
-        { provide: getRepositoryToken(Transaction), useValue: mockRepos.transactionRepo },
-        { provide: getRepositoryToken(SavedPaymentMethod), useValue: mockRepos.paymentMethodRepo },
+        {
+          provide: getRepositoryToken(Achievement),
+          useValue: mockRepos.achievementRepo,
+        },
+        {
+          provide: getRepositoryToken(PrizeHome),
+          useValue: mockRepos.prizeHomeRepo,
+        },
+        {
+          provide: getRepositoryToken(Transaction),
+          useValue: mockRepos.transactionRepo,
+        },
+        {
+          provide: getRepositoryToken(SavedPaymentMethod),
+          useValue: mockRepos.paymentMethodRepo,
+        },
         { provide: getRepositoryToken(Kyc), useValue: mockRepos.kycRepo },
-        { provide: getRepositoryToken(Withdrawal), useValue: mockRepos.withdrawalRepo },
+        {
+          provide: getRepositoryToken(Withdrawal),
+          useValue: mockRepos.withdrawalRepo,
+        },
         { provide: getRepositoryToken(Poll), useValue: mockRepos.pollRepo },
         { provide: getRepositoryToken(Post), useValue: mockRepos.postRepo },
         { provide: getRepositoryToken(Like), useValue: mockRepos.likeRepo },
-        { provide: getRepositoryToken(Comment), useValue: mockRepos.commentRepo },
+        {
+          provide: getRepositoryToken(Comment),
+          useValue: mockRepos.commentRepo,
+        },
         { provide: getRepositoryToken(Chat), useValue: mockRepos.chatRepo },
-        { provide: getRepositoryToken(ChatMessage), useValue: mockRepos.chatMessageRepo },
-        { provide: getRepositoryToken(ChatParticipant), useValue: mockRepos.chatParticipantRepo },
-        { provide: getRepositoryToken(Referral), useValue: mockRepos.referralRepo },
-        { provide: getRepositoryToken(SupportTicket), useValue: mockRepos.supportTicketRepo },
-        { provide: getRepositoryToken(SystemConfig), useValue: mockRepos.systemConfigRepo },
+        {
+          provide: getRepositoryToken(ChatMessage),
+          useValue: mockRepos.chatMessageRepo,
+        },
+        {
+          provide: getRepositoryToken(ChatParticipant),
+          useValue: mockRepos.chatParticipantRepo,
+        },
+        {
+          provide: getRepositoryToken(Referral),
+          useValue: mockRepos.referralRepo,
+        },
+        {
+          provide: getRepositoryToken(SupportTicket),
+          useValue: mockRepos.supportTicketRepo,
+        },
+        {
+          provide: getRepositoryToken(SystemConfig),
+          useValue: mockRepos.systemConfigRepo,
+        },
       ],
     }).compile();
 
@@ -109,7 +147,9 @@ describe('SeedService', () => {
   describe('onApplicationBootstrap', () => {
     it('should backfill when contests exist', async () => {
       mockRepos.contestRepo.count.mockResolvedValue(3);
-      mockRepos.contestRepo.findOne.mockResolvedValue({ id: 'completed-contest' });
+      mockRepos.contestRepo.findOne.mockResolvedValue({
+        id: 'completed-contest',
+      });
       setAllCounts(1);
       mockRepos.userRepo.find.mockResolvedValue([]);
       mockRepos.systemConfigRepo.find.mockResolvedValue([{ id: 1 }]);
@@ -132,7 +172,9 @@ describe('SeedService', () => {
 
     it('should skip seeding if data already exists', async () => {
       mockRepos.contestRepo.count.mockResolvedValue(1);
-      mockRepos.contestRepo.findOne.mockResolvedValue({ id: 'completed-contest' });
+      mockRepos.contestRepo.findOne.mockResolvedValue({
+        id: 'completed-contest',
+      });
       mockRepos.contestRepo.findBy.mockResolvedValue([]);
       setAllCounts(1);
       mockRepos.userRepo.find.mockResolvedValue([]);
@@ -178,7 +220,9 @@ describe('SeedService', () => {
     });
 
     it('should skip system config when already exists', async () => {
-      mockRepos.systemConfigRepo.find.mockResolvedValue([{ id: 1, appName: 'Test' }]);
+      mockRepos.systemConfigRepo.find.mockResolvedValue([
+        { id: 1, appName: 'Test' },
+      ]);
 
       await service['_seedSystemConfig']();
       expect(mockRepos.systemConfigRepo.save).not.toHaveBeenCalled();

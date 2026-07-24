@@ -1,4 +1,13 @@
-import { IsNumber, IsBoolean, IsArray, IsString, IsEmail, IsOptional, Min, Max } from 'class-validator';
+import {
+  IsNumber,
+  IsBoolean,
+  IsArray,
+  IsString,
+  IsEmail,
+  IsOptional,
+  Min,
+  Max,
+} from 'class-validator';
 
 export class ComplianceSettingsDto {
   @IsOptional()

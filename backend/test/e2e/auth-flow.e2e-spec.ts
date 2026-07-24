@@ -1,8 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  INestApplication,
-  HttpStatus,
-} from '@nestjs/common';
+import { INestApplication, HttpStatus } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../../src/app.module';
@@ -11,7 +8,11 @@ import { DataSource } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { REDIS_CLIENT } from '../../src/redis/redis.constants';
 
-import { User, UserRole, UserLevel } from '../../src/users/entities/user.entity';
+import {
+  User,
+  UserRole,
+  UserLevel,
+} from '../../src/users/entities/user.entity';
 import { Kyc } from '../../src/kyc/entities/kyc.entity';
 import { Contest } from '../../src/contests/entities/contest.entity';
 import { ContestMember } from '../../src/contests/entities/contest-member.entity';
@@ -45,13 +46,38 @@ import { CompensationLog } from '../../src/compensation/entities/compensation.en
 import { AuditLog } from '../../src/audit/entities/audit-log.entity';
 
 const ALL_ENTITIES = [
-  User, Kyc, Contest, ContestMember, PointLog,
-  FcmToken, Reminder, NotificationLog, Share, Reward,
-  RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome,
-  Transaction, Payment, SavedPaymentMethod, Withdrawal,
-  Post, Like, Comment, Poll, PollVote,
-  Referral, Chat, ChatMessage, ChatParticipant,
-  SupportTicket, SystemConfig, CompensationLog, AuditLog,
+  User,
+  Kyc,
+  Contest,
+  ContestMember,
+  PointLog,
+  FcmToken,
+  Reminder,
+  NotificationLog,
+  Share,
+  Reward,
+  RewardRedemption,
+  Banner,
+  Achievement,
+  UserAchievement,
+  PrizeHome,
+  Transaction,
+  Payment,
+  SavedPaymentMethod,
+  Withdrawal,
+  Post,
+  Like,
+  Comment,
+  Poll,
+  PollVote,
+  Referral,
+  Chat,
+  ChatMessage,
+  ChatParticipant,
+  SupportTicket,
+  SystemConfig,
+  CompensationLog,
+  AuditLog,
 ];
 
 function createQueryBuilderMock() {
@@ -93,7 +119,9 @@ function createMockRepo() {
     create: jest.fn().mockImplementation((e: any) => e || {}),
     update: jest.fn().mockResolvedValue({ affected: 1, generatedMaps: [] }),
     delete: jest.fn().mockResolvedValue({ affected: 1 }),
-    insert: jest.fn().mockResolvedValue({ identifiers: [{ id: 'mock' }], generatedMaps: [] }),
+    insert: jest
+      .fn()
+      .mockResolvedValue({ identifiers: [{ id: 'mock' }], generatedMaps: [] }),
     upsert: jest.fn().mockResolvedValue({ identifiers: [], generatedMaps: [] }),
     softDelete: jest.fn().mockResolvedValue({ affected: 1 }),
     restore: jest.fn().mockResolvedValue({ affected: 1 }),
@@ -175,7 +203,10 @@ describe('Auth Flow E2E', () => {
       multi: jest.fn(() => ({
         incr: jest.fn(),
         pttl: jest.fn(),
-        exec: jest.fn().mockResolvedValue([[null, 1], [null, -1]]),
+        exec: jest.fn().mockResolvedValue([
+          [null, 1],
+          [null, -1],
+        ]),
       })),
       incr: jest.fn().mockResolvedValue(1),
       pttl: jest.fn().mockResolvedValue(-1),
@@ -238,12 +269,15 @@ describe('Auth Flow E2E', () => {
         return null;
       });
       mockUserRepo.findOneBy = jest.fn().mockResolvedValue(null);
-      mockUserRepo.save.mockImplementation(async (u: any) => ({ ...mockUser, ...u }));
+      mockUserRepo.save.mockImplementation(async (u: any) => ({
+        ...mockUser,
+        ...u,
+      }));
 
       const res = await request(app.getHttpServer())
         .post('/api/v1/auth/mock-login')
         .send({ phoneNumber: USER_PHONE, role: 'user' });
-      
+
       if (res.status !== HttpStatus.CREATED) {
         console.error('MOCK LOGIN ERROR BODY:', res.body);
       }
@@ -322,7 +356,11 @@ describe('Auth Flow E2E', () => {
     });
 
     it('should reject token for suspended user', async () => {
-      const suspendedUser = { ...mockUser, id: '00000000-0000-0000-0000-000000000003', isActive: false };
+      const suspendedUser = {
+        ...mockUser,
+        id: '00000000-0000-0000-0000-000000000003',
+        isActive: false,
+      };
       const originalFindOne = mockUserRepo.findOne;
       mockUserRepo.findOne.mockImplementation(async (opts: any) => {
         const id = opts?.where?.id;
@@ -372,11 +410,18 @@ describe('Auth Flow E2E', () => {
     it.each(publicOrAuthEndpoints)(
       '%s %s should be accessible without auth',
       async (method, url) => {
-        const req = method === 'GET'
-          ? request(app.getHttpServer()).get(url)
-          : request(app.getHttpServer()).post(url).send({ phoneNumber: USER_PHONE });
+        const req =
+          method === 'GET'
+            ? request(app.getHttpServer()).get(url)
+            : request(app.getHttpServer())
+                .post(url)
+                .send({ phoneNumber: USER_PHONE });
         const res = await req;
-        expect([HttpStatus.OK, HttpStatus.CREATED, HttpStatus.BAD_REQUEST]).toContain(res.status);
+        expect([
+          HttpStatus.OK,
+          HttpStatus.CREATED,
+          HttpStatus.BAD_REQUEST,
+        ]).toContain(res.status);
       },
     );
   });

@@ -1,4 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, VersionColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  VersionColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('wallets')

@@ -104,11 +104,14 @@ export class RedisCacheService {
     });
   }
 
-  async mset(items: { key: string; value: any; ttl?: number }[]): Promise<void> {
+  async mset(
+    items: { key: string; value: any; ttl?: number }[],
+  ): Promise<void> {
     if (items.length === 0) return;
     const multi = this.redis.multi();
     for (const { key, value, ttl } of items) {
-      const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+      const serialized =
+        typeof value === 'string' ? value : JSON.stringify(value);
       if (ttl !== undefined && ttl > 0) {
         multi.setex(key, ttl, serialized);
       } else {

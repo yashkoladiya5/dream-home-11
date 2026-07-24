@@ -33,9 +33,10 @@ export interface PaginatedResponse<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, ApiResponse<T> | PaginatedResponse<T>>
-{
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponse<T> | PaginatedResponse<T>
+> {
   // Standard response envelope transformer constructor
   constructor(private readonly reflector: Reflector) {}
 
@@ -43,11 +44,10 @@ export class TransformInterceptor<T>
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<ApiResponse<T> | PaginatedResponse<T>> {
-    const skipEnvelope =
-      this.reflector.getAllAndOverride<boolean>(SKIP_ENVELOPE_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]);
+    const skipEnvelope = this.reflector.getAllAndOverride<boolean>(
+      SKIP_ENVELOPE_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (skipEnvelope) {
       return next.handle();
@@ -107,9 +107,12 @@ export class TransformInterceptor<T>
     );
   }
 
-  private isPaginated(
-    value: any,
-  ): value is { total: number; page: number; limit: number; [key: string]: any } {
+  private isPaginated(value: any): value is {
+    total: number;
+    page: number;
+    limit: number;
+    [key: string]: any;
+  } {
     if (!value || typeof value !== 'object') return false;
 
     const hasPaginationKeys =

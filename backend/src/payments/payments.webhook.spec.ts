@@ -13,7 +13,9 @@ describe('PaymentsService Webhook Signature', () => {
       {} as any,
       {} as any,
       {} as any,
-      { get: (key: string) => (key === 'WEBHOOK_SECRET' ? 'test_secret' : null) } as any,
+      {
+        get: (key: string) => (key === 'WEBHOOK_SECRET' ? 'test_secret' : null),
+      } as any,
       {} as any,
       {} as any,
     );
@@ -32,7 +34,8 @@ describe('PaymentsService Webhook Signature', () => {
 
   it('should reject an invalid webhook signature', () => {
     const payload = JSON.stringify({ event: 'payment.captured', amount: 1000 });
-    const signature = 'invalid_signature_hash_1234567890abcdef1234567890abcdef12345678';
+    const signature =
+      'invalid_signature_hash_1234567890abcdef1234567890abcdef12345678';
 
     const isValid = service.verifyWebhookSignature(payload, signature);
     expect(isValid).toBe(false);

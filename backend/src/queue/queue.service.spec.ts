@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/unbound-method, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { QueueService } from './queue.service';
 import { getQueueToken } from '@nestjs/bullmq';
@@ -32,12 +31,18 @@ describe('QueueService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         QueueService,
-        { provide: getQueueToken(QUEUES.OTP_SMS), useValue: mockQueues[QUEUES.OTP_SMS] },
+        {
+          provide: getQueueToken(QUEUES.OTP_SMS),
+          useValue: mockQueues[QUEUES.OTP_SMS],
+        },
         {
           provide: getQueueToken(QUEUES.PUSH_NOTIFICATIONS),
           useValue: mockQueues[QUEUES.PUSH_NOTIFICATIONS],
         },
-        { provide: getQueueToken(QUEUES.EMAIL), useValue: mockQueues[QUEUES.EMAIL] },
+        {
+          provide: getQueueToken(QUEUES.EMAIL),
+          useValue: mockQueues[QUEUES.EMAIL],
+        },
         {
           provide: getQueueToken(QUEUES.PRIZE_DISTRIBUTION),
           useValue: mockQueues[QUEUES.PRIZE_DISTRIBUTION],
@@ -64,7 +69,9 @@ describe('QueueService', () => {
     it('should add a job to the specified queue and return its id', async () => {
       mockQueues[QUEUES.OTP_SMS].add.mockResolvedValue({ id: 'job-123' });
 
-      const jobId = await service.add(QUEUES.OTP_SMS, { phone: '+919999999999' });
+      const jobId = await service.add(QUEUES.OTP_SMS, {
+        phone: '+919999999999',
+      });
       expect(jobId).toBe('job-123');
       expect(mockQueues[QUEUES.OTP_SMS].add).toHaveBeenCalledWith(
         QUEUES.OTP_SMS,
@@ -76,7 +83,11 @@ describe('QueueService', () => {
     it('should pass options to the queue add call', async () => {
       mockQueues[QUEUES.EMAIL].add.mockResolvedValue({ id: 'job-456' });
 
-      await service.add(QUEUES.EMAIL, { to: 'user@test.com' }, { delay: 5000, priority: 1, jobId: 'custom-id' });
+      await service.add(
+        QUEUES.EMAIL,
+        { to: 'user@test.com' },
+        { delay: 5000, priority: 1, jobId: 'custom-id' },
+      );
       expect(mockQueues[QUEUES.EMAIL].add).toHaveBeenCalledWith(
         QUEUES.EMAIL,
         { to: 'user@test.com' },
@@ -92,22 +103,30 @@ describe('QueueService', () => {
     });
 
     it('should handle errors from queue add', async () => {
-      mockQueues[QUEUES.SETTLEMENT].add.mockRejectedValue(new Error('Queue unavailable'));
+      mockQueues[QUEUES.SETTLEMENT].add.mockRejectedValue(
+        new Error('Queue unavailable'),
+      );
 
-      await expect(service.add(QUEUES.SETTLEMENT, {})).rejects.toThrow('Queue unavailable');
+      await expect(service.add(QUEUES.SETTLEMENT, {})).rejects.toThrow(
+        'Queue unavailable',
+      );
     });
   });
 
   describe('addBulk', () => {
     it('should add multiple jobs to the specified queue', async () => {
-      mockQueues[QUEUES.PUSH_NOTIFICATIONS].addBulk.mockResolvedValue(undefined);
+      mockQueues[QUEUES.PUSH_NOTIFICATIONS].addBulk.mockResolvedValue(
+        undefined,
+      );
 
       const items = [
         { data: { userId: '1', message: 'Hello' } },
         { data: { userId: '2', message: 'World' }, options: { delay: 1000 } },
       ];
       await service.addBulk(QUEUES.PUSH_NOTIFICATIONS, items);
-      expect(mockQueues[QUEUES.PUSH_NOTIFICATIONS].addBulk).toHaveBeenCalledWith(
+      expect(
+        mockQueues[QUEUES.PUSH_NOTIFICATIONS].addBulk,
+      ).toHaveBeenCalledWith(
         items.map((item) => ({
           name: QUEUES.PUSH_NOTIFICATIONS,
           data: item.data,
@@ -133,7 +152,13 @@ describe('QueueService', () => {
       mockQueues[QUEUES.OTP_SMS].getDelayedCount.mockResolvedValue(1);
 
       const status = await service.getQueueStatus(QUEUES.OTP_SMS);
-      expect(status).toEqual({ waiting: 5, active: 2, completed: 100, failed: 3, delayed: 1 });
+      expect(status).toEqual({
+        waiting: 5,
+        active: 2,
+        completed: 100,
+        failed: 3,
+        delayed: 1,
+      });
     });
 
     it('should return zero counts when queue is empty', async () => {
@@ -144,14 +169,24 @@ describe('QueueService', () => {
       mockQueues[QUEUES.EMAIL].getDelayedCount.mockResolvedValue(0);
 
       const status = await service.getQueueStatus(QUEUES.EMAIL);
-      expect(status).toEqual({ waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0 });
+      expect(status).toEqual({
+        waiting: 0,
+        active: 0,
+        completed: 0,
+        failed: 0,
+        delayed: 0,
+      });
     });
   });
 
   describe('getQueueMetrics', () => {
     it('should return queue metrics with failure rate', async () => {
-      mockQueues[QUEUES.PRIZE_DISTRIBUTION].getCompletedCount.mockResolvedValue(80);
-      mockQueues[QUEUES.PRIZE_DISTRIBUTION].getFailedCount.mockResolvedValue(20);
+      mockQueues[QUEUES.PRIZE_DISTRIBUTION].getCompletedCount.mockResolvedValue(
+        80,
+      );
+      mockQueues[QUEUES.PRIZE_DISTRIBUTION].getFailedCount.mockResolvedValue(
+        20,
+      );
 
       const metrics = await service.getQueueMetrics(QUEUES.PRIZE_DISTRIBUTION);
       expect(metrics.failureRate).toBe(20);

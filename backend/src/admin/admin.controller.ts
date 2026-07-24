@@ -303,33 +303,57 @@ export class AdminController {
 
   @Post('contests')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async createContest(@Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async createContest(
+    @Body() dto: any,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.createContest(dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.CREATE_CONTEST,
-      targetId: result.id, targetType: 'contest', metadata: { title: dto.title }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.CREATE_CONTEST,
+      targetId: result.id,
+      targetType: 'contest',
+      metadata: { title: dto.title },
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Patch('contests/:id')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updateContest(@Param('id') id: string, @Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async updateContest(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.updateContest(id, dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONTEST,
-      targetId: id, targetType: 'contest', metadata: dto, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONTEST,
+      targetId: id,
+      targetType: 'contest',
+      metadata: dto,
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Delete('contests/:id')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
-  async deleteContest(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
+  async deleteContest(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     await this.adminService.deleteContest(id);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.DELETE_CONTEST,
-      targetId: id, targetType: 'contest', ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.DELETE_CONTEST,
+      targetId: id,
+      targetType: 'contest',
+      ipAddress: req.ip,
     });
     return { success: true };
   }
@@ -342,44 +366,75 @@ export class AdminController {
 
   @Post('banners')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async createBanner(@Body() dto: CreateBannerDto, @GetUser() admin: User, @Req() req: any) {
+  async createBanner(
+    @Body() dto: CreateBannerDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.createBanner(dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: result.id, targetType: 'banner', metadata: { title: dto.title }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: result.id,
+      targetType: 'banner',
+      metadata: { title: dto.title },
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Patch('banners/:id')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updateBanner(@Param('id') id: string, @Body() dto: UpdateBannerDto, @GetUser() admin: User, @Req() req: any) {
+  async updateBanner(
+    @Param('id') id: string,
+    @Body() dto: UpdateBannerDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.updateBanner(id, dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: id, targetType: 'banner', metadata: dto, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: id,
+      targetType: 'banner',
+      metadata: dto,
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Delete('banners/:id')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
-  async deleteBanner(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
+  async deleteBanner(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     await this.adminService.deleteBanner(id);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: id, targetType: 'banner', ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: id,
+      targetType: 'banner',
+      ipAddress: req.ip,
     });
     return { success: true };
   }
 
   @Post('banners/reorder')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async reorderBanners(@Body() dto: ReorderBannersDto, @GetUser() admin: User, @Req() req: any) {
+  async reorderBanners(
+    @Body() dto: ReorderBannersDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     await this.adminService.reorderBanners(dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetType: 'banner', metadata: { reorder: true }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetType: 'banner',
+      metadata: { reorder: true },
+      ipAddress: req.ip,
     });
     return { success: true };
   }
@@ -392,68 +447,126 @@ export class AdminController {
 
   @Post('prize-homes')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async createPrizeHome(@Body() dto: CreatePrizeHomeDto, @GetUser() admin: User, @Req() req: any) {
+  async createPrizeHome(
+    @Body() dto: CreatePrizeHomeDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.createPrizeHome(dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: result.id, targetType: 'prize_home', metadata: { title: result.title }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: result.id,
+      targetType: 'prize_home',
+      metadata: { title: result.title },
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Patch('prize-homes/:id')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updatePrizeHome(@Param('id') id: string, @Body() dto: UpdatePrizeHomeDto, @GetUser() admin: User, @Req() req: any) {
+  async updatePrizeHome(
+    @Param('id') id: string,
+    @Body() dto: UpdatePrizeHomeDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.updatePrizeHome(id, dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: id, targetType: 'prize_home', metadata: dto, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: id,
+      targetType: 'prize_home',
+      metadata: dto,
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Delete('prize-homes/:id')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
-  async deletePrizeHome(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
+  async deletePrizeHome(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     await this.adminService.deletePrizeHome(id);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: id, targetType: 'prize_home', ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: id,
+      targetType: 'prize_home',
+      ipAddress: req.ip,
     });
     return { success: true };
   }
 
   @Get('warnings')
   @Throttle({ default: { ttl: 60000, limit: 30 } })
-  async getWarnings(@Query() query: { page?: number; limit?: number; status?: string; userId?: string }) {
+  async getWarnings(
+    @Query()
+    query: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      userId?: string;
+    },
+  ) {
     return this.adminService.getWarnings(query);
   }
 
   @Post('warnings')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async issueWarning(@Body() dto: { userId: string; level: number; reason: string; notes?: string }, @GetUser() admin: User, @Req() req: any) {
+  async issueWarning(
+    @Body()
+    dto: { userId: string; level: number; reason: string; notes?: string },
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.issueWarning(dto, admin.id);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_USER,
-      targetId: dto.userId, targetType: 'warning', metadata: { level: dto.level, reason: dto.reason }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_USER,
+      targetId: dto.userId,
+      targetType: 'warning',
+      metadata: { level: dto.level, reason: dto.reason },
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Patch('warnings/:id/resolve')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async resolveWarning(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
+  async resolveWarning(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.resolveWarning(id);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_USER,
-      targetId: id, targetType: 'warning', metadata: { resolved: true }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_USER,
+      targetId: id,
+      targetType: 'warning',
+      metadata: { resolved: true },
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Get('fraud/alerts')
   @Throttle({ default: { ttl: 60000, limit: 30 } })
-  async getFraudAlerts(@Query() query: { page?: number; limit?: number; severity?: string; status?: string; search?: string }) {
+  async getFraudAlerts(
+    @Query()
+    query: {
+      page?: number;
+      limit?: number;
+      severity?: string;
+      status?: string;
+      search?: string;
+    },
+  ) {
     return this.adminService.getFraudAlerts(query);
   }
 
@@ -465,11 +578,24 @@ export class AdminController {
 
   @Patch('fraud/alerts/:id/resolve')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updateFraudAlert(@Param('id') id: string, @Body() dto: { status: string }, @GetUser() admin: User, @Req() req: any) {
-    const result = await this.adminService.updateFraudAlert(id, dto.status, admin.id);
+  async updateFraudAlert(
+    @Param('id') id: string,
+    @Body() dto: { status: string },
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
+    const result = await this.adminService.updateFraudAlert(
+      id,
+      dto.status,
+      admin.id,
+    );
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_USER,
-      targetId: id, targetType: 'fraud_alert', metadata: { status: dto.status }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_USER,
+      targetId: id,
+      targetType: 'fraud_alert',
+      metadata: { status: dto.status },
+      ipAddress: req.ip,
     });
     return result;
   }
@@ -482,7 +608,15 @@ export class AdminController {
 
   @Get('transactions')
   @Throttle({ default: { ttl: 60000, limit: 30 } })
-  async getTransactions(@Query() query: { page?: number; limit?: number; type?: string; userId?: string }) {
+  async getTransactions(
+    @Query()
+    query: {
+      page?: number;
+      limit?: number;
+      type?: string;
+      userId?: string;
+    },
+  ) {
     return this.adminService.getTransactions(query);
   }
 
@@ -494,28 +628,51 @@ export class AdminController {
 
   @Get('withdrawals')
   @Throttle({ default: { ttl: 60000, limit: 30 } })
-  async getWithdrawals(@Query() query: { page?: number; limit?: number; status?: string }) {
+  async getWithdrawals(
+    @Query() query: { page?: number; limit?: number; status?: string },
+  ) {
     return this.adminService.getWithdrawals(query);
   }
 
   @Patch('withdrawals/:id/approve')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async approveWithdrawal(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
+  async approveWithdrawal(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.approveWithdrawal(id, admin.id);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_USER,
-      targetId: id, targetType: 'withdrawal', metadata: { status: 'approved' }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_USER,
+      targetId: id,
+      targetType: 'withdrawal',
+      metadata: { status: 'approved' },
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Patch('withdrawals/:id/reject')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async rejectWithdrawal(@Param('id') id: string, @Body() dto: { reason: string }, @GetUser() admin: User, @Req() req: any) {
-    const result = await this.adminService.rejectWithdrawal(id, dto.reason, admin.id);
+  async rejectWithdrawal(
+    @Param('id') id: string,
+    @Body() dto: { reason: string },
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
+    const result = await this.adminService.rejectWithdrawal(
+      id,
+      dto.reason,
+      admin.id,
+    );
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_USER,
-      targetId: id, targetType: 'withdrawal', metadata: { status: 'rejected', reason: dto.reason }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_USER,
+      targetId: id,
+      targetType: 'withdrawal',
+      metadata: { status: 'rejected', reason: dto.reason },
+      ipAddress: req.ip,
     });
     return result;
   }
@@ -528,33 +685,57 @@ export class AdminController {
 
   @Post('rewards')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async createReward(@Body() dto: CreateRewardDto, @GetUser() admin: User, @Req() req: any) {
+  async createReward(
+    @Body() dto: CreateRewardDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.createReward(dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: result.id, targetType: 'reward', metadata: { title: dto.title }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: result.id,
+      targetType: 'reward',
+      metadata: { title: dto.title },
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Patch('rewards/:id')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updateReward(@Param('id') id: string, @Body() dto: UpdateRewardDto, @GetUser() admin: User, @Req() req: any) {
+  async updateReward(
+    @Param('id') id: string,
+    @Body() dto: UpdateRewardDto,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.updateReward(id, dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: id, targetType: 'reward', metadata: dto, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: id,
+      targetType: 'reward',
+      metadata: dto,
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Delete('rewards/:id')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
-  async deleteReward(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
+  async deleteReward(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     await this.adminService.deleteReward(id);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: id, targetType: 'reward', ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: id,
+      targetType: 'reward',
+      ipAddress: req.ip,
     });
     return { success: true };
   }
@@ -576,30 +757,50 @@ export class AdminController {
   async createPoll(@Body() dto: any, @GetUser() admin: User, @Req() req: any) {
     const result = await this.adminService.createPoll(dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: result.id, targetType: 'poll', metadata: { question: dto.question }, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: result.id,
+      targetType: 'poll',
+      metadata: { question: dto.question },
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Patch('polls/:id')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async updatePoll(@Param('id') id: string, @Body() dto: any, @GetUser() admin: User, @Req() req: any) {
+  async updatePoll(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     const result = await this.adminService.updatePoll(id, dto);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: id, targetType: 'poll', metadata: dto, ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: id,
+      targetType: 'poll',
+      metadata: dto,
+      ipAddress: req.ip,
     });
     return result;
   }
 
   @Delete('polls/:id')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
-  async deletePoll(@Param('id') id: string, @GetUser() admin: User, @Req() req: any) {
+  async deletePoll(
+    @Param('id') id: string,
+    @GetUser() admin: User,
+    @Req() req: any,
+  ) {
     await this.adminService.deletePoll(id);
     await this.auditService.log({
-      adminId: admin.id, action: AuditAction.UPDATE_CONFIG,
-      targetId: id, targetType: 'poll', ipAddress: req.ip,
+      adminId: admin.id,
+      action: AuditAction.UPDATE_CONFIG,
+      targetId: id,
+      targetType: 'poll',
+      ipAddress: req.ip,
     });
     return { success: true };
   }

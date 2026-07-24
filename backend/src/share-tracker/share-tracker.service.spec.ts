@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ShareTrackerService, SHARE_POINTS } from './share-tracker.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -50,18 +50,28 @@ describe('ShareTrackerService', () => {
         pointsAwarded: SHARE_POINTS,
         inviteCode: expect.any(String),
       };
-      const savedShare = { id: 'share-uuid', ...shareData, sharedAt: new Date() };
+      const savedShare = {
+        id: 'share-uuid',
+        ...shareData,
+        sharedAt: new Date(),
+      };
       mockRepo.create.mockReturnValue({ ...shareData });
       mockRepo.save.mockResolvedValue(savedShare);
 
-      const result = await service.logShare('user-uuid', 'contest-uuid', 'whatsapp');
+      const result = await service.logShare(
+        'user-uuid',
+        'contest-uuid',
+        'whatsapp',
+      );
       expect(result).toEqual(savedShare);
-      expect(mockRepo.create).toHaveBeenCalledWith(expect.objectContaining({
-        userId: 'user-uuid',
-        contestId: 'contest-uuid',
-        shareChannel: 'whatsapp',
-        pointsAwarded: 15,
-      }));
+      expect(mockRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'user-uuid',
+          contestId: 'contest-uuid',
+          shareChannel: 'whatsapp',
+          pointsAwarded: 15,
+        }),
+      );
       expect(mockRepo.save).toHaveBeenCalled();
       expect(mockPointsEngine.logPointAction).toHaveBeenCalledWith(
         'user-uuid',
@@ -74,7 +84,10 @@ describe('ShareTrackerService', () => {
 
     it('should generate a unique invite code', async () => {
       mockRepo.create.mockReturnValue({});
-      mockRepo.save.mockResolvedValue({ id: 'share-uuid', inviteCode: 'ABCD1234' });
+      mockRepo.save.mockResolvedValue({
+        id: 'share-uuid',
+        inviteCode: 'ABCD1234',
+      });
 
       const result = await service.logShare('user-uuid', null, 'telegram');
       expect(result.inviteCode).toBeDefined();
@@ -83,7 +96,11 @@ describe('ShareTrackerService', () => {
 
     it('should handle null contestId', async () => {
       mockRepo.create.mockReturnValue({});
-      mockRepo.save.mockResolvedValue({ id: 'share-uuid', contestId: null, inviteCode: 'CODE123' });
+      mockRepo.save.mockResolvedValue({
+        id: 'share-uuid',
+        contestId: null,
+        inviteCode: 'CODE123',
+      });
 
       const result = await service.logShare('user-uuid', null, 'copy_link');
       expect(result.contestId).toBeNull();
@@ -93,7 +110,9 @@ describe('ShareTrackerService', () => {
       mockRepo.create.mockReturnValue({});
       mockRepo.save.mockRejectedValue(new Error('Save failed'));
 
-      await expect(service.logShare('user-uuid', 'contest-uuid', 'whatsapp')).rejects.toThrow('Save failed');
+      await expect(
+        service.logShare('user-uuid', 'contest-uuid', 'whatsapp'),
+      ).rejects.toThrow('Save failed');
     });
   });
 
@@ -124,8 +143,18 @@ describe('ShareTrackerService', () => {
   describe('getShareStats', () => {
     it('should return aggregated share stats', async () => {
       const shares = [
-        { id: 's1', pointsAwarded: 50, inviteCode: 'CODE1', sharedAt: new Date() },
-        { id: 's2', pointsAwarded: 50, inviteCode: 'CODE2', sharedAt: new Date(Date.now() - 86400000) },
+        {
+          id: 's1',
+          pointsAwarded: 50,
+          inviteCode: 'CODE1',
+          sharedAt: new Date(),
+        },
+        {
+          id: 's2',
+          pointsAwarded: 50,
+          inviteCode: 'CODE2',
+          sharedAt: new Date(Date.now() - 86400000),
+        },
       ];
       mockRepo.find.mockResolvedValue(shares);
 
@@ -145,7 +174,9 @@ describe('ShareTrackerService', () => {
     });
 
     it('should return null inviteCode for single share with null inviteCode', async () => {
-      const shares = [{ id: 's1', pointsAwarded: 50, inviteCode: null, sharedAt: new Date() }];
+      const shares = [
+        { id: 's1', pointsAwarded: 50, inviteCode: null, sharedAt: new Date() },
+      ];
       mockRepo.find.mockResolvedValue(shares);
 
       const result = await service.getShareStats('user-uuid');

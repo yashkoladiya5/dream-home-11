@@ -29,7 +29,9 @@ export class GdprController {
   @HttpCode(HttpStatus.OK)
   async requestDeletion(@GetUser() user: User) {
     await this.gdprService.requestAccountDeletion(user.id);
-    return { message: 'Account deletion requested. Your data will be anonymized.' };
+    return {
+      message: 'Account deletion requested. Your data will be anonymized.',
+    };
   }
 
   @Delete('account')

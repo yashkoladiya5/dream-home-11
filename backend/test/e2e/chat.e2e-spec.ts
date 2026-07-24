@@ -20,8 +20,6 @@ describe('ChatController (e2e)', () => {
   });
 
   it('/api/v1/chat (GET) unauthorized', () => {
-    return request(app.getHttpServer())
-      .get('/api/v1/chat')
-      .expect(401);
+    return request(app.getHttpServer()).get('/api/v1/chat').expect(401);
   });
 });

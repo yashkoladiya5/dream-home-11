@@ -154,22 +154,51 @@ export class AddPerformanceIndexes implements MigrationInterface {
   }
 
   async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropIndex('contest_members', 'idx_contest_members_user_contest');
-    await queryRunner.dropIndex('transactions', 'idx_transactions_user_type_created');
-    await queryRunner.query('DROP INDEX IF EXISTS "idx_transactions_user_deposits"');
-    await queryRunner.query('DROP INDEX IF EXISTS "idx_transactions_user_withdrawals"');
-    await queryRunner.query('DROP INDEX IF EXISTS "idx_transactions_user_contest_joins"');
+    await queryRunner.dropIndex(
+      'contest_members',
+      'idx_contest_members_user_contest',
+    );
+    await queryRunner.dropIndex(
+      'transactions',
+      'idx_transactions_user_type_created',
+    );
+    await queryRunner.query(
+      'DROP INDEX IF EXISTS "idx_transactions_user_deposits"',
+    );
+    await queryRunner.query(
+      'DROP INDEX IF EXISTS "idx_transactions_user_withdrawals"',
+    );
+    await queryRunner.query(
+      'DROP INDEX IF EXISTS "idx_transactions_user_contest_joins"',
+    );
     await queryRunner.dropIndex('point_logs', 'idx_point_logs_user_created');
     await queryRunner.query('DROP INDEX IF EXISTS "idx_point_logs_weekly"');
-    await queryRunner.dropIndex('audit_logs', 'idx_audit_logs_user_action_created');
-    await queryRunner.query('DROP INDEX IF EXISTS "idx_audit_logs_admin_action_created"');
-    await queryRunner.dropIndex('chat_messages', 'idx_chat_messages_chat_created_desc');
+    await queryRunner.dropIndex(
+      'audit_logs',
+      'idx_audit_logs_user_action_created',
+    );
+    await queryRunner.query(
+      'DROP INDEX IF EXISTS "idx_audit_logs_admin_action_created"',
+    );
+    await queryRunner.dropIndex(
+      'chat_messages',
+      'idx_chat_messages_chat_created_desc',
+    );
     await queryRunner.dropIndex('posts', 'idx_posts_user_created');
     await queryRunner.query('DROP INDEX IF EXISTS "idx_posts_active_created"');
-    await queryRunner.dropIndex('withdrawals', 'idx_withdrawals_user_status_created');
+    await queryRunner.dropIndex(
+      'withdrawals',
+      'idx_withdrawals_user_status_created',
+    );
     await queryRunner.dropIndex('payments', 'idx_payments_user_created');
     await queryRunner.dropIndex('referrals', 'idx_referrals_referrer_status');
-    await queryRunner.dropIndex('notification_logs', 'idx_notification_logs_user_inbox');
-    await queryRunner.dropIndex('reward_redemptions', 'idx_reward_redemptions_user_status');
+    await queryRunner.dropIndex(
+      'notification_logs',
+      'idx_notification_logs_user_inbox',
+    );
+    await queryRunner.dropIndex(
+      'reward_redemptions',
+      'idx_reward_redemptions_user_status',
+    );
   }
 }

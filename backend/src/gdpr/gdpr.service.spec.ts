@@ -12,7 +12,10 @@ import { PointLog } from '../points/entities/point-log.entity';
 import { Withdrawal } from '../withdrawals/entities/withdrawal.entity';
 import { Referral } from '../referral/entities/referral.entity';
 import { CompensationLog } from '../compensation/entities/compensation.entity';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
 import { createMockDataSource } from '../test/mock-services.factory';
 
 describe('GdprService', () => {
@@ -77,11 +80,17 @@ describe('GdprService', () => {
         { provide: getRepositoryToken(Kyc), useValue: kycRepo },
         { provide: getRepositoryToken(Wallet), useValue: walletRepo },
         { provide: getRepositoryToken(Transaction), useValue: transactionRepo },
-        { provide: getRepositoryToken(ContestMember), useValue: contestMemberRepo },
+        {
+          provide: getRepositoryToken(ContestMember),
+          useValue: contestMemberRepo,
+        },
         { provide: getRepositoryToken(PointLog), useValue: pointLogRepo },
         { provide: getRepositoryToken(Withdrawal), useValue: withdrawalRepo },
         { provide: getRepositoryToken(Referral), useValue: referralRepo },
-        { provide: getRepositoryToken(CompensationLog), useValue: compensationLogRepo },
+        {
+          provide: getRepositoryToken(CompensationLog),
+          useValue: compensationLogRepo,
+        },
         { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
@@ -96,12 +105,26 @@ describe('GdprService', () => {
   describe('exportUserData', () => {
     it('should export all user data', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValue(mockUser);
-      (kycRepo.findOne as jest.Mock).mockResolvedValue({ id: 'kyc-1', userId: 'user-1' });
-      (walletRepo.findOne as jest.Mock).mockResolvedValue({ id: 'wallet-1', userId: 'user-1' });
-      (transactionRepo.find as jest.Mock).mockResolvedValue([{ id: 'tx-1', userId: 'user-1' }]);
-      (contestMemberRepo.find as jest.Mock).mockResolvedValue([{ id: 'cm-1', userId: 'user-1' }]);
-      (pointLogRepo.find as jest.Mock).mockResolvedValue([{ id: 'pl-1', userId: 'user-1' }]);
-      (withdrawalRepo.find as jest.Mock).mockResolvedValue([{ id: 'wd-1', userId: 'user-1' }]);
+      (kycRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 'kyc-1',
+        userId: 'user-1',
+      });
+      (walletRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 'wallet-1',
+        userId: 'user-1',
+      });
+      (transactionRepo.find as jest.Mock).mockResolvedValue([
+        { id: 'tx-1', userId: 'user-1' },
+      ]);
+      (contestMemberRepo.find as jest.Mock).mockResolvedValue([
+        { id: 'cm-1', userId: 'user-1' },
+      ]);
+      (pointLogRepo.find as jest.Mock).mockResolvedValue([
+        { id: 'pl-1', userId: 'user-1' },
+      ]);
+      (withdrawalRepo.find as jest.Mock).mockResolvedValue([
+        { id: 'wd-1', userId: 'user-1' },
+      ]);
       (referralRepo.find as jest.Mock).mockResolvedValue([]);
       (compensationLogRepo.find as jest.Mock).mockResolvedValue([]);
 
@@ -136,7 +159,10 @@ describe('GdprService', () => {
   describe('requestAccountDeletion', () => {
     it('should soft-delete user account', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValue(mockUser);
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...mockUser, isActive: false });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...mockUser,
+        isActive: false,
+      });
 
       await service.requestAccountDeletion('user-1');
       expect(userRepo.save).toHaveBeenCalledWith(
@@ -150,7 +176,9 @@ describe('GdprService', () => {
 
     it('should throw NotFoundException when user not found', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.requestAccountDeletion('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.requestAccountDeletion('invalid-id'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -160,16 +188,23 @@ describe('GdprService', () => {
       const manager = {
         delete: jest.fn().mockResolvedValue({}),
       };
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
 
       await service.permanentDeleteAccount('user-1');
       expect(manager.delete).toHaveBeenCalledTimes(10);
-      expect(manager.delete).toHaveBeenCalledWith(expect.any(Function), 'user-1');
+      expect(manager.delete).toHaveBeenCalledWith(
+        expect.any(Function),
+        'user-1',
+      );
     });
 
     it('should throw NotFoundException when user not found', async () => {
       (userRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.permanentDeleteAccount('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.permanentDeleteAccount('invalid-id'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

@@ -80,28 +80,31 @@ export class ChatHistoryService {
 
     const chatIds = participations.map((p) => p.chat.id);
 
-    const [allParticipants, lastMessages, unreadCountResults] = await Promise.all([
-      this.chatParticipantRepo.find({
-        where: { chatId: In(chatIds) },
-        relations: { user: true },
-      }),
-      this.chatMessageRepo
-        .createQueryBuilder()
-        .select('DISTINCT ON (chat_id) id, chat_id, content, sender_id, created_at')
-        .from('chat_messages', 'm')
-        .where('chat_id IN (:...chatIds)', { chatIds })
-        .orderBy('chat_id', 'ASC')
-        .addOrderBy('created_at', 'DESC')
-        .getRawMany(),
-      this.chatMessageRepo
-        .createQueryBuilder('m')
-        .select('m.chat_id', 'chat_id')
-        .addSelect('COUNT(*)', 'count')
-        .where('m.chat_id IN (:...chatIds)', { chatIds })
-        .andWhere('m.is_read = false')
-        .groupBy('m.chat_id')
-        .getRawMany(),
-    ]);
+    const [allParticipants, lastMessages, unreadCountResults] =
+      await Promise.all([
+        this.chatParticipantRepo.find({
+          where: { chatId: In(chatIds) },
+          relations: { user: true },
+        }),
+        this.chatMessageRepo
+          .createQueryBuilder()
+          .select(
+            'DISTINCT ON (chat_id) id, chat_id, content, sender_id, created_at',
+          )
+          .from('chat_messages', 'm')
+          .where('chat_id IN (:...chatIds)', { chatIds })
+          .orderBy('chat_id', 'ASC')
+          .addOrderBy('created_at', 'DESC')
+          .getRawMany(),
+        this.chatMessageRepo
+          .createQueryBuilder('m')
+          .select('m.chat_id', 'chat_id')
+          .addSelect('COUNT(*)', 'count')
+          .where('m.chat_id IN (:...chatIds)', { chatIds })
+          .andWhere('m.is_read = false')
+          .groupBy('m.chat_id')
+          .getRawMany(),
+      ]);
 
     const participantsByChat = new Map<string, typeof allParticipants>();
     for (const p of allParticipants) {

@@ -369,8 +369,14 @@ export class ContestsService {
 
       if (Number(contest.entryFeeInr) > 0) {
         const config = await this.configService.getConfig();
-        if (user.state && config.restrictedStates && config.restrictedStates.includes(user.state)) {
-          throw new BadRequestException(`Paid contests are restricted in your state (${user.state})`);
+        if (
+          user.state &&
+          config.restrictedStates &&
+          config.restrictedStates.includes(user.state)
+        ) {
+          throw new BadRequestException(
+            `Paid contests are restricted in your state (${user.state})`,
+          );
         }
       }
 
@@ -400,7 +406,11 @@ export class ContestsService {
       const { transaction: cashTx } = await this.walletService.debitBalance(
         userId,
         Number(contest.entryFeeInr),
-        { type: 'contest', id: contestId, description: `Joined contest: ${contest.title}` },
+        {
+          type: 'contest',
+          id: contestId,
+          description: `Joined contest: ${contest.title}`,
+        },
         entityManager,
       );
 
@@ -413,7 +423,8 @@ export class ContestsService {
 
       // Merge points info into the cashTx that was just created, to match original behavior
       cashTx.pointsAmount = finalPoints;
-      cashTx.pointsBalanceBefore = Number(pointsWallet.pointsBalance) - finalPoints;
+      cashTx.pointsBalanceBefore =
+        Number(pointsWallet.pointsBalance) - finalPoints;
       cashTx.pointsBalanceAfter = Number(pointsWallet.pointsBalance);
       await entityManager.save(cashTx);
 
@@ -614,7 +625,10 @@ export class ContestsService {
       });
 
       if (!contest) throw new NotFoundException('Contest not found');
-      if (contest.status !== ContestStatus.RUNNING && contest.status !== ContestStatus.FILLED)
+      if (
+        contest.status !== ContestStatus.RUNNING &&
+        contest.status !== ContestStatus.FILLED
+      )
         throw new BadRequestException('Contest is not in running status');
 
       const members = await manager.find(ContestMember, {
@@ -704,8 +718,13 @@ export class ContestsService {
       });
 
       if (!contest) throw new NotFoundException('Contest not found');
-      if (contest.status === ContestStatus.COMPLETED || contest.status === ContestStatus.CANCELLED) {
-        throw new BadRequestException('Contest is already completed or cancelled');
+      if (
+        contest.status === ContestStatus.COMPLETED ||
+        contest.status === ContestStatus.CANCELLED
+      ) {
+        throw new BadRequestException(
+          'Contest is already completed or cancelled',
+        );
       }
 
       const members = await manager.find(ContestMember, {

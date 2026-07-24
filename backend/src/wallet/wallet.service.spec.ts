@@ -4,7 +4,10 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { WalletService } from './wallet.service';
 import { Wallet } from './entities/wallet.entity';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
 import { createMockDataSource } from '../test/mock-services.factory';
 
 describe('WalletService', () => {
@@ -26,7 +29,9 @@ describe('WalletService', () => {
 
   function makeManager(overrides: Record<string, any> = {}) {
     return {
-      findOne: jest.fn().mockImplementation(() => Promise.resolve({ ...mockWallet })),
+      findOne: jest
+        .fn()
+        .mockImplementation(() => Promise.resolve({ ...mockWallet })),
       save: jest.fn().mockImplementation((w) => Promise.resolve(w)),
       create: jest.fn((_e: any, data: any) => data),
       query: jest.fn().mockResolvedValue([]),
@@ -63,14 +68,19 @@ describe('WalletService', () => {
 
     it('should throw NotFoundException for missing wallet', async () => {
       (walletRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.getWallet('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getWallet('invalid-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('initializeWallet', () => {
     it('should create and save a new wallet', async () => {
       (walletRepo.create as jest.Mock).mockReturnValue({ userId: 'new-user' });
-      (walletRepo.save as jest.Mock).mockResolvedValue({ id: 'new-wallet', userId: 'new-user' });
+      (walletRepo.save as jest.Mock).mockResolvedValue({
+        id: 'new-wallet',
+        userId: 'new-user',
+      });
 
       const result = await service.initializeWallet('new-user');
       expect(result.userId).toBe('new-user');
@@ -81,48 +91,92 @@ describe('WalletService', () => {
   describe('creditBalance', () => {
     it('should credit balance and create transaction', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
 
-      const result = await service.creditBalance('user-1', 500, { type: 'deposit', id: 'ref-1', description: 'Test deposit' });
+      const result = await service.creditBalance('user-1', 500, {
+        type: 'deposit',
+        id: 'ref-1',
+        description: 'Test deposit',
+      });
       expect(result.wallet.balanceInr).toBe(1500);
       expect(manager.save).toHaveBeenCalledTimes(2);
     });
 
     it('should throw BadRequestException for non-positive amount', async () => {
-      await expect(service.creditBalance('user-1', 0, { type: 'deposit', id: 'ref-1', description: '' })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.creditBalance('user-1', 0, {
+          type: 'deposit',
+          id: 'ref-1',
+          description: '',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw NotFoundException when wallet not found', async () => {
-      const manager = makeManager({ findOne: jest.fn().mockResolvedValue(null) });
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
-      await expect(service.creditBalance('user-1', 500, { type: 'deposit', id: 'ref-1', description: '' })).rejects.toThrow(NotFoundException);
+      const manager = makeManager({
+        findOne: jest.fn().mockResolvedValue(null),
+      });
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
+      await expect(
+        service.creditBalance('user-1', 500, {
+          type: 'deposit',
+          id: 'ref-1',
+          description: '',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('debitBalance', () => {
     it('should debit balance and create transaction', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
 
-      const result = await service.debitBalance('user-1', 300, { type: 'entry_fee', id: 'ref-1', description: 'Contest entry' });
+      const result = await service.debitBalance('user-1', 300, {
+        type: 'entry_fee',
+        id: 'ref-1',
+        description: 'Contest entry',
+      });
       expect(result.wallet.balanceInr).toBe(700);
     });
 
     it('should throw BadRequestException for insufficient balance', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
-      await expect(service.debitBalance('user-1', 5000, { type: 'entry_fee', id: 'ref-1', description: '' })).rejects.toThrow(BadRequestException);
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
+      await expect(
+        service.debitBalance('user-1', 5000, {
+          type: 'entry_fee',
+          id: 'ref-1',
+          description: '',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException for non-positive amount', async () => {
-      await expect(service.debitBalance('user-1', -100, { type: 'entry_fee', id: 'ref-1', description: '' })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.debitBalance('user-1', -100, {
+          type: 'entry_fee',
+          id: 'ref-1',
+          description: '',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('lockBalance', () => {
     it('should lock part of the balance', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
 
       const result = await service.lockBalance('user-1', 300);
       expect(result.balanceInr).toBe(700);
@@ -131,15 +185,21 @@ describe('WalletService', () => {
 
     it('should throw BadRequestException when locking more than available', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
-      await expect(service.lockBalance('user-1', 5000)).rejects.toThrow(BadRequestException);
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
+      await expect(service.lockBalance('user-1', 5000)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('unlockBalance', () => {
     it('should unlock previously locked balance', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
 
       const result = await service.unlockBalance('user-1', 100);
       expect(result.balanceInr).toBe(1100);
@@ -148,8 +208,12 @@ describe('WalletService', () => {
 
     it('should throw BadRequestException when unlocking more than locked', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
-      await expect(service.unlockBalance('user-1', 5000)).rejects.toThrow(BadRequestException);
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
+      await expect(service.unlockBalance('user-1', 5000)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -167,21 +231,27 @@ describe('WalletService', () => {
   describe('creditPoints', () => {
     it('should credit points to wallet', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
 
       const result = await service.creditPoints('user-1', 100);
       expect(result.pointsBalance).toBe(600);
     });
 
     it('should throw BadRequestException for non-positive points', async () => {
-      await expect(service.creditPoints('user-1', 0)).rejects.toThrow(BadRequestException);
+      await expect(service.creditPoints('user-1', 0)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('debitPoints', () => {
     it('should debit points from wallet', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
 
       const result = await service.debitPoints('user-1', 200);
       expect(result.pointsBalance).toBe(300);
@@ -189,12 +259,18 @@ describe('WalletService', () => {
 
     it('should throw BadRequestException for insufficient points', async () => {
       const manager = makeManager();
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
-      await expect(service.debitPoints('user-1', 5000)).rejects.toThrow(BadRequestException);
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
+      await expect(service.debitPoints('user-1', 5000)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException for non-positive points', async () => {
-      await expect(service.debitPoints('user-1', -10)).rejects.toThrow(BadRequestException);
+      await expect(service.debitPoints('user-1', -10)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

@@ -3,7 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Withdrawal } from '../../withdrawals/entities/withdrawal.entity';
 import { User } from '../../users/entities/user.entity';
-import { FraudAlert, FraudSeverity, FraudStatus } from '../../admin/entities/fraud-alert.entity';
+import {
+  FraudAlert,
+  FraudSeverity,
+  FraudStatus,
+} from '../../admin/entities/fraud-alert.entity';
 
 export interface FraudCheckResult {
   isSuspicious: boolean;

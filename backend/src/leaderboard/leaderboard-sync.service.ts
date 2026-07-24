@@ -118,7 +118,9 @@ export class LeaderboardSyncService implements OnApplicationBootstrap {
     }
 
     let totalMembers = 0;
-    const pipeline = this.leaderboardRedis.batchSetScores.bind(this.leaderboardRedis);
+    const pipeline = this.leaderboardRedis.batchSetScores.bind(
+      this.leaderboardRedis,
+    );
     const tasks: Promise<void>[] = [];
 
     for (const contest of contests) {

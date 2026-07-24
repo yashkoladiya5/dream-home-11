@@ -3,7 +3,10 @@ import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PrizeHomesService } from './prize-homes.service';
 import { PrizeHome } from './entities/prize-home.entity';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
 
 describe('PrizeHomesService', () => {
   let service: PrizeHomesService;
@@ -88,7 +91,9 @@ describe('PrizeHomesService', () => {
 
   describe('getCatalog', () => {
     it('should return all active prize homes sorted by sortOrder', async () => {
-      (prizeHomeRepo.find as jest.Mock).mockResolvedValue(mockPrizeHomes.filter((p) => p.isActive));
+      (prizeHomeRepo.find as jest.Mock).mockResolvedValue(
+        mockPrizeHomes.filter((p) => p.isActive),
+      );
       const result = await service.getCatalog();
       expect(result).toHaveLength(2);
       expect(result[0].city).toBe('Mumbai');
@@ -115,7 +120,9 @@ describe('PrizeHomesService', () => {
 
     it('should throw NotFoundException when not found', async () => {
       (prizeHomeRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.getById('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getById('invalid-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -140,7 +147,9 @@ describe('PrizeHomesService', () => {
 
   describe('getCities', () => {
     it('should return unique cities with counts', async () => {
-      (prizeHomeRepo.find as jest.Mock).mockResolvedValue(mockPrizeHomes.filter((p) => p.isActive));
+      (prizeHomeRepo.find as jest.Mock).mockResolvedValue(
+        mockPrizeHomes.filter((p) => p.isActive),
+      );
       const result = await service.getCities();
       expect(result).toHaveLength(2);
       expect(result[0].city).toBe('Mumbai');
@@ -154,8 +163,16 @@ describe('PrizeHomesService', () => {
     });
 
     it('should group multiple homes in same city', async () => {
-      const extraMumbaiHome = { ...mockPrizeHomes[0], id: 'ph-4', sortOrder: 4 };
-      (prizeHomeRepo.find as jest.Mock).mockResolvedValue([mockPrizeHomes[0], mockPrizeHomes[1], extraMumbaiHome]);
+      const extraMumbaiHome = {
+        ...mockPrizeHomes[0],
+        id: 'ph-4',
+        sortOrder: 4,
+      };
+      (prizeHomeRepo.find as jest.Mock).mockResolvedValue([
+        mockPrizeHomes[0],
+        mockPrizeHomes[1],
+        extraMumbaiHome,
+      ]);
       const result = await service.getCities();
       const mumbai = result.find((c) => c.city === 'Mumbai');
       expect(mumbai?.count).toBe(2);
@@ -164,7 +181,9 @@ describe('PrizeHomesService', () => {
 
   describe('getFeatured', () => {
     it('should return featured prize homes up to limit', async () => {
-      (prizeHomeRepo.find as jest.Mock).mockResolvedValue(mockPrizeHomes.filter((p) => p.isActive));
+      (prizeHomeRepo.find as jest.Mock).mockResolvedValue(
+        mockPrizeHomes.filter((p) => p.isActive),
+      );
       const result = await service.getFeatured(5);
       expect(result).toHaveLength(2);
       expect(prizeHomeRepo.find).toHaveBeenCalledWith({

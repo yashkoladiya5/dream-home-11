@@ -89,10 +89,17 @@ describe('AuthService', () => {
     generateReferralCode: jest.fn().mockReturnValue('TESTCODE'),
   };
 
-  const otpStore = new Map<string, { code: string; expiresAt: Date; attempts: number }>();
+  const otpStore = new Map<
+    string,
+    { code: string; expiresAt: Date; attempts: number }
+  >();
   const mockRedisOtpService = {
     storeOtp: jest.fn().mockImplementation((phone: string, code: string) => {
-      otpStore.set(phone, { code, expiresAt: new Date(Date.now() + 300000), attempts: 0 });
+      otpStore.set(phone, {
+        code,
+        expiresAt: new Date(Date.now() + 300000),
+        attempts: 0,
+      });
     }),
     verifyOtp: jest.fn().mockImplementation((phone: string, code: string) => {
       const entry = otpStore.get(phone);
@@ -105,7 +112,9 @@ describe('AuthService', () => {
         entry.attempts++;
         if (entry.attempts >= 3) {
           otpStore.delete(phone);
-          throw new UnauthorizedException('Too many failed attempts. Please request a new OTP.');
+          throw new UnauthorizedException(
+            'Too many failed attempts. Please request a new OTP.',
+          );
         }
         throw new UnauthorizedException('Invalid OTP verification code');
       }

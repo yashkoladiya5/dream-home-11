@@ -53,10 +53,7 @@ export class KycController {
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async submitKyc(
-    @GetUser() user: User,
-    @Body() dto: SubmitKycDto,
-  ) {
+  async submitKyc(@GetUser() user: User, @Body() dto: SubmitKycDto) {
     const kyc = await this.kycService.submitKyc(
       user.id,
       dto.aadhaarNumber,

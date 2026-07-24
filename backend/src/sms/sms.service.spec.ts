@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/unbound-method, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { SmsService } from './sms.service';
 
@@ -26,14 +25,15 @@ describe('SmsService', () => {
 
     it('should handle special characters in message', async () => {
       await expect(
-        service.sendSms('+919999999999', 'Hello! Your OTP is 1234. Valid for 5 mins.'),
+        service.sendSms(
+          '+919999999999',
+          'Hello! Your OTP is 1234. Valid for 5 mins.',
+        ),
       ).resolves.not.toThrow();
     });
 
     it('should handle empty message gracefully', async () => {
-      await expect(
-        service.sendSms('+919999999999', ''),
-      ).resolves.not.toThrow();
+      await expect(service.sendSms('+919999999999', '')).resolves.not.toThrow();
     });
 
     it('should handle international phone numbers', async () => {
@@ -64,7 +64,11 @@ describe('SmsService', () => {
 
     it('should handle special characters in contest title', async () => {
       await expect(
-        service.sendCompensationSms('+919999999999', 50, 'Weekend $pecial! @Home'),
+        service.sendCompensationSms(
+          '+919999999999',
+          50,
+          'Weekend $pecial! @Home',
+        ),
       ).resolves.not.toThrow();
     });
   });

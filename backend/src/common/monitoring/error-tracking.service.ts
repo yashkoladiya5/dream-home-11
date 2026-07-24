@@ -65,8 +65,7 @@ export class ErrorTrackingService {
     const requestId =
       context.requestId || this.getRequestIdFromContext() || 'unknown';
 
-    const errorObj =
-      error instanceof Error ? error : new Error(String(error));
+    const errorObj = error instanceof Error ? error : new Error(String(error));
     const errorType = errorObj.constructor.name || 'UnknownError';
 
     this.logger.error(
@@ -88,9 +87,7 @@ export class ErrorTrackingService {
       this.errorByEndpoint
         .labels(context.method, context.endpoint, context.statusCode.toString())
         .inc();
-      this.errorByStatusCode
-        .labels(context.statusCode.toString())
-        .inc();
+      this.errorByStatusCode.labels(context.statusCode.toString()).inc();
     }
 
     this.trackEndpointErrorRate(context.endpoint || 'unknown');
@@ -103,7 +100,10 @@ export class ErrorTrackingService {
         scope.setUser({ id: context.userId });
       }
       if (context.endpoint) {
-        scope.setTag('endpoint', `${context.method || 'UNKNOWN'} ${context.endpoint}`);
+        scope.setTag(
+          'endpoint',
+          `${context.method || 'UNKNOWN'} ${context.endpoint}`,
+        );
       }
       if (context.statusCode) {
         scope.setTag('status_code', context.statusCode.toString());
@@ -159,7 +159,10 @@ export class ErrorTrackingService {
         scope.setUser({ id: context.userId });
       }
       if (context.endpoint) {
-        scope.setTag('endpoint', `${context.method || 'UNKNOWN'} ${context.endpoint}`);
+        scope.setTag(
+          'endpoint',
+          `${context.method || 'UNKNOWN'} ${context.endpoint}`,
+        );
       }
       if (context.extra) {
         scope.setExtras(context.extra);
@@ -217,7 +220,10 @@ export class ErrorTrackingService {
     const now = Date.now();
     const existing = this.endpointErrorWindow.get(endpoint);
 
-    if (!existing || now - existing.windowStart > ErrorTrackingService.WINDOW_DURATION_MS) {
+    if (
+      !existing ||
+      now - existing.windowStart > ErrorTrackingService.WINDOW_DURATION_MS
+    ) {
       this.endpointErrorWindow.set(endpoint, {
         count: 1,
         windowStart: now,

@@ -8,10 +8,7 @@ import { ContestSchedulerService } from './contest-scheduler.service';
 import { DataRetentionService } from './data-retention.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Contest, User, Kyc]),
-    ContestsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Contest, User, Kyc]), ContestsModule],
   providers: [ContestSchedulerService, DataRetentionService],
 })
 export class SchedulerModule {}

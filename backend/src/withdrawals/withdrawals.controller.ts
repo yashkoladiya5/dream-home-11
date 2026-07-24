@@ -31,7 +31,8 @@ export class WithdrawalsController {
     @GetUser() user: User,
     @Body() dto: RequestWithdrawalDto,
   ) {
-    const parsedAmount = typeof dto.amount === 'string' ? parseFloat(dto.amount as any) : dto.amount;
+    const parsedAmount =
+      typeof dto.amount === 'string' ? parseFloat(dto.amount) : dto.amount;
     const withdrawal = await this.withdrawalsService.requestWithdrawal(
       user.id,
       parsedAmount,

@@ -217,9 +217,7 @@ describe('Rate Limiting E2E', () => {
     });
 
     it('should still allow other endpoints after per-user limit is hit', async () => {
-      await request(app.getHttpServer())
-        .get('/_rl_user')
-        .expect(HttpStatus.OK);
+      await request(app.getHttpServer()).get('/_rl_user').expect(HttpStatus.OK);
     });
   });
 

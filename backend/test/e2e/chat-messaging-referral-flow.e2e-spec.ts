@@ -5,7 +5,11 @@ import { AppModule } from '../../src/app.module';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { REDIS_CLIENT } from '../../src/redis/redis.constants';
-import { User, UserRole, UserLevel } from '../../src/users/entities/user.entity';
+import {
+  User,
+  UserRole,
+  UserLevel,
+} from '../../src/users/entities/user.entity';
 import { Kyc } from '../../src/kyc/entities/kyc.entity';
 import { Chat } from '../../src/chat/entities/chat.entity';
 import { ChatMessage } from '../../src/chat/entities/chat-message.entity';
@@ -149,7 +153,11 @@ describe('Chat Messaging & Referral System E2E (Sprints 11 & 12)', () => {
           findOne: jest.fn().mockResolvedValue(null),
           find: jest.fn().mockResolvedValue([]),
           save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
-          create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
+          create: jest
+            .fn()
+            .mockImplementation((cls: any, obj: any) =>
+              obj ? obj : cls || {},
+            ),
           increment: jest.fn().mockResolvedValue(undefined),
         };
         return cb(mockEntityManager);
@@ -183,7 +191,14 @@ describe('Chat Messaging & Referral System E2E (Sprints 11 & 12)', () => {
 
     const repoMocks: Record<string, ReturnType<typeof createMockRepo>> = {};
     const ALL_ENTITIES = [
-      User, Kyc, Chat, ChatMessage, ChatParticipant, Referral, SupportTicket, SystemConfig
+      User,
+      Kyc,
+      Chat,
+      ChatMessage,
+      ChatParticipant,
+      Referral,
+      SupportTicket,
+      SystemConfig,
     ];
 
     let builder = Test.createTestingModule({ imports: [AppModule] })
@@ -195,7 +210,9 @@ describe('Chat Messaging & Referral System E2E (Sprints 11 & 12)', () => {
     for (const entity of ALL_ENTITIES) {
       const mock = createMockRepo();
       repoMocks[(entity as any).name || String(entity)] = mock;
-      builder = builder.overrideProvider(getRepositoryToken(entity)).useValue(mock);
+      builder = builder
+        .overrideProvider(getRepositoryToken(entity))
+        .useValue(mock);
     }
 
     mockUserRepo = repoMocks['User'];
@@ -232,7 +249,12 @@ describe('Chat Messaging & Referral System E2E (Sprints 11 & 12)', () => {
       const phone = opts?.where?.phoneNumber;
       const refCode = opts?.where?.referralCode;
 
-      if (id === USER_ID || phone === USER_PHONE || (refCode && refCode === activeUser.referralCode)) return activeUser;
+      if (
+        id === USER_ID ||
+        phone === USER_PHONE ||
+        (refCode && refCode === activeUser.referralCode)
+      )
+        return activeUser;
       if (id === REFERRER_ID || refCode === 'REFER123') return activeReferrer;
       return null;
     });
@@ -245,7 +267,9 @@ describe('Chat Messaging & Referral System E2E (Sprints 11 & 12)', () => {
     mockChatMessageRepo.findAndCount.mockResolvedValue([[mockMessage], 1]);
 
     // Support Mocks
-    mockSupportRepo.save.mockImplementation(async (t: any) => Promise.resolve({ id: TICKET_ID, ...t }));
+    mockSupportRepo.save.mockImplementation(async (t: any) =>
+      Promise.resolve({ id: TICKET_ID, ...t }),
+    );
     mockSupportRepo.findAndCount.mockResolvedValue([[mockTicket], 1]);
     mockSupportRepo.findOne.mockResolvedValue(mockTicket);
 
@@ -372,11 +396,17 @@ describe('Chat Messaging & Referral System E2E (Sprints 11 & 12)', () => {
         const res = await request(app.getHttpServer())
           .post('/api/v1/support/tickets')
           .set('Authorization', `Bearer ${userToken}`)
-          .attach('attachment', largeBuffer, { filename: 'screenshot.png', contentType: 'image/png' })
+          .attach('attachment', largeBuffer, {
+            filename: 'screenshot.png',
+            contentType: 'image/png',
+          })
           .field('subject', 'Payments issues')
           .field('message', 'I was double debited');
 
-        expect([HttpStatus.BAD_REQUEST, HttpStatus.PAYLOAD_TOO_LARGE]).toContain(res.status);
+        expect([
+          HttpStatus.BAD_REQUEST,
+          HttpStatus.PAYLOAD_TOO_LARGE,
+        ]).toContain(res.status);
       } catch (err: any) {
         expect(err.code || err.message).toBeDefined();
       }
@@ -388,7 +418,10 @@ describe('Chat Messaging & Referral System E2E (Sprints 11 & 12)', () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/support/tickets')
         .set('Authorization', `Bearer ${userToken}`)
-        .attach('attachment', fileBuffer, { filename: 'exploit.exe', contentType: 'application/x-msdownload' })
+        .attach('attachment', fileBuffer, {
+          filename: 'exploit.exe',
+          contentType: 'application/x-msdownload',
+        })
         .field('subject', 'Help needed')
         .field('message', 'Unapproved type file attached')
         .expect(HttpStatus.BAD_REQUEST);

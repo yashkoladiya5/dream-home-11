@@ -45,12 +45,8 @@ export class HealthMetricsService implements OnModuleDestroy {
   private readonly gaugeValues: Record<string, number> = {};
 
   private readonly thresholds: HealthThresholds = {
-    cpuUsagePercent: parseFloat(
-      process.env.HEALTH_CPU_THRESHOLD || '85',
-    ),
-    memoryUsagePercent: parseFloat(
-      process.env.HEALTH_MEMORY_THRESHOLD || '85',
-    ),
+    cpuUsagePercent: parseFloat(process.env.HEALTH_CPU_THRESHOLD || '85'),
+    memoryUsagePercent: parseFloat(process.env.HEALTH_MEMORY_THRESHOLD || '85'),
     redisMemoryUsagePercent: parseFloat(
       process.env.HEALTH_REDIS_MEMORY_THRESHOLD || '80',
     ),
@@ -343,22 +339,34 @@ export class HealthMetricsService implements OnModuleDestroy {
 
     const components: Record<string, HealthComponentStatus> = {
       cpu: {
-        status: this.getComponentStatus(this.gaugeValues['cpu'] || 0, this.thresholds.cpuUsagePercent),
+        status: this.getComponentStatus(
+          this.gaugeValues['cpu'] || 0,
+          this.thresholds.cpuUsagePercent,
+        ),
         value: this.gaugeValues['cpu'] || 0,
         threshold: this.thresholds.cpuUsagePercent,
       },
       memory: {
-        status: this.getComponentStatus(this.gaugeValues['memory'] || 0, this.thresholds.memoryUsagePercent),
+        status: this.getComponentStatus(
+          this.gaugeValues['memory'] || 0,
+          this.thresholds.memoryUsagePercent,
+        ),
         value: this.gaugeValues['memory'] || 0,
         threshold: this.thresholds.memoryUsagePercent,
       },
       redis: {
-        status: this.getComponentStatus(this.gaugeValues['redis'] || 0, this.thresholds.redisMemoryUsagePercent),
+        status: this.getComponentStatus(
+          this.gaugeValues['redis'] || 0,
+          this.thresholds.redisMemoryUsagePercent,
+        ),
         value: this.gaugeValues['redis'] || 0,
         threshold: this.thresholds.redisMemoryUsagePercent,
       },
       database: {
-        status: this.getComponentStatus(this.gaugeValues['database'] || 0, this.thresholds.dbPoolUsagePercent),
+        status: this.getComponentStatus(
+          this.gaugeValues['database'] || 0,
+          this.thresholds.dbPoolUsagePercent,
+        ),
         value: this.gaugeValues['database'] || 0,
         threshold: this.thresholds.dbPoolUsagePercent,
       },

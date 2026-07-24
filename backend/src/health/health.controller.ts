@@ -32,10 +32,7 @@ export class HealthController {
   @Get()
   async check() {
     try {
-      await Promise.all([
-        this.dataSource.query('SELECT 1'),
-        this.redis.ping(),
-      ]);
+      await Promise.all([this.dataSource.query('SELECT 1'), this.redis.ping()]);
       return {
         status: 'ok',
         timestamp: new Date().toISOString(),

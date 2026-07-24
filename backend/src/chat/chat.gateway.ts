@@ -80,9 +80,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.data.userId = user.id;
       client.join(`user:${user.id}`);
 
-      this.logger.log(
-        `Client ${client.id} connected as user ${user.id}`,
-      );
+      this.logger.log(`Client ${client.id} connected as user ${user.id}`);
     } catch (error) {
       this.logger.error(
         `Error in handleConnection for client ${client.id}: ${error}`,
@@ -143,8 +141,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Automated auto-responder bot logic for single-developer aggressive testing
       try {
-        const chatDetail = await this.chatHistoryService.getChatDetail(payload.chatId, userId);
-        const otherParticipant = chatDetail.participants.find((p) => p.id !== userId);
+        const chatDetail = await this.chatHistoryService.getChatDetail(
+          payload.chatId,
+          userId,
+        );
+        const otherParticipant = chatDetail.participants.find(
+          (p) => p.id !== userId,
+        );
 
         if (otherParticipant) {
           const botUserId = otherParticipant.id;
@@ -173,7 +176,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
               'Did you try the daily spin wheel today? Got some extra points!',
               'Awesome! Let me know if you want to test typing and read receipts as well.',
             ];
-            const randomAnswer = botAnswers[Math.floor(Math.random() * botAnswers.length)];
+            const randomAnswer =
+              botAnswers[Math.floor(Math.random() * botAnswers.length)];
 
             const savedBotMsg = await this.chatHistoryService.saveMessage({
               chatId: payload.chatId,
@@ -196,7 +200,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       } catch (err) {
         this.logger.warn(`Could not trigger bot response: ${err.message}`);
       }
-
     } catch (error) {
       this.logger.error(`Failed to save message: ${error}`);
     }

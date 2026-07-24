@@ -1,8 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  INestApplication,
-  HttpStatus,
-} from '@nestjs/common';
+import { INestApplication, HttpStatus } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../../src/app.module';
@@ -11,9 +8,17 @@ import { DataSource } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { REDIS_CLIENT } from '../../src/redis/redis.constants';
 
-import { User, UserRole, UserLevel } from '../../src/users/entities/user.entity';
+import {
+  User,
+  UserRole,
+  UserLevel,
+} from '../../src/users/entities/user.entity';
 import { Kyc, KycStatus } from '../../src/kyc/entities/kyc.entity';
-import { Contest, ContestStatus, ContestType } from '../../src/contests/entities/contest.entity';
+import {
+  Contest,
+  ContestStatus,
+  ContestType,
+} from '../../src/contests/entities/contest.entity';
 import { ContestMember } from '../../src/contests/entities/contest-member.entity';
 import { PointLog } from '../../src/points/entities/point-log.entity';
 import { FcmToken } from '../../src/notifications/entities/fcm-token.entity';
@@ -45,13 +50,38 @@ import { CompensationLog } from '../../src/compensation/entities/compensation.en
 import { AuditLog } from '../../src/audit/entities/audit-log.entity';
 
 const ALL_ENTITIES = [
-  User, Kyc, Contest, ContestMember, PointLog,
-  FcmToken, Reminder, NotificationLog, Share, Reward,
-  RewardRedemption, Banner, Achievement, UserAchievement, PrizeHome,
-  Transaction, Payment, SavedPaymentMethod, Withdrawal,
-  Post, Like, Comment, Poll, PollVote,
-  Referral, Chat, ChatMessage, ChatParticipant,
-  SupportTicket, SystemConfig, CompensationLog, AuditLog,
+  User,
+  Kyc,
+  Contest,
+  ContestMember,
+  PointLog,
+  FcmToken,
+  Reminder,
+  NotificationLog,
+  Share,
+  Reward,
+  RewardRedemption,
+  Banner,
+  Achievement,
+  UserAchievement,
+  PrizeHome,
+  Transaction,
+  Payment,
+  SavedPaymentMethod,
+  Withdrawal,
+  Post,
+  Like,
+  Comment,
+  Poll,
+  PollVote,
+  Referral,
+  Chat,
+  ChatMessage,
+  ChatParticipant,
+  SupportTicket,
+  SystemConfig,
+  CompensationLog,
+  AuditLog,
 ];
 
 function createQueryBuilderMock() {
@@ -93,7 +123,9 @@ function createMockRepo() {
     create: jest.fn().mockImplementation((e: any) => e || {}),
     update: jest.fn().mockResolvedValue({ affected: 1, generatedMaps: [] }),
     delete: jest.fn().mockResolvedValue({ affected: 1 }),
-    insert: jest.fn().mockResolvedValue({ identifiers: [{ id: 'mock' }], generatedMaps: [] }),
+    insert: jest
+      .fn()
+      .mockResolvedValue({ identifiers: [{ id: 'mock' }], generatedMaps: [] }),
     upsert: jest.fn().mockResolvedValue({ identifiers: [], generatedMaps: [] }),
     softDelete: jest.fn().mockResolvedValue({ affected: 1 }),
     restore: jest.fn().mockResolvedValue({ affected: 1 }),
@@ -184,7 +216,11 @@ describe('Contest Flow E2E', () => {
           findOne: jest.fn().mockResolvedValue(null),
           find: jest.fn().mockResolvedValue([]),
           save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
-          create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
+          create: jest
+            .fn()
+            .mockImplementation((cls: any, obj: any) =>
+              obj ? obj : cls || {},
+            ),
         };
         return cb(mockEntityManager);
       }),
@@ -200,7 +236,10 @@ describe('Contest Flow E2E', () => {
       multi: jest.fn(() => ({
         incr: jest.fn(),
         pttl: jest.fn(),
-        exec: jest.fn().mockResolvedValue([[null, 1], [null, -1]]),
+        exec: jest.fn().mockResolvedValue([
+          [null, 1],
+          [null, -1],
+        ]),
       })),
       incr: jest.fn().mockResolvedValue(1),
       pttl: jest.fn().mockResolvedValue(-1),
@@ -221,7 +260,7 @@ describe('Contest Flow E2E', () => {
 
     let builder = Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DataSource)
-      .useValue(mockDataSource as any)
+      .useValue(mockDataSource)
       .overrideProvider(REDIS_CLIENT)
       .useValue(mockRedisClient as any);
 
@@ -251,12 +290,16 @@ describe('Contest Flow E2E', () => {
       return null;
     });
     mockContestRepo.findAndCount.mockResolvedValue([[{ ...mockContest }], 1]);
-    mockContestRepo.save.mockImplementation(async (c: any) => Promise.resolve(c));
+    mockContestRepo.save.mockImplementation(async (c: any) =>
+      Promise.resolve(c),
+    );
 
     mockContestMemberRepo.find.mockResolvedValue([]);
     mockContestMemberRepo.findAndCount.mockResolvedValue([[], 0]);
     mockContestMemberRepo.findOne.mockResolvedValue(null);
-    mockContestMemberRepo.save.mockImplementation(async (m: any) => Promise.resolve(m));
+    mockContestMemberRepo.save.mockImplementation(async (m: any) =>
+      Promise.resolve(m),
+    );
 
     moduleFixture = await builder.compile();
     app = moduleFixture.createNestApplication();
@@ -277,7 +320,9 @@ describe('Contest Flow E2E', () => {
         findOne: jest.fn().mockResolvedValue(null),
         find: jest.fn().mockResolvedValue([]),
         save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
-        create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
+        create: jest
+          .fn()
+          .mockImplementation((cls: any, obj: any) => (obj ? obj : cls || {})),
       };
       return cb(mockEntityManager);
     });
@@ -308,17 +353,23 @@ describe('Contest Flow E2E', () => {
 
   describe('POST /api/v1/contests/:id/join', () => {
     it('should successfully join a contest with sufficient balance', async () => {
-      const emFindOne = jest.fn().mockImplementation(async (entity: any, opts: any) => {
-        if (entity === Contest) {
-          return { ...mockContest, filledSlots: 5 };
-        }
-        if (entity === User) {
-          return { ...mockUser, walletBalanceInr: 500 };
-        }
-        return null;
-      });
-      const emSave = jest.fn().mockImplementation((e: any) => Promise.resolve(e));
-      const emCreate = jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {}));
+      const emFindOne = jest
+        .fn()
+        .mockImplementation(async (entity: any, opts: any) => {
+          if (entity === Contest) {
+            return { ...mockContest, filledSlots: 5 };
+          }
+          if (entity === User) {
+            return { ...mockUser, walletBalanceInr: 500 };
+          }
+          return null;
+        });
+      const emSave = jest
+        .fn()
+        .mockImplementation((e: any) => Promise.resolve(e));
+      const emCreate = jest
+        .fn()
+        .mockImplementation((cls: any, obj: any) => (obj ? obj : cls || {}));
 
       mockDataSource.transaction.mockImplementation(async (cb: Function) => {
         const mockEm = {
@@ -427,18 +478,24 @@ describe('Contest Flow E2E', () => {
       });
 
       mockDataSource.transaction.mockImplementation(async (cb: Function) => {
-        const emFindOne = jest.fn().mockImplementation(async (entity: any, opts?: any) => {
-          if (entity === Contest) {
-            return { ...mockContest, filledSlots: 3 };
-          }
-          if (entity === User) {
-            return { ...mockUser, walletBalanceInr: 500 };
-          }
-          if (entity === ContestMember) {
-            return { id: 'existing-member', contestId: CONTEST_ID, userId: USER_ID };
-          }
-          return null;
-        });
+        const emFindOne = jest
+          .fn()
+          .mockImplementation(async (entity: any, opts?: any) => {
+            if (entity === Contest) {
+              return { ...mockContest, filledSlots: 3 };
+            }
+            if (entity === User) {
+              return { ...mockUser, walletBalanceInr: 500 };
+            }
+            if (entity === ContestMember) {
+              return {
+                id: 'existing-member',
+                contestId: CONTEST_ID,
+                userId: USER_ID,
+              };
+            }
+            return null;
+          });
         return cb({
           findOne: emFindOne,
           save: jest.fn(),
@@ -481,7 +538,10 @@ describe('Contest Flow E2E', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .send({})
         .expect((r) => {
-          expect([HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.BAD_REQUEST]).toContain(r.status);
+          expect([
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            HttpStatus.BAD_REQUEST,
+          ]).toContain(r.status);
         });
     });
   });

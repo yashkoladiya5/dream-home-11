@@ -6,7 +6,10 @@ import { Reward } from './entities/reward.entity';
 import { RewardRedemption } from './entities/reward-redemption.entity';
 import { User } from '../users/entities/user.entity';
 import { PointsEngineService } from '../points/points-engine.service';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
 import { createMockPointsEngineService } from '../test/mock-services.factory';
 
 describe('RewardsService', () => {
@@ -82,7 +85,10 @@ describe('RewardsService', () => {
       providers: [
         RewardsService,
         { provide: getRepositoryToken(Reward), useValue: rewardRepo },
-        { provide: getRepositoryToken(RewardRedemption), useValue: redemptionRepo },
+        {
+          provide: getRepositoryToken(RewardRedemption),
+          useValue: redemptionRepo,
+        },
         { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: PointsEngineService, useValue: mockPointsEngineService },
       ],
@@ -122,7 +128,9 @@ describe('RewardsService', () => {
 
     it('should throw NotFoundException when reward not found', async () => {
       (rewardRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.getRewardById('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getRewardById('invalid-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -130,43 +138,71 @@ describe('RewardsService', () => {
     it('should redeem reward successfully', async () => {
       (rewardRepo.findOne as jest.Mock).mockResolvedValueOnce(mockReward);
       (userRepo.findOne as jest.Mock).mockResolvedValue(mockUser);
-      (userRepo.save as jest.Mock).mockResolvedValue({ ...mockUser, pointsBalance: 500 });
-      (rewardRepo.save as jest.Mock).mockResolvedValue({ ...mockReward, stock: 9 });
+      (userRepo.save as jest.Mock).mockResolvedValue({
+        ...mockUser,
+        pointsBalance: 500,
+      });
+      (rewardRepo.save as jest.Mock).mockResolvedValue({
+        ...mockReward,
+        stock: 9,
+      });
       (redemptionRepo.create as jest.Mock).mockReturnValue(mockRedemption);
       (redemptionRepo.save as jest.Mock).mockResolvedValue(mockRedemption);
       (redemptionRepo.findOne as jest.Mock).mockResolvedValue(mockRedemption);
 
       const result = await service.redeemReward('user-1', 'reward-1');
       expect(result.pointsSpent).toBe(500);
-      expect(mockPointsEngineService.logPointAction).toHaveBeenCalledWith('user-1', 'reward_redeem', 500, 1.0, -500);
+      expect(mockPointsEngineService.logPointAction).toHaveBeenCalledWith(
+        'user-1',
+        'reward_redeem',
+        500,
+        1.0,
+        -500,
+      );
     });
 
     it('should throw NotFoundException when reward not found', async () => {
       (rewardRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.redeemReward('user-1', 'invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.redeemReward('user-1', 'invalid-id'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException when reward is inactive', async () => {
-      (rewardRepo.findOne as jest.Mock).mockResolvedValue({ ...mockReward, isActive: false });
-      await expect(service.redeemReward('user-1', 'reward-1')).rejects.toThrow(BadRequestException);
+      (rewardRepo.findOne as jest.Mock).mockResolvedValue({
+        ...mockReward,
+        isActive: false,
+      });
+      await expect(service.redeemReward('user-1', 'reward-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when reward is out of stock', async () => {
-      (rewardRepo.findOne as jest.Mock).mockResolvedValue({ ...mockReward, stock: 0 });
-      await expect(service.redeemReward('user-1', 'reward-1')).rejects.toThrow(BadRequestException);
+      (rewardRepo.findOne as jest.Mock).mockResolvedValue({
+        ...mockReward,
+        stock: 0,
+      });
+      await expect(service.redeemReward('user-1', 'reward-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when user has insufficient points', async () => {
       const poorUser = { ...mockUser, pointsBalance: 100 };
       (rewardRepo.findOne as jest.Mock).mockResolvedValue(mockReward);
       (userRepo.findOne as jest.Mock).mockResolvedValue(poorUser);
-      await expect(service.redeemReward('user-1', 'reward-1')).rejects.toThrow(BadRequestException);
+      await expect(service.redeemReward('user-1', 'reward-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw NotFoundException when user not found', async () => {
       (rewardRepo.findOne as jest.Mock).mockResolvedValue(mockReward);
       (userRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.redeemReward('user-1', 'reward-1')).rejects.toThrow(NotFoundException);
+      await expect(service.redeemReward('user-1', 'reward-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should not decrement stock for unlimited rewards', async () => {
@@ -211,7 +247,9 @@ describe('RewardsService', () => {
 
     it('should throw NotFoundException when redemption not found', async () => {
       (redemptionRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.getRedemptionById('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getRedemptionById('invalid-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

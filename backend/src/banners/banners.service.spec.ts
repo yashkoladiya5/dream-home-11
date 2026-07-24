@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { BannersService } from './banners.service';
 import { Banner } from './entities/banner.entity';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
 
 describe('BannersService', () => {
   let service: BannersService;
@@ -66,7 +69,9 @@ describe('BannersService', () => {
 
   describe('getActiveBanners', () => {
     it('should return only active banners sorted by sortOrder', async () => {
-      (bannerRepo.find as jest.Mock).mockResolvedValue(mockBanners.filter((b) => b.isActive));
+      (bannerRepo.find as jest.Mock).mockResolvedValue(
+        mockBanners.filter((b) => b.isActive),
+      );
 
       const result = await service.getActiveBanners();
       expect(result).toHaveLength(2);

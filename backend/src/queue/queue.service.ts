@@ -57,9 +57,7 @@ export class QueueService {
         opts: item.options,
       })),
     );
-    this.logger.debug(
-      `Added ${items.length} jobs to queue ${queueName}`,
-    );
+    this.logger.debug(`Added ${items.length} jobs to queue ${queueName}`);
   }
 
   async getQueueStatus(queueName: QueueName): Promise<{

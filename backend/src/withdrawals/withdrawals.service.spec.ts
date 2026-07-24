@@ -251,8 +251,12 @@ describe('WithdrawalsService', () => {
       expect(walletService.debitBalance).toHaveBeenCalledWith(
         'user-1',
         2000,
-        { type: 'withdrawal', id: 'w1', description: 'Withdrawal request of ₹2000' },
-        mockEntityManager
+        {
+          type: 'withdrawal',
+          id: 'w1',
+          description: 'Withdrawal request of ₹2000',
+        },
+        mockEntityManager,
       );
     });
   });

@@ -28,7 +28,9 @@ describe('Security: Audit Logging', () => {
     }).compile();
 
     auditLogService = module.get<AuditLogService>(AuditLogService);
-    auditLogRepo = module.get<Repository<AuditLog>>(getRepositoryToken(AuditLog));
+    auditLogRepo = module.get<Repository<AuditLog>>(
+      getRepositoryToken(AuditLog),
+    );
   });
 
   afterEach(() => {
@@ -39,7 +41,11 @@ describe('Security: Audit Logging', () => {
     test('login success is logged', async () => {
       mockRepository.create.mockReturnValue({});
       mockRepository.save.mockResolvedValue({ id: 'log-1' });
-      const result = await auditLogService.logLogin('user-1', true, '192.168.1.1');
+      const result = await auditLogService.logLogin(
+        'user-1',
+        true,
+        '192.168.1.1',
+      );
       expect(result).toBeDefined();
       expect(mockRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -55,7 +61,11 @@ describe('Security: Audit Logging', () => {
     test('login failure is logged', async () => {
       mockRepository.create.mockReturnValue({});
       mockRepository.save.mockResolvedValue({ id: 'log-2' });
-      const result = await auditLogService.logLogin('user-2', false, '10.0.0.1');
+      const result = await auditLogService.logLogin(
+        'user-2',
+        false,
+        '10.0.0.1',
+      );
       expect(result).toBeDefined();
       expect(mockRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -89,7 +99,10 @@ describe('Security: Audit Logging', () => {
         expect.objectContaining({
           action: 'kyc_submitted',
           targetType: 'kyc',
-          metadata: expect.objectContaining({ action: 'submitted', status: 'pending' }),
+          metadata: expect.objectContaining({
+            action: 'submitted',
+            status: 'pending',
+          }),
         }),
       );
     });
@@ -97,7 +110,9 @@ describe('Security: Audit Logging', () => {
     test('admin actions are logged', async () => {
       mockRepository.create.mockReturnValue({});
       mockRepository.save.mockResolvedValue({ id: 'log-5' });
-      await auditLogService.logAdminAction('admin-1', 'update_user', 'user-5', { role: 'moderator' });
+      await auditLogService.logAdminAction('admin-1', 'update_user', 'user-5', {
+        role: 'moderator',
+      });
       expect(mockRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'admin_update_user',
@@ -119,7 +134,10 @@ describe('Security: Audit Logging', () => {
         expect.objectContaining({
           action: 'withdrawal_completed',
           targetType: 'withdrawal',
-          metadata: expect.objectContaining({ amount: 1000, status: 'completed' }),
+          metadata: expect.objectContaining({
+            amount: 1000,
+            status: 'completed',
+          }),
         }),
       );
     });
@@ -128,7 +146,9 @@ describe('Security: Audit Logging', () => {
   describe('Audit Event Required Fields', () => {
     test('audit log is created with all required fields', async () => {
       mockRepository.create.mockImplementation((data) => data);
-      mockRepository.save.mockImplementation((data) => Promise.resolve({ id: 'log-req', ...data }));
+      mockRepository.save.mockImplementation((data) =>
+        Promise.resolve({ id: 'log-req', ...data }),
+      );
       const result = await auditLogService.log(
         'test_action',
         'test_resource',
@@ -150,7 +170,9 @@ describe('Security: Audit Logging', () => {
 
     test('audit log without optional ip still has timestamp', async () => {
       mockRepository.create.mockImplementation((data) => data);
-      mockRepository.save.mockImplementation((data) => Promise.resolve({ id: 'log-noip', ...data }));
+      mockRepository.save.mockImplementation((data) =>
+        Promise.resolve({ id: 'log-noip', ...data }),
+      );
       const result = await auditLogService.log('test', 'resource', 'r1', 'u1');
       expect(result.metadata).toHaveProperty('timestamp');
       expect(typeof result.metadata.timestamp).toBe('string');
@@ -162,7 +184,14 @@ describe('Security: Audit Logging', () => {
       const metadata = { aadhaar: 'XXXX-XXXX-1234', name: 'Test User' };
       mockRepository.create.mockReturnValue({});
       mockRepository.save.mockResolvedValue({ id: 'log-pii-1' });
-      await auditLogService.log('kyc_submitted', 'kyc', 'user-1', 'user-1', metadata, '10.0.0.1');
+      await auditLogService.log(
+        'kyc_submitted',
+        'kyc',
+        'user-1',
+        'user-1',
+        metadata,
+        '10.0.0.1',
+      );
       const createCall = mockRepository.create.mock.calls[0][0];
       expect(createCall.metadata.aadhaar).toBe('XXXX-XXXX-1234');
       expect(createCall.metadata.aadhaar).not.toMatch(/^\d{12}$/);
@@ -172,7 +201,14 @@ describe('Security: Audit Logging', () => {
       const metadata = { pan: 'XXXX-XXXX-1234', name: 'Test User' };
       mockRepository.create.mockReturnValue({});
       mockRepository.save.mockResolvedValue({ id: 'log-pii-2' });
-      await auditLogService.log('kyc_submitted', 'kyc', 'user-1', 'user-1', metadata, '10.0.0.1');
+      await auditLogService.log(
+        'kyc_submitted',
+        'kyc',
+        'user-1',
+        'user-1',
+        metadata,
+        '10.0.0.1',
+      );
       const createCall = mockRepository.create.mock.calls[0][0];
       expect(createCall.metadata.pan).not.toMatch(/^[A-Z]{5}[0-9]{4}[A-Z]$/);
     });
@@ -181,7 +217,14 @@ describe('Security: Audit Logging', () => {
       const metadata = { bankAccount: 'XXXXXXXX1234', ifsc: 'SBIN0001234' };
       mockRepository.create.mockReturnValue({});
       mockRepository.save.mockResolvedValue({ id: 'log-pii-3' });
-      await auditLogService.log('payment_verified', 'payment', 'user-1', 'user-1', metadata, '10.0.0.1');
+      await auditLogService.log(
+        'payment_verified',
+        'payment',
+        'user-1',
+        'user-1',
+        metadata,
+        '10.0.0.1',
+      );
       const createCall = mockRepository.create.mock.calls[0][0];
       expect(createCall.metadata.bankAccount).toBe('XXXXXXXX1234');
     });
@@ -201,8 +244,14 @@ describe('Security: Audit Logging', () => {
 
     test('failed login has success=false in metadata', async () => {
       mockRepository.create.mockImplementation((data) => data);
-      mockRepository.save.mockImplementation((data) => Promise.resolve({ id: 'log-fail-meta', ...data }));
-      const result = await auditLogService.logLogin('user-fail', false, '10.0.0.100');
+      mockRepository.save.mockImplementation((data) =>
+        Promise.resolve({ id: 'log-fail-meta', ...data }),
+      );
+      const result = await auditLogService.logLogin(
+        'user-fail',
+        false,
+        '10.0.0.100',
+      );
       expect(result.action).toBe('login_failure');
       expect(result.metadata).toHaveProperty('success', false);
     });
@@ -210,7 +259,9 @@ describe('Security: Audit Logging', () => {
 
   describe('Audit Log Cleanup', () => {
     test('cleanup removes logs older than retention period', async () => {
-      const deleteSpy = jest.spyOn(mockRepository, 'delete').mockResolvedValue({ affected: 10, raw: {} });
+      const deleteSpy = jest
+        .spyOn(mockRepository, 'delete')
+        .mockResolvedValue({ affected: 10, raw: {} });
       process.env.AUDIT_LOG_RETENTION_DAYS = '30';
       await auditLogService.cleanupOldLogs();
       expect(deleteSpy).toHaveBeenCalled();
@@ -218,7 +269,9 @@ describe('Security: Audit Logging', () => {
     });
 
     test('cleanup defaults to 90 days retention', async () => {
-      const deleteSpy = jest.spyOn(mockRepository, 'delete').mockResolvedValue({ affected: 5, raw: {} });
+      const deleteSpy = jest
+        .spyOn(mockRepository, 'delete')
+        .mockResolvedValue({ affected: 5, raw: {} });
       await auditLogService.cleanupOldLogs();
       expect(deleteSpy).toHaveBeenCalled();
     });

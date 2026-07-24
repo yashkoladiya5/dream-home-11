@@ -9,7 +9,10 @@ import { RedisOtpService } from './redis-otp.service';
 import { RefreshTokenService } from './refresh-token.service';
 import { QueueService } from '../queue/queue.service';
 import { QUEUES } from '../queue/queue.constants';
-import { DomainEventNames, createDomainEvent } from '../common/events/domain-events';
+import {
+  DomainEventNames,
+  createDomainEvent,
+} from '../common/events/domain-events';
 import { User, UserRole } from '../users/entities/user.entity';
 
 @Injectable()
@@ -56,9 +59,15 @@ export class AuthService {
     }
 
     const existingUser = await this.usersService.findByPhoneNumber(phoneNumber);
-    if (existingUser && existingUser.isSelfExcluded && existingUser.selfExcludedUntil) {
+    if (
+      existingUser &&
+      existingUser.isSelfExcluded &&
+      existingUser.selfExcludedUntil
+    ) {
       if (new Date() < existingUser.selfExcludedUntil) {
-        throw new UnauthorizedException('Account is self-excluded for responsible gaming');
+        throw new UnauthorizedException(
+          'Account is self-excluded for responsible gaming',
+        );
       } else {
         existingUser.isSelfExcluded = false;
         existingUser.selfExcludedUntil = null as any;

@@ -38,10 +38,7 @@ export class PaymentMethodsController {
   @Post()
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.CREATED)
-  async create(
-    @GetUser() user: User,
-    @Body() dto: CreatePaymentMethodDto,
-  ) {
+  async create(@GetUser() user: User, @Body() dto: CreatePaymentMethodDto) {
     return this.service.create(user.id, dto);
   }
 

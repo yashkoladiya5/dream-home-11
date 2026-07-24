@@ -43,9 +43,7 @@ export class TwilioSmsService {
         from: this.fromNumber,
         to: phoneNumber,
       });
-      this.logger.log(
-        `Twilio SMS sent to ${phoneNumber}: sid=${result.sid}`,
-      );
+      this.logger.log(`Twilio SMS sent to ${phoneNumber}: sid=${result.sid}`);
     } catch (error) {
       this.logger.error(
         `Twilio SMS failed to ${phoneNumber}: ${(error as Error).message}`,
@@ -54,10 +52,7 @@ export class TwilioSmsService {
     }
   }
 
-  async sendVerificationSms(
-    phoneNumber: string,
-    code: string,
-  ): Promise<void> {
+  async sendVerificationSms(phoneNumber: string, code: string): Promise<void> {
     const message = `Dream Home 11 verification code: ${code}`;
     await this.sendSms(phoneNumber, message);
   }

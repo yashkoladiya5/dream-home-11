@@ -66,13 +66,22 @@ export class FraudAlert {
   @Column({ name: 'device_id', type: 'varchar', length: 255, nullable: true })
   deviceId: string | null;
 
-  @Column({ name: 'flagged_field', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'flagged_field',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   flaggedField: string | null;
 
   @Column({ name: 'resolved_by', type: 'uuid', nullable: true })
   resolvedBy: string | null;
 
-  @Column({ name: 'resolved_at', type: 'timestamp with time zone', nullable: true })
+  @Column({
+    name: 'resolved_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
   resolvedAt: Date | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })

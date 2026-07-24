@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TransactionsService } from './transactions.service';
 import { Transaction } from './entities/transaction.entity';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
 
 describe('TransactionsService', () => {
   let service: TransactionsService;
@@ -64,8 +67,16 @@ describe('TransactionsService', () => {
     });
 
     it('should use defaults for optional values', async () => {
-      (transactionRepo.create as jest.Mock).mockReturnValue({ ...mockTransaction, cashAmount: 0, pointsAmount: 0 });
-      (transactionRepo.save as jest.Mock).mockResolvedValue({ ...mockTransaction, cashAmount: 0, pointsAmount: 0 });
+      (transactionRepo.create as jest.Mock).mockReturnValue({
+        ...mockTransaction,
+        cashAmount: 0,
+        pointsAmount: 0,
+      });
+      (transactionRepo.save as jest.Mock).mockResolvedValue({
+        ...mockTransaction,
+        cashAmount: 0,
+        pointsAmount: 0,
+      });
 
       const result = await service.logTransaction({
         userId: 'user-1',
@@ -91,7 +102,10 @@ describe('TransactionsService', () => {
 
   describe('getHistory', () => {
     it('should return paginated transaction history', async () => {
-      (transactionRepo.findAndCount as jest.Mock).mockResolvedValue([[mockTransaction], 1]);
+      (transactionRepo.findAndCount as jest.Mock).mockResolvedValue([
+        [mockTransaction],
+        1,
+      ]);
 
       const result = await service.getHistory('user-1', 1, 20);
       expect(result.transactions).toHaveLength(1);
@@ -101,7 +115,10 @@ describe('TransactionsService', () => {
     });
 
     it('should filter by type when provided', async () => {
-      (transactionRepo.findAndCount as jest.Mock).mockResolvedValue([[mockTransaction], 1]);
+      (transactionRepo.findAndCount as jest.Mock).mockResolvedValue([
+        [mockTransaction],
+        1,
+      ]);
 
       const result = await service.getHistory('user-1', 1, 20, 'deposit');
       expect(result.transactions).toHaveLength(1);
@@ -116,7 +133,10 @@ describe('TransactionsService', () => {
     });
 
     it('should handle multiple comma-separated types', async () => {
-      (transactionRepo.findAndCount as jest.Mock).mockResolvedValue([[mockTransaction], 1]);
+      (transactionRepo.findAndCount as jest.Mock).mockResolvedValue([
+        [mockTransaction],
+        1,
+      ]);
 
       await service.getHistory('user-1', 1, 20, 'deposit,withdrawal');
       expect(transactionRepo.findAndCount).toHaveBeenCalled();
@@ -140,11 +160,36 @@ describe('TransactionsService', () => {
         groupBy: jest.fn().mockReturnThis(),
         addGroupBy: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([
-          { type: 'deposit', status: 'completed', totalCash: '2000', totalPoints: '0' },
-          { type: 'entry_fee', status: 'completed', totalCash: '500', totalPoints: '0' },
-          { type: 'points_earned', status: 'completed', totalCash: '0', totalPoints: '300' },
-          { type: 'redemption', status: 'completed', totalCash: '0', totalPoints: '100' },
-          { type: 'withdrawal', status: 'completed', totalCash: '200', totalPoints: '0' },
+          {
+            type: 'deposit',
+            status: 'completed',
+            totalCash: '2000',
+            totalPoints: '0',
+          },
+          {
+            type: 'entry_fee',
+            status: 'completed',
+            totalCash: '500',
+            totalPoints: '0',
+          },
+          {
+            type: 'points_earned',
+            status: 'completed',
+            totalCash: '0',
+            totalPoints: '300',
+          },
+          {
+            type: 'redemption',
+            status: 'completed',
+            totalCash: '0',
+            totalPoints: '100',
+          },
+          {
+            type: 'withdrawal',
+            status: 'completed',
+            totalCash: '200',
+            totalPoints: '0',
+          },
         ]),
       });
 

@@ -61,7 +61,9 @@ export class PushNotificationsProcessor extends WorkerHost {
           data: { ...data, type: type || 'general' },
         });
       } catch (error: any) {
-        this.logger.error(`FCM send failed for token ${fcmToken.id}: ${error.message}`);
+        this.logger.error(
+          `FCM send failed for token ${fcmToken.id}: ${error.message}`,
+        );
       }
     }
   }

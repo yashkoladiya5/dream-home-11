@@ -17,10 +17,7 @@ export class RedisOtpService {
     await this.redisCache.set(key, { code, attempts: 0 }, OTP_TTL);
   }
 
-  async verifyOtp(
-    phoneNumber: string,
-    code: string,
-  ): Promise<boolean> {
+  async verifyOtp(phoneNumber: string, code: string): Promise<boolean> {
     const key = `${OTP_PREFIX}${phoneNumber}`;
     const stored = await this.redisCache.get<{
       code: string;

@@ -121,17 +121,22 @@ describe('ContestsService', () => {
         },
         { provide: DataSource, useValue: dataSource },
         { provide: PointsEngineService, useValue: mockPointsEngineService },
-        { 
+        {
           provide: WalletService,
-          useValue: { 
-            debitBalance: jest.fn().mockResolvedValue({ 
-              wallet: { balanceInr: 900 }, 
-              transaction: { id: 'tx-1' } 
+          useValue: {
+            debitBalance: jest.fn().mockResolvedValue({
+              wallet: { balanceInr: 900 },
+              transaction: { id: 'tx-1' },
             }),
-            creditPoints: jest.fn().mockResolvedValue({ pointsBalance: 150 })
-          } 
+            creditPoints: jest.fn().mockResolvedValue({ pointsBalance: 150 }),
+          },
         },
-        { provide: ConfigService, useValue: { getConfig: jest.fn().mockResolvedValue({ restrictedStates: [] }) } }
+        {
+          provide: ConfigService,
+          useValue: {
+            getConfig: jest.fn().mockResolvedValue({ restrictedStates: [] }),
+          },
+        },
       ],
     }).compile();
 

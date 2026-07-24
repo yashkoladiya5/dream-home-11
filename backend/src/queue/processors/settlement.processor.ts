@@ -9,7 +9,10 @@ import { Contest, ContestStatus } from '../../contests/entities/contest.entity';
 import { ContestMember } from '../../contests/entities/contest-member.entity';
 import { Transaction } from '../../transactions/entities/transaction.entity';
 import { User } from '../../users/entities/user.entity';
-import { DomainEventNames, createDomainEvent } from '../../common/events/domain-events';
+import {
+  DomainEventNames,
+  createDomainEvent,
+} from '../../common/events/domain-events';
 
 @Injectable()
 @Processor(QUEUES.SETTLEMENT)
@@ -39,7 +42,9 @@ export class SettlementProcessor extends WorkerHost {
       }
 
       if (contest.status !== ContestStatus.COMPLETED) {
-        this.logger.warn(`Contest ${contestId} status is ${contest.status}, not completed`);
+        this.logger.warn(
+          `Contest ${contestId} status is ${contest.status}, not completed`,
+        );
         return;
       }
 
@@ -74,7 +79,9 @@ export class SettlementProcessor extends WorkerHost {
         }
       }
 
-      this.logger.log(`Contest ${contestId}: settled ${settledCount}/${members.length} members`);
+      this.logger.log(
+        `Contest ${contestId}: settled ${settledCount}/${members.length} members`,
+      );
     });
 
     this.eventEmitter.emit(

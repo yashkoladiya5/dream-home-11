@@ -15,10 +15,7 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Get()
-  async getHistory(
-    @GetUser() user: User,
-    @Query() dto: GetTransactionsDto,
-  ) {
+  async getHistory(@GetUser() user: User, @Query() dto: GetTransactionsDto) {
     return this.transactionsService.getHistory(
       user.id,
       dto.page ?? 1,

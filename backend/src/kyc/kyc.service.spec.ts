@@ -5,8 +5,16 @@ import { DataSource } from 'typeorm';
 import { KycService } from './kyc.service';
 import { Kyc, KycStatus } from './entities/kyc.entity';
 import { User } from '../users/entities/user.entity';
-import { createMockRepository, MockRepository } from '../test/mock-repository.factory';
-import { createMockDataSource, createMockReferralService, createMockAuditService, createMockEncryptionService } from '../test/mock-services.factory';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../test/mock-repository.factory';
+import {
+  createMockDataSource,
+  createMockReferralService,
+  createMockAuditService,
+  createMockEncryptionService,
+} from '../test/mock-services.factory';
 import { ReferralService } from '../referral/referral.service';
 import { AuditService } from '../audit/audit.service';
 import { EncryptionService } from '../common/encryption/encryption.service';
@@ -55,7 +63,13 @@ describe('KycService', () => {
         { provide: ReferralService, useValue: mockReferralService },
         { provide: AuditService, useValue: mockAuditService },
         { provide: EncryptionService, useValue: mockEncryptionService },
-        { provide: KycProviderService, useValue: { verifyAadhaar: jest.fn().mockResolvedValue({ success: true }), verifyPan: jest.fn().mockResolvedValue({ success: true }) } },
+        {
+          provide: KycProviderService,
+          useValue: {
+            verifyAadhaar: jest.fn().mockResolvedValue({ success: true }),
+            verifyPan: jest.fn().mockResolvedValue({ success: true }),
+          },
+        },
       ],
     }).compile();
 
@@ -72,16 +86,26 @@ describe('KycService', () => {
       (kycRepo.create as jest.Mock).mockReturnValue(mockKyc);
       (kycRepo.save as jest.Mock).mockResolvedValue(mockKyc);
 
-      const result = await service.submitKyc('user-1', '123456789012', 'ABCDE1234F', 'Test User', '1990-01-01');
+      const result = await service.submitKyc(
+        'user-1',
+        '123456789012',
+        'ABCDE1234F',
+        'Test User',
+        '1990-01-01',
+      );
       expect(result.status).toBe(KycStatus.PENDING);
       expect(mockEncryptionService.encrypt).toHaveBeenCalledTimes(2);
       expect(mockAuditService.log).toHaveBeenCalled();
-      expect(mockReferralService.processKycReferral).toHaveBeenCalledWith('user-1');
+      expect(mockReferralService.processKycReferral).toHaveBeenCalledWith(
+        'user-1',
+      );
     });
 
     it('should throw ConflictException when KYC already submitted', async () => {
       (kycRepo.findOne as jest.Mock).mockResolvedValue(mockKyc);
-      await expect(service.submitKyc('user-1', '123456789012', 'ABCDE1234F', 'Test')).rejects.toThrow(ConflictException);
+      await expect(
+        service.submitKyc('user-1', '123456789012', 'ABCDE1234F', 'Test'),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should update user full name when provided', async () => {
@@ -89,8 +113,16 @@ describe('KycService', () => {
       (kycRepo.create as jest.Mock).mockReturnValue(mockKyc);
       (kycRepo.save as jest.Mock).mockResolvedValue(mockKyc);
 
-      await service.submitKyc('user-1', '123456789012', 'ABCDE1234F', 'Updated Name', '1990-01-01');
-      expect(userRepo.update).toHaveBeenCalledWith('user-1', { fullName: 'Updated Name' });
+      await service.submitKyc(
+        'user-1',
+        '123456789012',
+        'ABCDE1234F',
+        'Updated Name',
+        '1990-01-01',
+      );
+      expect(userRepo.update).toHaveBeenCalledWith('user-1', {
+        fullName: 'Updated Name',
+      });
     });
 
     it('should not update user full name when empty', async () => {
@@ -98,7 +130,13 @@ describe('KycService', () => {
       (kycRepo.create as jest.Mock).mockReturnValue(mockKyc);
       (kycRepo.save as jest.Mock).mockResolvedValue(mockKyc);
 
-      await service.submitKyc('user-1', '123456789012', 'ABCDE1234F', '', '1990-01-01');
+      await service.submitKyc(
+        'user-1',
+        '123456789012',
+        'ABCDE1234F',
+        '',
+        '1990-01-01',
+      );
       expect(userRepo.update).not.toHaveBeenCalled();
     });
   });
@@ -118,7 +156,11 @@ describe('KycService', () => {
     });
 
     it('should return approved status with verified date', async () => {
-      const approvedKyc = { ...mockKyc, status: KycStatus.APPROVED, verifiedAt: new Date('2025-01-01') };
+      const approvedKyc = {
+        ...mockKyc,
+        status: KycStatus.APPROVED,
+        verifiedAt: new Date('2025-01-01'),
+      };
       (kycRepo.findOne as jest.Mock).mockResolvedValue(approvedKyc);
       const result = await service.getKycStatus('user-1');
       expect(result.status).toBe('approved');
@@ -137,34 +179,60 @@ describe('KycService', () => {
     });
 
     it('should upload document and update KYC record', async () => {
-      const file = { buffer: Buffer.from('fake-image-data'), originalname: 'photo.jpg', mimetype: 'image/jpeg' } as Express.Multer.File;
+      const file = {
+        buffer: Buffer.from('fake-image-data'),
+        originalname: 'photo.jpg',
+        mimetype: 'image/jpeg',
+      } as Express.Multer.File;
       const manager = {
         findOne: jest.fn().mockResolvedValue(mockKyc),
         save: jest.fn().mockResolvedValue({}),
         create: jest.fn(),
       };
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
 
-      const result = await service.uploadDocument('user-1', 'aadhaar_front', file);
+      const result = await service.uploadDocument(
+        'user-1',
+        'aadhaar_front',
+        file,
+      );
       expect(result.url).toContain('/uploads/kyc/user-1/');
     });
 
     it('should create a new KYC record if none exists', async () => {
-      const file = { buffer: Buffer.from('data'), originalname: 'selfie.jpg' } as Express.Multer.File;
+      const file = {
+        buffer: Buffer.from('data'),
+        originalname: 'selfie.jpg',
+      } as Express.Multer.File;
       const manager = {
         findOne: jest.fn().mockResolvedValue(null),
-        save: jest.fn().mockResolvedValue({ id: 'new-kyc', userId: 'user-1', status: KycStatus.PENDING }),
-        create: jest.fn().mockReturnValue({ userId: 'user-1', status: KycStatus.PENDING }),
+        save: jest.fn().mockResolvedValue({
+          id: 'new-kyc',
+          userId: 'user-1',
+          status: KycStatus.PENDING,
+        }),
+        create: jest
+          .fn()
+          .mockReturnValue({ userId: 'user-1', status: KycStatus.PENDING }),
       };
-      mockDataSource.transaction.mockImplementation(async (cb: any) => cb(manager));
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager),
+      );
 
       const result = await service.uploadDocument('user-1', 'selfie', file);
       expect(result.url).toBeDefined();
     });
 
     it('should throw BadRequestException for invalid document type', async () => {
-      const file = { buffer: Buffer.from('data'), originalname: 'doc.jpg' } as Express.Multer.File;
-      await expect(service.uploadDocument('user-1', 'invalid_type', file)).rejects.toThrow(BadRequestException);
+      const file = {
+        buffer: Buffer.from('data'),
+        originalname: 'doc.jpg',
+      } as Express.Multer.File;
+      await expect(
+        service.uploadDocument('user-1', 'invalid_type', file),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

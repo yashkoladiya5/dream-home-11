@@ -158,10 +158,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async verifyAge(
-    @GetUser() user: User,
-    @Body() dto: VerifyAgeDto,
-  ) {
+  async verifyAge(@GetUser() user: User, @Body() dto: VerifyAgeDto) {
     let kyc = await this.kycRepository.findOne({ where: { userId: user.id } });
     if (!kyc) {
       kyc = this.kycRepository.create({ userId: user.id });

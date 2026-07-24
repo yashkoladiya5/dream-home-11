@@ -33,10 +33,7 @@ export class NotificationsController {
 
   @Post('fcm-token')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async registerToken(
-    @Req() req,
-    @Body() dto: RegisterTokenDto,
-  ) {
+  async registerToken(@Req() req, @Body() dto: RegisterTokenDto) {
     const userId = req.user.id;
     if (!dto.token) return { success: false, reason: 'Token is required' };
     await this.notificationsService.registerToken(
@@ -54,10 +51,7 @@ export class NotificationsController {
 
   @Post('reminders')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async createReminder(
-    @Req() req,
-    @Body() dto: CreateReminderDto,
-  ) {
+  async createReminder(@Req() req, @Body() dto: CreateReminderDto) {
     const userId = req.user.id;
     const reminder = await this.notificationsService.createReminder(
       userId,

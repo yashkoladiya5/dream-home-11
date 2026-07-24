@@ -8,7 +8,11 @@ import { DataSource } from 'typeorm';
 import { REDIS_CLIENT } from '../../src/redis/redis.constants';
 import { User, UserLevel } from '../../src/users/entities/user.entity';
 import { Kyc } from '../../src/kyc/entities/kyc.entity';
-import { Contest, ContestStatus, CompensationStatus as ContestCompensationStatus } from '../../src/contests/entities/contest.entity';
+import {
+  Contest,
+  ContestStatus,
+  CompensationStatus as ContestCompensationStatus,
+} from '../../src/contests/entities/contest.entity';
 import { ContestMember } from '../../src/contests/entities/contest-member.entity';
 import { PointLog } from '../../src/points/entities/point-log.entity';
 import { CompensationLog } from '../../src/compensation/entities/compensation.entity';
@@ -100,14 +104,24 @@ describe('Points & Compensation Flow E2E', () => {
       initialize: jest.fn(),
       transaction: jest.fn().mockImplementation(async (cb: Function) => {
         const mockEntityManager = {
-          findOne: jest.fn().mockImplementation(async (entity: any, opts?: any) => {
-            if (entity === User) return mockUserRepo.findOne(opts);
-            if (entity === Contest) return mockContestRepo.findOne(opts);
-            return null;
-          }),
+          findOne: jest
+            .fn()
+            .mockImplementation(async (entity: any, opts?: any) => {
+              if (entity === User) return mockUserRepo.findOne(opts);
+              if (entity === Contest) return mockContestRepo.findOne(opts);
+              return null;
+            }),
           find: jest.fn().mockResolvedValue([]),
-          save: jest.fn().mockImplementation((arg1: any, arg2?: any) => Promise.resolve(arg2 ? arg2 : arg1)),
-          create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
+          save: jest
+            .fn()
+            .mockImplementation((arg1: any, arg2?: any) =>
+              Promise.resolve(arg2 ? arg2 : arg1),
+            ),
+          create: jest
+            .fn()
+            .mockImplementation((cls: any, obj: any) =>
+              obj ? obj : cls || {},
+            ),
           increment: jest.fn().mockResolvedValue(undefined),
         };
         return cb(mockEntityManager);
@@ -124,7 +138,10 @@ describe('Points & Compensation Flow E2E', () => {
       multi: jest.fn(() => ({
         incr: jest.fn(),
         pttl: jest.fn(),
-        exec: jest.fn().mockResolvedValue([[null, 1], [null, -1]]),
+        exec: jest.fn().mockResolvedValue([
+          [null, 1],
+          [null, -1],
+        ]),
       })),
       incr: jest.fn().mockResolvedValue(1),
       pttl: jest.fn().mockResolvedValue(-1),
@@ -144,18 +161,27 @@ describe('Points & Compensation Flow E2E', () => {
     };
 
     const repoMocks: Record<string, ReturnType<typeof createMockRepo>> = {};
-    const ALL_ENTITIES = [User, Kyc, Contest, ContestMember, PointLog, CompensationLog];
-    
+    const ALL_ENTITIES = [
+      User,
+      Kyc,
+      Contest,
+      ContestMember,
+      PointLog,
+      CompensationLog,
+    ];
+
     let builder = Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DataSource)
-      .useValue(mockDataSource as any)
+      .useValue(mockDataSource)
       .overrideProvider(REDIS_CLIENT)
       .useValue(mockRedisClient as any);
 
     for (const entity of ALL_ENTITIES) {
       const mock = createMockRepo();
       repoMocks[(entity as any).name || String(entity)] = mock;
-      builder = builder.overrideProvider(getRepositoryToken(entity)).useValue(mock);
+      builder = builder
+        .overrideProvider(getRepositoryToken(entity))
+        .useValue(mock);
     }
 
     mockUserRepo = repoMocks['User'];
@@ -170,7 +196,8 @@ describe('Points & Compensation Flow E2E', () => {
 
     jwtService = moduleFixture.get<JwtService>(JwtService);
     streakService = moduleFixture.get<StreakService>(StreakService);
-    compensationService = moduleFixture.get<CompensationService>(CompensationService);
+    compensationService =
+      moduleFixture.get<CompensationService>(CompensationService);
     userToken = jwtService.sign({ sub: USER_ID, phoneNumber: USER_PHONE });
   });
 
@@ -197,11 +224,13 @@ describe('Points & Compensation Flow E2E', () => {
     mockUserRepo.manager = {
       transaction: jest.fn().mockImplementation(async (cb: Function) => {
         const mockEntityManager = {
-          findOne: jest.fn().mockImplementation(async (entity: any, opts?: any) => {
-            if (entity === User) return mockUserRepo.findOne(opts);
-            if (entity === Contest) return mockContestRepo.findOne(opts);
-            return null;
-          }),
+          findOne: jest
+            .fn()
+            .mockImplementation(async (entity: any, opts?: any) => {
+              if (entity === User) return mockUserRepo.findOne(opts);
+              if (entity === Contest) return mockContestRepo.findOne(opts);
+              return null;
+            }),
           find: jest.fn().mockResolvedValue([]),
           save: jest.fn().mockImplementation((arg1: any, arg2?: any) => {
             const saved = arg2 ? arg2 : arg1;
@@ -211,12 +240,26 @@ describe('Points & Compensation Flow E2E', () => {
             }
             return Promise.resolve(saved);
           }),
-          create: jest.fn().mockImplementation((cls: any, obj: any) => obj ? obj : (cls || {})),
-          increment: jest.fn().mockImplementation(async (entityCls: any, criteria: any, propertyName: string, value: number) => {
-            if (entityCls === User && criteria.id === USER_ID) {
-              activeUser[propertyName] = Number(activeUser[propertyName] || 0) + value;
-            }
-          }),
+          create: jest
+            .fn()
+            .mockImplementation((cls: any, obj: any) =>
+              obj ? obj : cls || {},
+            ),
+          increment: jest
+            .fn()
+            .mockImplementation(
+              async (
+                entityCls: any,
+                criteria: any,
+                propertyName: string,
+                value: number,
+              ) => {
+                if (entityCls === User && criteria.id === USER_ID) {
+                  activeUser[propertyName] =
+                    Number(activeUser[propertyName] || 0) + value;
+                }
+              },
+            ),
         };
         return cb(mockEntityManager);
       }),
@@ -231,7 +274,9 @@ describe('Points & Compensation Flow E2E', () => {
       if (id === CONTEST_ID) return { ...mockContest };
       return null;
     });
-    mockContestRepo.save.mockImplementation(async (c: any) => Promise.resolve(c));
+    mockContestRepo.save.mockImplementation(async (c: any) =>
+      Promise.resolve(c),
+    );
     mockContestRepo.find.mockResolvedValue([]);
   });
 
@@ -311,8 +356,12 @@ describe('Points & Compensation Flow E2E', () => {
     it('should apply missed day penalties to inactive streak users', async () => {
       const oldDate = new Date();
       oldDate.setDate(oldDate.getDate() - 3);
-      const userToPenalize = { ...mockUser, lastStreakDate: oldDate, pointsBalance: 500 };
-      
+      const userToPenalize = {
+        ...mockUser,
+        lastStreakDate: oldDate,
+        pointsBalance: 500,
+      };
+
       mockUserRepo.find.mockResolvedValueOnce([userToPenalize]);
 
       const penalitiesCount = await streakService.applyMissedDayPenalties();
@@ -355,7 +404,8 @@ describe('Points & Compensation Flow E2E', () => {
 
       mockContestRepo.findOne.mockResolvedValueOnce(cancelledContest);
 
-      const compResult = await compensationService.processCompensation(cancelledContest);
+      const compResult =
+        await compensationService.processCompensation(cancelledContest);
       expect(compResult.processed).toBe(1);
       expect(compResult.totalPoints).toBe(275);
     });

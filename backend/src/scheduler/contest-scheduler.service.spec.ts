@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ContestSchedulerService } from './contest-scheduler.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -53,7 +53,9 @@ describe('ContestSchedulerService', () => {
 
       await service.autoCompleteContests();
       expect(mockRepo.find).toHaveBeenCalled();
-      expect(mockContestsServiceObj.completeContest).toHaveBeenCalledWith('contest-1');
+      expect(mockContestsServiceObj.completeContest).toHaveBeenCalledWith(
+        'contest-1',
+      );
     });
 
     it('should handle no expired contests gracefully', async () => {
@@ -65,22 +67,46 @@ describe('ContestSchedulerService', () => {
 
     it('should process multiple expired contests', async () => {
       const contests = [
-        { id: 'contest-1', title: 'C1', status: ContestStatus.RUNNING, endTime: new Date(Date.now() - 1000) },
-        { id: 'contest-2', title: 'C2', status: ContestStatus.RUNNING, endTime: new Date(Date.now() - 2000) },
+        {
+          id: 'contest-1',
+          title: 'C1',
+          status: ContestStatus.RUNNING,
+          endTime: new Date(Date.now() - 1000),
+        },
+        {
+          id: 'contest-2',
+          title: 'C2',
+          status: ContestStatus.RUNNING,
+          endTime: new Date(Date.now() - 2000),
+        },
       ];
       mockRepo.find.mockResolvedValue(contests);
       mockContestsServiceObj.completeContest.mockResolvedValue({ winners: [] });
 
       await service.autoCompleteContests();
       expect(mockContestsServiceObj.completeContest).toHaveBeenCalledTimes(2);
-      expect(mockContestsServiceObj.completeContest).toHaveBeenCalledWith('contest-1');
-      expect(mockContestsServiceObj.completeContest).toHaveBeenCalledWith('contest-2');
+      expect(mockContestsServiceObj.completeContest).toHaveBeenCalledWith(
+        'contest-1',
+      );
+      expect(mockContestsServiceObj.completeContest).toHaveBeenCalledWith(
+        'contest-2',
+      );
     });
 
     it('should continue processing remaining contests even if one fails', async () => {
       const contests = [
-        { id: 'contest-1', title: 'C1', status: ContestStatus.RUNNING, endTime: new Date(Date.now() - 1000) },
-        { id: 'contest-2', title: 'C2', status: ContestStatus.RUNNING, endTime: new Date(Date.now() - 2000) },
+        {
+          id: 'contest-1',
+          title: 'C1',
+          status: ContestStatus.RUNNING,
+          endTime: new Date(Date.now() - 1000),
+        },
+        {
+          id: 'contest-2',
+          title: 'C2',
+          status: ContestStatus.RUNNING,
+          endTime: new Date(Date.now() - 2000),
+        },
       ];
       mockRepo.find.mockResolvedValue(contests);
       mockContestsServiceObj.completeContest

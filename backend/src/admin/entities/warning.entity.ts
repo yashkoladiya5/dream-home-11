@@ -54,10 +54,18 @@ export class Warning {
   @Column({ name: 'issued_by', type: 'uuid', nullable: true })
   issuedBy: string | null;
 
-  @Column({ name: 'expires_at', type: 'timestamp with time zone', nullable: true })
+  @Column({
+    name: 'expires_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
   expiresAt: Date | null;
 
-  @Column({ name: 'resolved_at', type: 'timestamp with time zone', nullable: true })
+  @Column({
+    name: 'resolved_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
   resolvedAt: Date | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })

@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In, ILike } from 'typeorm';
 import { ConsentService } from '../common/consent/consent.service';
@@ -157,7 +163,9 @@ export class UsersService {
     }
 
     if (data.bankAccountNumber !== undefined)
-      user.bankAccountNumber = this.encryptionService.encrypt(data.bankAccountNumber);
+      user.bankAccountNumber = this.encryptionService.encrypt(
+        data.bankAccountNumber,
+      );
     if (data.bankIfsc !== undefined) user.bankIfsc = data.bankIfsc;
     if (data.bankName !== undefined) user.bankName = data.bankName;
     if (data.upiId !== undefined)
@@ -179,7 +187,9 @@ export class UsersService {
     let decryptedUpi: string | undefined;
     try {
       if (user.bankAccountNumber) {
-        decryptedBankAccount = this.encryptionService.decrypt(user.bankAccountNumber);
+        decryptedBankAccount = this.encryptionService.decrypt(
+          user.bankAccountNumber,
+        );
       }
     } catch {
       decryptedBankAccount = undefined;
@@ -258,12 +268,24 @@ export class UsersService {
 
     // Profile Completion Bonus
     if (savedUser.fullName && savedUser.email && savedUser.avatarUrl) {
-      const hasReceived = await this.pointsEngineService.hasActionEverBeenPerformed(userId, 'profile_complete');
+      const hasReceived =
+        await this.pointsEngineService.hasActionEverBeenPerformed(
+          userId,
+          'profile_complete',
+        );
       if (!hasReceived) {
         const basePoints = 50;
-        const multiplier = this.pointsEngineService.getMultiplier(savedUser.currentTier);
+        const multiplier = this.pointsEngineService.getMultiplier(
+          savedUser.currentTier,
+        );
         const finalPoints = Math.round(basePoints * multiplier);
-        await this.pointsEngineService.logPointAction(userId, 'profile_complete', basePoints, multiplier, finalPoints);
+        await this.pointsEngineService.logPointAction(
+          userId,
+          'profile_complete',
+          basePoints,
+          multiplier,
+          finalPoints,
+        );
         await this.awardPoints(userId, finalPoints);
       }
     }
@@ -416,7 +438,11 @@ export class UsersService {
     }
     user.termsAcceptedAt = new Date();
     const saved = await this.userRepository.save(user);
-    await this.consentService.recordConsent(userId, ConsentType.TERMS_OF_SERVICE, true);
+    await this.consentService.recordConsent(
+      userId,
+      ConsentType.TERMS_OF_SERVICE,
+      true,
+    );
     return saved;
   }
 
@@ -600,18 +626,20 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    
+
     // Instead of hard deleting, we typically deactivate the account for compliance/auditing
     // Or we anonymize personal data. Here we do a soft delete + anonymization.
     const randomSuffix = randomBytes(4).toString('hex');
     user.isActive = false;
     user.phoneNumber = `deleted_${randomSuffix}`; // Anonymize PII
     user.fullName = 'Deleted User';
-    user.email = user.email ? `deleted_${randomSuffix}@example.com` : `deleted_${randomSuffix}@example.com`;
+    user.email = user.email
+      ? `deleted_${randomSuffix}@example.com`
+      : `deleted_${randomSuffix}@example.com`;
 
     await this.userRepository.save(user);
-    
-    // In a real app we might also need to clean up sessions and queue 
+
+    // In a real app we might also need to clean up sessions and queue
     // a background job for hard-deleting transactional data if required by GDPR.
   }
   async selfExclude(userId: string, days: number): Promise<void> {

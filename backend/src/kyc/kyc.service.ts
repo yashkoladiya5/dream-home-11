@@ -50,21 +50,30 @@ export class KycService {
       const ageDate = new Date(ageDifMs);
       const age = Math.abs(ageDate.getUTCFullYear() - 1970);
       if (age < 18) {
-        throw new BadRequestException('You must be at least 18 years old to complete KYC');
+        throw new BadRequestException(
+          'You must be at least 18 years old to complete KYC',
+        );
       }
     } else {
-        throw new BadRequestException('Date of birth is required for 18+ age verification');
+      throw new BadRequestException(
+        'Date of birth is required for 18+ age verification',
+      );
     }
 
     // Call Provider to verify Aadhaar and PAN immediately
-    const aadhaarResult = await this.kycProviderService.verifyAadhaar(aadhaarNumber);
+    const aadhaarResult =
+      await this.kycProviderService.verifyAadhaar(aadhaarNumber);
     if (!aadhaarResult.success) {
-      throw new BadRequestException(`Aadhaar verification failed: ${aadhaarResult.errorReason || 'Unknown error'}`);
+      throw new BadRequestException(
+        `Aadhaar verification failed: ${aadhaarResult.errorReason || 'Unknown error'}`,
+      );
     }
 
     const panResult = await this.kycProviderService.verifyPan(panNumber);
     if (!panResult.success) {
-      throw new BadRequestException(`PAN verification failed: ${panResult.errorReason || 'Unknown error'}`);
+      throw new BadRequestException(
+        `PAN verification failed: ${panResult.errorReason || 'Unknown error'}`,
+      );
     }
 
     const kyc = this.kycRepository.create({
@@ -79,7 +88,8 @@ export class KycService {
     const saved = await this.kycRepository.save(kyc);
 
     // Update User Profile with verified name
-    const updatedName = aadhaarResult.verifiedName || panResult.verifiedName || fullName;
+    const updatedName =
+      aadhaarResult.verifiedName || panResult.verifiedName || fullName;
     if (updatedName) {
       await this.userRepository.update(userId, { fullName: updatedName });
     }
@@ -165,7 +175,9 @@ export class KycService {
     file: Express.Multer.File,
   ): Promise<{ url: string }> {
     try {
-      console.log(`[KYC Upload] Starting upload for user: ${userId}, type: ${documentType}`);
+      console.log(
+        `[KYC Upload] Starting upload for user: ${userId}, type: ${documentType}`,
+      );
       const column = this.getColumnForDocumentType(documentType);
       if (!column) {
         throw new BadRequestException(`Invalid document type: ${documentType}`);
@@ -180,7 +192,9 @@ export class KycService {
         });
 
         if (!kyc) {
-          console.log(`[KYC Upload] No KYC record found. Creating a new one for user: ${userId}`);
+          console.log(
+            `[KYC Upload] No KYC record found. Creating a new one for user: ${userId}`,
+          );
           kyc = entityManager.create(Kyc, {
             userId,
             status: KycStatus.PENDING,
@@ -188,11 +202,15 @@ export class KycService {
           kyc = await entityManager.save(kyc);
         }
 
-        console.log(`[KYC Upload] Ensuring upload directory: ${KYC_UPLOAD_DIR}`);
+        console.log(
+          `[KYC Upload] Ensuring upload directory: ${KYC_UPLOAD_DIR}`,
+        );
         ensureUploadDir();
         const userDir = join(KYC_UPLOAD_DIR, userId);
         if (!existsSync(userDir)) {
-          console.log(`[KYC Upload] Creating user-specific directory: ${userDir}`);
+          console.log(
+            `[KYC Upload] Creating user-specific directory: ${userDir}`,
+          );
           mkdirSync(userDir, { recursive: true });
         }
 
@@ -200,7 +218,9 @@ export class KycService {
         const filename = `${documentType}${ext}`;
         const filePath = join(userDir, filename);
 
-        console.log(`[KYC Upload] Writing file of size ${fileData.length} bytes to: ${filePath}`);
+        console.log(
+          `[KYC Upload] Writing file of size ${fileData.length} bytes to: ${filePath}`,
+        );
         writeFileSync(filePath, fileData);
 
         const url = `/uploads/kyc/${userId}/${filename}`;
@@ -234,13 +254,20 @@ export class KycService {
       if (rawObj.data && Array.isArray(rawObj.data.data)) {
         return Buffer.from(rawObj.data.data);
       }
-      if (rawObj instanceof Uint8Array || rawObj.constructor?.name === 'Uint8Array' || rawObj.constructor?.name === 'Buffer') {
+      if (
+        rawObj instanceof Uint8Array ||
+        rawObj.constructor?.name === 'Uint8Array' ||
+        rawObj.constructor?.name === 'Buffer'
+      ) {
         return Buffer.from(rawObj);
       }
       if (rawObj.buffer && rawObj.buffer instanceof ArrayBuffer) {
         return Buffer.from(rawObj.buffer);
       }
-      console.warn('[KYC Upload] Unknown buffer object format. Attempting conversion of keys:', Object.keys(rawObj));
+      console.warn(
+        '[KYC Upload] Unknown buffer object format. Attempting conversion of keys:',
+        Object.keys(rawObj),
+      );
       return Buffer.from(JSON.stringify(rawObj));
     }
     return Buffer.from((file.buffer as any) || '');
