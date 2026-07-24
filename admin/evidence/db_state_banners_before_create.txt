@@ -1,0 +1,9 @@
+                  id                  |       title        |                             subtitle                              | image_url |      link      | link_label | background_color | sort_order | is_active |           created_at           
+--------------------------------------+--------------------+-------------------------------------------------------------------+-----------+----------------+------------+------------------+------------+-----------+--------------------------------
+ 23c56998-4de1-44a8-b3a2-fdc8cc9b864d | Mega Dream Contest | Win a 3 BHK Luxury Apartment in Mumbai! Entry starts at just ₹49. |           | /mega-contests | JOIN NOW   | #D22C2C          |          1 | t         | 2026-06-24 16:53:57.4874+05:30
+ fa11c7c0-a252-45b2-bf8f-4bf15d11df04 | Rewards Catalog    | Redeem your points for gift cards, merchandise & more!            |           | /rewards       | EXPLORE    | #F59E0B          |          2 | t         | 2026-06-24 16:53:57.4874+05:30
+ 6438f976-2d91-419e-98c7-a2bfc3a2f157 | Share & Earn       | Invite friends and earn bonus points for every referral!          |           | /share-tracker | SHARE NOW  | #10B981          |          3 | t         | 2026-06-24 16:53:57.4874+05:30
+ 8021ea2e-8e68-47be-90b0-4a13f34fd8f7 | Complete Your KYC  | Verify your account to unlock all features and win big prizes!    |           | /home          | VERIFY     | #8B5CF6          |          4 | t         | 2026-06-24 16:53:57.4874+05:30
+ dbb80b9b-b905-4ac2-bcb6-0fcfc2805fa9 | Premium Membership | Go premium for exclusive contests, rewards & priority support.    |           | /rewards       | LEARN MORE | #D22C2C          |          5 | t         | 2026-06-24 16:53:57.4874+05:30
+(5 rows)
+

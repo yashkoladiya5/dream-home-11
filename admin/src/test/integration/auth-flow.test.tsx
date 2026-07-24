@@ -28,7 +28,7 @@ describe('Auth Flow', () => {
   it('shows login form with phone input and role selector', () => {
     render(<MemoryRouter><LoginPage /></MemoryRouter>);
     expect(screen.getByPlaceholderText('Enter registered phone number')).toBeInTheDocument();
-    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter admin password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument();
   });
 
@@ -40,12 +40,12 @@ describe('Auth Flow', () => {
     expect(input).toHaveValue('9999999999');
   });
 
-  it('accepts role selection', async () => {
+  it('accepts password input', async () => {
     const user = userEvent.setup();
     render(<MemoryRouter><LoginPage /></MemoryRouter>);
-    const select = screen.getByRole('combobox');
-    await user.selectOptions(select, 'moderator');
-    expect(select).toHaveValue('moderator');
+    const input = screen.getByPlaceholderText('Enter admin password');
+    await user.type(input, 'adminpass');
+    expect(input).toHaveValue('adminpass');
   });
 
   it('calls login on form submit', async () => {
@@ -53,8 +53,9 @@ describe('Auth Flow', () => {
     const user = userEvent.setup();
     render(<MemoryRouter><LoginPage /></MemoryRouter>);
     await user.type(screen.getByPlaceholderText('Enter registered phone number'), '9999999999');
+    await user.type(screen.getByPlaceholderText('Enter admin password'), 'adminpass');
     await user.click(screen.getByRole('button', { name: 'Sign In' }));
-    expect(mockLogin).toHaveBeenCalledWith('9999999999', 'admin');
+    expect(mockLogin).toHaveBeenCalledWith('9999999999', 'adminpass');
   });
 
   it('navigates to dashboard on successful login', async () => {
@@ -62,6 +63,7 @@ describe('Auth Flow', () => {
     const user = userEvent.setup();
     render(<MemoryRouter><LoginPage /></MemoryRouter>);
     await user.type(screen.getByPlaceholderText('Enter registered phone number'), '9999999999');
+    await user.type(screen.getByPlaceholderText('Enter admin password'), 'adminpass');
     await user.click(screen.getByRole('button', { name: 'Sign In' }));
     await vi.waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
@@ -73,7 +75,8 @@ describe('Auth Flow', () => {
     const user = userEvent.setup();
     render(<MemoryRouter><LoginPage /></MemoryRouter>);
     await user.type(screen.getByPlaceholderText('Enter registered phone number'), '9999999999');
+    await user.type(screen.getByPlaceholderText('Enter admin password'), 'adminpass');
     await user.click(screen.getByRole('button', { name: 'Sign In' }));
-    expect(screen.getByText('Signing in...')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Signing in...' })).toBeDisabled();
   });
 });

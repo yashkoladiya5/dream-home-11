@@ -42,7 +42,7 @@ describe('auth', () => {
         data: { data: { accessToken: 'test-token', user: { _id: '1', name: 'Admin', phoneNumber: '9999999999', role: 'admin' } } },
       });
       await login('9999999999', 'admin');
-      expect(mockPost).toHaveBeenCalledWith('/auth/mock-login', { phoneNumber: '9999999999', role: 'admin' });
+      expect(mockPost).toHaveBeenCalledWith('/auth/admin-login', { phoneNumber: '9999999999', password: 'admin' });
     });
 
     it('stores token in localStorage', async () => {
@@ -80,7 +80,7 @@ describe('auth', () => {
         data: { data: { accessToken: 'token', user: { _id: '1', name: 'Admin', phoneNumber: '9999999999', role: 'admin' } } },
       });
       await login('9999999999');
-      expect(mockPost).toHaveBeenCalledWith('/auth/mock-login', { phoneNumber: '9999999999', role: 'admin' });
+      expect(mockPost).toHaveBeenCalledWith('/auth/admin-login', { phoneNumber: '9999999999', password: undefined });
     });
   });
 

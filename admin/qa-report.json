@@ -1,0 +1,28 @@
+{
+  "successfulPages": [
+    "http://localhost:5173/dashboard",
+    "http://localhost:5173/users",
+    "http://localhost:5173/contests",
+    "http://localhost:5173/prize-homes",
+    "http://localhost:5173/banners",
+    "http://localhost:5173/leaderboard",
+    "http://localhost:5173/kyc",
+    "http://localhost:5173/compliance",
+    "http://localhost:5173/config",
+    "http://localhost:5173/support",
+    "http://localhost:5173/warnings",
+    "http://localhost:5173/fraud",
+    "http://localhost:5173/notifications",
+    "http://localhost:5173/compensations",
+    "http://localhost:5173/audit-logs",
+    "http://localhost:5173/payments",
+    "http://localhost:5173/withdrawals",
+    "http://localhost:5173/rewards",
+    "http://localhost:5173/referrals",
+    "http://localhost:5173/polls",
+    "http://localhost:5173/reports"
+  ],
+  "failedPages": [],
+  "consoleErrors": [],
+  "networkErrors": []
+}
