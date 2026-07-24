@@ -19,7 +19,7 @@ import { RedisCacheService } from './redis-cache.service';
         const client = new Redis({
           host,
           port,
-          maxRetriesPerRequest: 3,
+          maxRetriesPerRequest: null,
           retryStrategy: (times) => {
             if (times > 5) return null;
             return Math.min(times * 200, 3000);

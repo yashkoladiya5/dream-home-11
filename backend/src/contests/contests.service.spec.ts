@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '../config/config.service';
 import { Repository, DataSource, EntityManager } from 'typeorm';
 import { ConfigService as NestConfigService } from '@nestjs/config';
-import { RedisService } from '@liaoliaots/nestjs-redis';
+
 import { WalletService } from '../wallet/wallet.service';
 import { ContestsService } from './contests.service';
 import {

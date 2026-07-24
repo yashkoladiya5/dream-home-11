@@ -25,7 +25,7 @@ import { SmsModule } from '../sms/sms.module';
         connection: {
           host: config.get<string>('REDIS_HOST', 'localhost'),
           port: config.get<number>('REDIS_PORT', 6379),
-          maxRetriesPerRequest: 3,
+          maxRetriesPerRequest: null,
           retryStrategy: (times: number) => {
             if (times > 5) return null;
             return Math.min(times * 200, 3000);

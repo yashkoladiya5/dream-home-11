@@ -222,7 +222,7 @@ export class HealthMetricsService implements OnModuleDestroy {
     let redis: Redis | null = null;
     try {
       redis = new Redis(redisUrl, {
-        maxRetriesPerRequest: 1,
+        maxRetriesPerRequest: null,
         connectTimeout: 2000,
         lazyConnect: true,
       });
